@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>賽博礦工大亨 - 放置賺錢模擬</title>
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow: hidden; 
+            touch-action: manipulation; 
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.7), 0 0 20px rgba(56, 189, 248, 0.5);
+        }
+
+        .coin-btn {
+            transition: transform 0.1s;
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+        }
+
+        .coin-btn:active {
+            transform: scale(0.95);
+        }
+
+        .upgrade-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .upgrade-card:active {
+            background: rgba(51, 65, 85, 0.9);
+        }
+
+        .floating-text {
+            position: absolute;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 1.2rem;
+            z-index: 50;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.2); opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        .pulse-glow {
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .modal-overlay {
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(5px);
+        }
+        
+        .notification-fade-out {
+            animation: fadeOut 3s forwards;
+            animation-delay: 2s;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="h-screen w-full flex flex-col items-center justify-center">
+
+    <div class="w-full h-full max-w-md bg-slate-900 flex flex-col relative shadow-2xl overflow-hidden border-x border-slate-800">
+        
+        <div id="notification-bar" class="absolute top-16 left-1/2 transform -translate-x-1/2 w-11/12 p-3 bg-green-600 text-white rounded-lg shadow-xl text-center text-sm hidden z-40 pointer-events-none">
+            </div>
+
+        <div class="p-4 bg-slate-800/80 backdrop-blur border-b border-slate-700 z-10 flex flex-col items-center sticky top-0">
+            <h1 class="text-xs font-cyber tracking-widest text-cyan-400 mb-1">CYBER MINER v1.1</h1>
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <circle cx="12" cy="12" r="10" fill="#F59E0B" />
+                    <path d="M12 6v12m-4-4h8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M9 9l6 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span id="balance-display" class="text-4xl font-bold font-cyber text-white neon-text">0</span>
+            </div>
+            <div class="text-xs text-slate-400 mt-1">
+                每秒收益: <span id="cps-display" class="text-green-400 font-bold">0</span> / 秒
+            </div>
+        </div>
+
+        <div class="w-full h-12 bg-slate-800 flex items-center justify-center border-b border-slate-700 relative overflow-hidden group cursor-pointer" onclick="game.showNotification('這是橫幅廣告位置 (Banner Ad)。\n實際上線後，這裡會顯示 Google AdMob 廣告。')">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+            <span class="text-[10px] text-slate-500 tracking-widest border border-slate-600 px-2 py-0.5 rounded">AD 廣告區域</span>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 pointer-events-none">
+                <div class="absolute top-10 left-10 w-20 h-20 border border-cyan-500 rounded-full"></div>
+                <div class="absolute bottom-20 right-10 w-32 h-32 border border-purple-500 rounded-full"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-slate-700 rounded-full animate-spin-slow" style="animation-duration: 20s"></div>
+            </div>
+
+            <button id="click-btn" class="coin-btn relative z-20 w-48 h-48 rounded-full bg-gradient-to-b from-slate-700 to-slate-900 border-4 border-cyan-500/50 flex items-center justify-center group outline-none tap-highlight-transparent">
+                <div class="absolute inset-0 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-cyan-400 group-active:scale-90 transition-transform duration-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+                    <rect x="8" y="8" width="8" height="8" rx="1" ry="1"></rect>
+                    <path d="M12 2v22"></path>
+                    <path d="M2 12h20"></path>
+                </svg>
+                <div class="absolute -bottom-8 text-sm text-cyan-300 font-cyber tracking-wider opacity-80">點擊挖礦</div>
+            </button>
+            
+            <button id="boost-btn" class="mt-8 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-purple-500/30 flex items-center gap-2 transform active:scale-95 transition-all pulse-glow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>觀看廣告 x2 倍速 (30秒)</span>
+            </button>
+        </div>
+
+        <div class="h-1/3 bg-slate-900 border-t border-slate-700 flex flex-col">
+            <div class="p-2 px-4 bg-slate-800 flex justify-between items-center">
+                <h2 class="text-sm font-bold text-slate-300">升級硬體</h2>
+                <button id="reset-btn" class="text-xs text-red-400 hover:text-red-300 underline" onclick="game.showResetModal()">重置進度</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-2 space-y-2 pb-10">
+                <div id="upg-mouse" class="upgrade-card p-3 rounded-xl flex items-center justify-between cursor-pointer" onclick="game.buyUpgrade('mouse')">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-900/50 p-2 rounded-lg text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-200">超頻滑鼠</div>
+                            <div class="text-xs text-slate-400">點擊收益 +1</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-yellow-400 font-cyber font-bold text-sm" id="cost-mouse">15</div>
+                        <div class="text-[10px] text-slate-500">LV <span id="lvl-mouse">1</span></div>
+                    </div>
+                </div>
+
+                <div id="upg-gpu" class="upgrade-card p-3 rounded-xl flex items-center justify-between cursor-pointer opacity-50" onclick="game.buyUpgrade('gpu')">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-green-900/50 p-2 rounded-lg text-green-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-200">入門顯卡 GT1030</div>
+                            <div class="text-xs text-slate-400">每秒自動 +1</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-yellow-400 font-cyber font-bold text-sm" id="cost-gpu">100</div>
+                        <div class="text-[10px] text-slate-500">LV <span id="lvl-gpu">0</span></div>
+                    </div>
+                </div>
+
+                <div id="upg-rig" class="upgrade-card p-3 rounded-xl flex items-center justify-between cursor-pointer opacity-50" onclick="game.buyUpgrade('rig')">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-purple-900/50 p-2 rounded-lg text-purple-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-200">專業礦機 RTX4090</div>
+                            <div class="text-xs text-slate-400">每秒自動 +10</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-yellow-400 font-cyber font-bold text-sm" id="cost-rig">1000</div>
+                        <div class="text-[10px] text-slate-500">LV <span id="lvl-rig">0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ad-modal" class="modal-overlay absolute inset-0 z-50 hidden flex flex-col items-center justify-center p-6 text-center">
+            <div class="bg-white text-black p-6 rounded-lg max-w-sm w-full shadow-2xl relative">
+                <div class="text-lg font-bold mb-4">廣告播放中...</div>
+                <div class="w-full h-32 bg-gray-200 flex items-center justify-center mb-4 rounded border border-gray-300">
+                    <span class="text-gray-400">模擬廣告畫面<br>(實際上這裡會播放影片)</span>
+                </div>
+                <div class="w-full bg-gray-200 h-2 rounded-full mb-4 overflow-hidden">
+                    <div id="ad-progress" class="bg-blue-600 h-full w-0 transition-all duration-[3000ms] ease-linear"></div>
+                </div>
+                <p class="text-sm text-gray-600 mb-2">觀看剩餘時間: <span id="ad-timer">3</span>秒</p>
+                <p class="text-xs text-gray-400">觀看完整廣告以獲得獎勵</p>
+            </div>
+        </div>
+        
+        <div id="reset-modal" class="modal-overlay absolute inset-0 z-50 hidden flex flex-col items-center justify-center p-6 text-center">
+            <div class="bg-slate-800 text-white p-6 rounded-lg max-w-sm w-full shadow-2xl relative border border-red-600">
+                <div class="text-xl font-bold mb-4 text-red-400">⚠️ 確認重置進度 ⚠️</div>
+                <p class="mb-6 text-slate-300">你確定要刪除所有遊戲進度嗎？此操作無法撤銷！</p>
+                <div class="flex justify-around gap-4">
+                    <button class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors" onclick="game.executeReset()">
+                        確定重置
+                    </button>
+                    <button class="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 rounded-lg transition-colors" onclick="document.getElementById('reset-modal').classList.add('hidden')">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Game Logic
+        const game = {
+            state: {
+                balance: 0,
+                clickPower: 1,
+                autoPerSec: 0,
+                multiplier: 1,
+                upgrades: {
+                    mouse: { level: 1, cost: 15, baseCost: 15, power: 1 },
+                    gpu: { level: 0, cost: 100, baseCost: 100, power: 1 },
+                    rig: { level: 0, cost: 1000, baseCost: 1000, power: 10 }
+                },
+                lastSave: Date.now()
+            },
+            
+            elements: {
+                balance: document.getElementById('balance-display'),
+                cps: document.getElementById('cps-display'),
+                btn: document.getElementById('click-btn'),
+                boostBtn: document.getElementById('boost-btn'),
+                adModal: document.getElementById('ad-modal'),
+                adProgress: document.getElementById('ad-progress'),
+                adTimer: document.getElementById('ad-timer'),
+                resetModal: document.getElementById('reset-modal'),
+                notificationBar: document.getElementById('notification-bar') // New element
+            },
+
+            isBoostActive: false,
+            adTimerInterval: null,
+
+            init() {
+                this.loadGame();
+                this.updateUI();
+                this.attachEvents();
+                this.gameLoop();
+                this.autoSaveLoop();
+            },
+
+            attachEvents() {
+                // Attachments are now simpler since reset button uses inline onclick
+                this.elements.btn.addEventListener('click', (e) => this.handleClick(e));
+                
+                // Add robust touch support for faster tapping
+                const touchStart = (e) => {
+                    e.preventDefault(); 
+                    // Use the first touch point for coordinates
+                    this.handleClick(e.touches[0]); 
+                    this.elements.btn.classList.add('scale-95');
+                };
+                const touchEnd = () => {
+                    this.elements.btn.classList.remove('scale-95');
+                };
+                
+                this.elements.btn.addEventListener('touchstart', touchStart);
+                this.elements.btn.addEventListener('touchend', touchEnd);
+                this.elements.btn.addEventListener('touchcancel', touchEnd); // important for touch safety
+
+                this.elements.boostBtn.addEventListener('click', () => this.watchAd());
+            },
+            
+            // New utility function to show non-blocking messages
+            showNotification(message, duration = 3000) {
+                const bar = this.elements.notificationBar;
+                bar.textContent = message;
+                bar.classList.remove('hidden', 'notification-fade-out');
+                
+                setTimeout(() => {
+                    bar.classList.add('notification-fade-out');
+                    setTimeout(() => bar.classList.add('hidden'), 3000); // Hide after fade out animation
+                }, duration);
+            },
+
+            handleClick(e) {
+                const earn = this.state.clickPower * this.state.multiplier * (this.isBoostActive ? 2 : 1);
+                this.state.balance += earn;
+                // Use clientX/Y from event or touch
+                const x = e.clientX || e.pageX;
+                const y = e.clientY || e.pageY;
+                this.createFloatingText(x, y, `+${Math.floor(earn)}`);
+                this.updateUI();
+            },
+
+            createFloatingText(x, y, text) {
+                const el = document.createElement('div');
+                el.classList.add('floating-text');
+                el.textContent = text;
+                
+                // Random slight offset
+                const offsetX = (Math.random() - 0.5) * 40;
+                
+                // Position relative to the main app container for floating text
+                const appRect = document.querySelector('.max-w-md').getBoundingClientRect();
+                el.style.left = `${x - appRect.left + offsetX}px`;
+                el.style.top = `${y - appRect.top - 50}px`; 
+                
+                document.querySelector('.max-w-md').appendChild(el);
+                
+                // Remove after animation
+                setTimeout(() => el.remove(), 1000);
+            },
+
+            buyUpgrade(type) {
+                const upgrade = this.state.upgrades[type];
+                if (this.state.balance >= upgrade.cost) {
+                    this.state.balance -= upgrade.cost;
+                    upgrade.level++;
+                    // Cost calculation uses Math.floor to keep costs integers
+                    upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(1.5, upgrade.level));
+                    
+                    // Apply effects
+                    if (type === 'mouse') {
+                        this.state.clickPower += upgrade.power;
+                        this.showNotification(`滑鼠升級至 LV.${upgrade.level}!`);
+                    } else if (type === 'gpu' || type === 'rig') {
+                        this.state.autoPerSec += upgrade.power;
+                        this.showNotification(`礦機升級至 LV.${upgrade.level}! 每秒收益+${upgrade.power}`);
+                    }
+                    
+                    this.updateUI();
+                } else {
+                    // Visual feedback for not enough money
+                    const card = document.getElementById(`upg-${type}`);
+                    card.classList.add('bg-red-900/50');
+                    this.showNotification(`貨幣不足! 需要 ${upgrade.cost.toLocaleString()} 貨幣`, 1500);
+                    setTimeout(() => card.classList.remove('bg-red-900/50'), 200);
+                }
+            },
+
+            watchAd() {
+                if (this.isBoostActive) return;
+
+                // Simulate Ad Network Logic
+                this.elements.adModal.classList.remove('hidden');
+                this.elements.adModal.classList.add('flex');
+                this.elements.boostBtn.disabled = true; // Disable button while ad is playing
+                
+                let timeLeft = 3;
+                this.elements.adTimer.textContent = timeLeft;
+                this.elements.adProgress.style.width = '0%';
+                
+                // Trigger animation
+                setTimeout(() => {
+                    this.elements.adProgress.style.width = '100%';
+                }, 50);
+
+                this.adTimerInterval = setInterval(() => {
+                    timeLeft--;
+                    this.elements.adTimer.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(this.adTimerInterval);
+                        this.finishAd();
+                    }
+                }, 1000);
+            },
+
+            finishAd() {
+                this.elements.adModal.classList.add('hidden');
+                this.elements.adModal.classList.remove('flex');
+                
+                // Reward User
+                this.isBoostActive = true;
+                this.elements.boostBtn.textContent = "🔥 2倍加速中! (30s)";
+                this.elements.boostBtn.classList.replace('from-purple-600', 'from-red-600');
+                this.elements.boostBtn.classList.replace('to-indigo-600', 'to-orange-600');
+                // The button remains visually disabled until boost ends
+
+                this.showNotification("✨ 廣告獎勵：2倍加速啟動 (30秒)！", 3000);
+
+                // End Boost after 30 seconds
+                setTimeout(() => {
+                    this.isBoostActive = false;
+                    this.elements.boostBtn.textContent = "觀看廣告 x2 倍速 (30秒)";
+                    this.elements.boostBtn.classList.replace('from-red-600', 'from-purple-600');
+                    this.elements.boostBtn.classList.replace('to-orange-600', 'to-indigo-600');
+                    this.elements.boostBtn.disabled = false; // Re-enable button
+                    this.updateUI(); // Important to update CPS display
+                }, 30000);
+
+                this.updateUI(); // Important to update CPS display immediately
+            },
+            
+            // New methods for custom Reset Modal
+            showResetModal() {
+                this.elements.resetModal.classList.remove('hidden');
+                this.elements.resetModal.classList.add('flex');
+            },
+
+            executeReset() {
+                this.elements.resetModal.classList.add('hidden');
+                localStorage.removeItem('cyberMinerSave');
+                this.showNotification("遊戲進度已重置。", 2000);
+                // Simple reload after a brief delay for message display
+                setTimeout(() => location.reload(), 2000);
+            },
+
+            gameLoop() {
+                // Run every 100ms
+                setInterval(() => {
+                    if (this.state.autoPerSec > 0) {
+                        const earnPerTick = (this.state.autoPerSec * (this.isBoostActive ? 2 : 1)) / 10;
+                        this.state.balance += earnPerTick;
+                        this.updateUI();
+                    }
+                }, 100);
+            },
+
+            autoSaveLoop() {
+                setInterval(() => {
+                    this.saveGame();
+                    console.log("Game saved automatically.");
+                }, 10000); // Save every 10 seconds
+            },
+
+            updateUI() {
+                // Update text
+                this.elements.balance.textContent = Math.floor(this.state.balance).toLocaleString();
+                const currentCps = this.state.autoPerSec * (this.isBoostActive ? 2 : 1);
+                this.elements.cps.textContent = currentCps.toLocaleString();
+
+                // Update upgrades UI
+                this.updateUpgradeCard('mouse', 'mouse');
+                this.updateUpgradeCard('gpu', 'gpu');
+                this.updateUpgradeCard('rig', 'rig');
+            },
+
+            updateUpgradeCard(type, idSuffix) {
+                const upgrade = this.state.upgrades[type];
+                document.getElementById(`cost-${idSuffix}`).textContent = Math.floor(upgrade.cost).toLocaleString();
+                document.getElementById(`lvl-${idSuffix}`).textContent = upgrade.level;
+                
+                const card = document.getElementById(`upg-${idSuffix}`);
+                if (this.state.balance >= upgrade.cost) {
+                    card.classList.remove('opacity-50');
+                } else {
+                    card.classList.add('opacity-50');
+                }
+            },
+
+            saveGame() {
+                this.state.lastSave = Date.now();
+                localStorage.setItem('cyberMinerSave', JSON.stringify(this.state));
+            },
+
+            loadGame() {
+                const saved = localStorage.getItem('cyberMinerSave');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        // Merge saved state with default structure (in case of updates)
+                        this.state = { ...this.state, ...parsed };
+                        
+                        // Calculate offline earnings (optional simplified version)
+                        const now = Date.now();
+                        const diffSeconds = (now - this.state.lastSave) / 1000;
+                        
+                        if (diffSeconds > 60 && this.state.autoPerSec > 0) {
+                            const offlineEarn = diffSeconds * this.state.autoPerSec * 0.5; // 50% efficiency offline
+                            this.state.balance += offlineEarn;
+                            
+                            // FIX: Replace alert() with non-blocking notification
+                            this.showNotification(`歡迎回來！離線賺取了 ${Math.floor(offlineEarn).toLocaleString()} 貨幣`);
+                        }
+                    } catch (e) {
+                        console.error("Save file corrupted:", e);
+                    }
+                }
+            }
+        };
+
+        // Start Game
+        window.onload = () => game.init();
+    </script>
+</body>
+</html>

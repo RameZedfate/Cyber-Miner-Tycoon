@@ -1,0 +1,21 @@
+{
+  "name": "賽博礦工大亨",
+  "short_name": "礦工大亨",
+  "start_url": "./cyber_miner.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "點擊挖礦與放置收益的賽博龐克風格大亨遊戲。",
+  "icons": [
+    {
+      "src": "images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
