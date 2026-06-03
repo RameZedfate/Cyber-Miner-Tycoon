@@ -87,12 +87,135 @@
             color: #00FF7F;
             text-shadow: 0 0 5px #00FF7F;
         }
+
+        /* 說明按鈕 */
+        .btn-help {
+            background: transparent;
+            border: 1px solid #00F0FF80;
+            color: #00F0FF;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-help:hover {
+            background: #00F0FF;
+            color: #0f172a;
+            box-shadow: 0 0 10px #00F0FF;
+        }
+
+        /* 說明彈窗遮罩 */
+        .help-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .help-overlay.active {
+            display: flex;
+        }
+
+        /* 說明彈窗內容 */
+        .help-modal {
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid #00F0FF;
+            box-shadow: 0 0 30px #00F0FF;
+            background: #0f172a;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .help-modal h3 {
+            color: #FF00FF;
+            text-shadow: 0 0 8px #FF00FF;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .help-modal h4 {
+            color: #00F0FF;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        .help-modal p, .help-modal li {
+            color: #a0f0e0;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .help-modal ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .help-modal ul li::before {
+            content: "▸ ";
+            color: #00FF7F;
+        }
+        .help-close-btn {
+            margin-top: 1.25rem;
+            width: 100%;
+            padding: 0.5rem;
+            background: #FF00FF;
+            color: #0f172a;
+            border: 2px solid #00F0FF;
+            border-radius: 0.375rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px #FF00FF;
+        }
+        .help-close-btn:hover {
+            background: #00F0FF;
+        }
     </style>
 </head>
 <body class="select-none">
+    <!-- 說明彈窗 -->
+    <div id="helpOverlay" class="help-overlay" onclick="closeHelp(event)">
+        <div class="help-modal">
+            <h3>[ 遊戲說明 ]</h3>
+
+            <h4>目標</h4>
+            <p>點擊挖礦按鈕來賺取 C-COIN，累積越多越好！</p>
+
+            <h4>畫面介紹</h4>
+            <ul>
+                <li><strong>C-COIN</strong> — 你目前持有的資源數量</li>
+                <li><strong>CPM</strong>（每次點擊倍率）— 每按一次挖礦可獲得的 C-COIN 數</li>
+                <li><strong>CPS</strong>（每秒自動產出）— 每秒自動賺取的 C-COIN 數</li>
+            </ul>
+
+            <h4>如何玩</h4>
+            <ul>
+                <li>按下「挖礦 / HACK」按鈕來手動賺取 C-COIN</li>
+                <li>累積足夠 C-COIN 後，購買下方的升級</li>
+                <li>升級可提升 CPM（點擊效率）或 CPS（自動收益）</li>
+            </ul>
+
+            <h4>升級說明</h4>
+            <ul>
+                <li><strong>駭客工具優化</strong> — 提升每次點擊賺取的 C-COIN（+CPM）</li>
+                <li><strong>部署礦工無人機</strong> — 每秒自動賺取少量 C-COIN（+CPS）</li>
+                <li><strong>AI礦場自動化</strong> — 大幅提升每秒自動收益（+CPS）</li>
+            </ul>
+
+            <p style="margin-top:0.75rem; color:#00FF7F;">遊戲進度會自動儲存到雲端，重新開啟後可繼續遊戲。</p>
+
+            <button class="help-close-btn" onclick="closeHelp()">[ 關閉說明 ]</button>
+        </div>
+    </div>
+
     <div id="app" class="container rounded-lg">
         <!-- 標題與資源顯示 -->
-        <h1 class="text-3xl text-center mb-4 border-b-2 border-cyborg-pink pb-2">CYBER MINER TWA</h1>
+        <div class="flex items-center justify-between mb-4 border-b-2 border-cyborg-pink pb-2">
+            <h1 class="text-3xl text-center flex-1">CYBER MINER TWA</h1>
+            <button class="btn-help" onclick="openHelp()" title="遊戲說明">?</button>
+        </div>
         <div class="text-center mb-6">
             <p class="text-lg">資源：<span id="resourceCount" class="resource-text text-4xl">0</span> C-COIN</p>
             <p class="text-sm text-cyborg-green">CPM: <span id="cpm">0.00</span> | CPS: <span id="cps">0</span></p>
@@ -376,6 +499,18 @@
                 document.body.removeChild(messageEl);
                 document.head.removeChild(style);
             }, 3000);
+        }
+
+        // --- 說明彈窗 ---
+        function openHelp() {
+            document.getElementById('helpOverlay').classList.add('active');
+        }
+
+        function closeHelp(event) {
+            // 點擊遮罩背景或關閉按鈕都可關閉
+            if (!event || event.target === document.getElementById('helpOverlay')) {
+                document.getElementById('helpOverlay').classList.remove('active');
+            }
         }
 
         // --- 啟動遊戲 ---
