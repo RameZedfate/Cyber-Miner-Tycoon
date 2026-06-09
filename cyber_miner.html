@@ -1,391 +1,927 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>賽博礦工大亨 - Cyber Miner Tycoon</title>
-    <!-- 確保 manifest.json 連結正確，使用 cross-origin 屬性 -->
-    <link rel="manifest" href="./manifest.json" crossorigin="use-credentials">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'cyborg-blue': '#00F0FF',
-                        'cyborg-pink': '#FF00FF',
-                        'cyborg-green': '#00FF7F',
-                        'dark-bg': '#0f172a',
-                    },
-                    fontFamily: {
-                        mono: ['VT323', 'monospace'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'VT323', monospace;
-            background-color: #0f172a;
-            color: #00F0FF;
-            text-shadow: 0 0 5px #00F0FF;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>賽博礦工大亨 - Cyber Miner Tycoon</title>
+<link rel="manifest" href="./manifest.json" crossorigin="use-credentials">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #00F0FF;
+  --pink: #FF00FF;
+  --green: #00FF7F;
+  --yellow: #FFD700;
+  --orange: #FF6B00;
+  --bg: #080c18;
+  --bg2: #0d1425;
+  --bg3: #111827;
+  --border: rgba(0,240,255,0.3);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg);
+  color: var(--blue);
+  min-height: 100vh;
+  overflow-x: hidden;
+  user-select: none;
+}
+/* Scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+}
+#canvas-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; }
 
-        .container {
-            max-width: 420px;
-            width: 100%;
-            padding: 1rem;
-            margin: 1rem;
-            border: 2px solid #00F0FF;
-            box-shadow: 0 0 20px #00F0FF;
-            background: rgba(0, 0, 0, 0.7);
-        }
+/* Header */
+#header {
+  background: linear-gradient(180deg, rgba(0,240,255,0.08) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+#header h1 {
+  font-family: 'VT323', monospace;
+  font-size: 1.6rem;
+  text-align: center;
+  color: var(--blue);
+  text-shadow: 0 0 10px var(--blue), 0 0 30px var(--blue);
+  letter-spacing: 3px;
+}
+#resource-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 4px;
+}
+#coins-display {
+  font-family: 'VT323', monospace;
+  font-size: 2rem;
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green);
+}
+#cps-display { font-size: 0.75rem; color: rgba(0,240,255,0.7); text-align: right; line-height: 1.4; }
+#prestige-bar {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 4px; font-size: 0.7rem;
+}
+#prestige-count { color: var(--yellow); text-shadow: 0 0 6px var(--yellow); }
+#prestige-multi { color: var(--orange); }
 
-        .btn-cyborg {
-            background-color: #FF00FF;
-            color: #0f172a;
-            border: 2px solid #00F0FF;
-            box-shadow: 0 0 10px #00F0FF, 0 0 10px #FF00FF inset;
-            transition: all 0.1s ease-in-out;
-        }
+/* Tabs */
+#tabs {
+  display: flex; background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-btn {
+  flex: 1; padding: 8px 4px; background: none; border: none; color: rgba(0,240,255,0.5);
+  font-family: 'VT323', monospace; font-size: 1.1rem; cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); text-shadow: 0 0 8px var(--blue); }
+.tab-btn:hover { color: var(--blue); }
 
-        .btn-cyborg:hover {
-            background-color: #00F0FF;
-            color: #0f172a;
-            box-shadow: 0 0 15px #FF00FF, 0 0 15px #00F0FF inset;
-        }
-        
-        /* 點擊特效 */
-        .animate-click {
-            animation: pulse-shadow 0.2s ease-out;
-        }
+/* Content area */
+#content { flex: 1; overflow-y: auto; padding: 8px; }
+#content::-webkit-scrollbar { width: 4px; }
+#content::-webkit-scrollbar-track { background: var(--bg2); }
+#content::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 2px; }
 
-        @keyframes pulse-shadow {
-            0% { transform: scale(1); box-shadow: 0 0 10px #00F0FF, 0 0 10px #FF00FF inset; }
-            50% { transform: scale(0.98); box-shadow: 0 0 20px #FF00FF, 0 0 20px #00F0FF inset; }
-            100% { transform: scale(1); box-shadow: 0 0 10px #00F0FF, 0 0 10px #FF00FF inset; }
-        }
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
-        .upgrade-card {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #00F0FF80;
-            transition: border-color 0.2s;
-        }
+/* Click zone */
+#click-zone { text-align: center; margin-bottom: 12px; }
+#mine-btn {
+  position: relative; width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a2a3a, #050a15);
+  border: 3px solid var(--blue);
+  box-shadow: 0 0 20px var(--blue), 0 0 40px rgba(0,240,255,0.2), inset 0 0 20px rgba(0,240,255,0.1);
+  cursor: pointer; transition: transform 0.08s, box-shadow 0.08s;
+  font-family: 'VT323', monospace; font-size: 1.1rem; color: var(--blue);
+  letter-spacing: 2px; text-shadow: 0 0 8px var(--blue);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  margin: 0 auto;
+}
+#mine-btn:active { transform: scale(0.93); box-shadow: 0 0 35px var(--pink), inset 0 0 30px rgba(255,0,255,0.2); }
+.mine-icon { font-size: 3.5rem; line-height: 1; }
+#click-power { font-size: 0.7rem; color: rgba(0,240,255,0.7); margin-top: 4px; }
 
-        .upgrade-card:hover {
-            border-color: #FF00FF;
-            box-shadow: 0 0 8px #FF00FF80;
-        }
+/* Mini stats row */
+#mini-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 12px;
+}
+.mini-stat {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px; text-align: center;
+}
+.mini-stat .label { font-size: 0.6rem; color: rgba(0,240,255,0.5); }
+.mini-stat .value { font-family: 'VT323', monospace; font-size: 1.2rem; color: var(--green); }
 
-        .resource-text {
-            color: #00FF7F;
-            text-shadow: 0 0 5px #00FF7F;
-        }
-    </style>
+/* Miners */
+.section-title {
+  font-family: 'VT323', monospace; font-size: 1.3rem; letter-spacing: 2px;
+  color: var(--pink); text-shadow: 0 0 6px var(--pink);
+  border-bottom: 1px solid rgba(255,0,255,0.3); padding-bottom: 4px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.miner-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+}
+.miner-card::before {
+  content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(0,240,255,0.03), transparent);
+  transform: translateX(-100%); transition: transform 0.4s;
+}
+.miner-card:hover::before { transform: translateX(100%); }
+.miner-card:hover { border-color: var(--blue); box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+.miner-card.affordable { border-color: rgba(0,255,127,0.4); }
+.miner-card.affordable:hover { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,127,0.3); }
+.miner-card.maxed { border-color: rgba(255,215,0,0.4); opacity: 0.7; cursor: default; }
+.miner-icon { font-size: 2.2rem; flex-shrink: 0; filter: drop-shadow(0 0 4px var(--blue)); }
+.miner-info { flex: 1; min-width: 0; }
+.miner-name { font-family: 'VT323', monospace; font-size: 1.15rem; color: var(--blue); }
+.miner-desc { font-size: 0.65rem; color: rgba(0,240,255,0.5); }
+.miner-production { font-size: 0.7rem; color: var(--green); }
+.miner-right { text-align: right; flex-shrink: 0; }
+.miner-cost { font-family: 'VT323', monospace; font-size: 1.1rem; color: var(--yellow); text-shadow: 0 0 6px var(--yellow); }
+.miner-count { font-family: 'VT323', monospace; font-size: 1.6rem; color: var(--pink); text-shadow: 0 0 6px var(--pink); }
+.miner-progress { height: 3px; background: rgba(0,240,255,0.1); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.miner-progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--pink)); transition: width 0.3s; }
+
+/* Upgrades shop */
+.upgrade-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.upgrade-card:hover { border-color: var(--pink); box-shadow: 0 0 10px rgba(255,0,255,0.2); }
+.upgrade-card.affordable { border-color: rgba(0,255,127,0.4); }
+.upgrade-card.purchased { border-color: rgba(255,215,0,0.3); opacity: 0.5; cursor: default; }
+.upgrade-icon { font-size: 2rem; flex-shrink: 0; }
+.upgrade-info { flex: 1; }
+.upgrade-name { font-family: 'VT323', monospace; font-size: 1.1rem; color: var(--pink); }
+.upgrade-effect { font-size: 0.65rem; color: rgba(0,255,127,0.8); }
+.upgrade-desc { font-size: 0.6rem; color: rgba(0,240,255,0.4); margin-top: 2px; }
+.upgrade-cost { font-family: 'VT323', monospace; font-size: 1rem; color: var(--yellow); flex-shrink: 0; }
+
+/* Achievements */
+.achievement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.achievement-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; text-align: center; transition: all 0.3s;
+}
+.achievement-card.unlocked { border-color: var(--yellow); box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+.achievement-card.locked { opacity: 0.4; }
+.achievement-icon { font-size: 2rem; }
+.achievement-name { font-family: 'VT323', monospace; font-size: 0.95rem; margin-top: 4px; }
+.achievement-desc { font-size: 0.6rem; color: rgba(0,240,255,0.5); margin-top: 2px; }
+
+/* Stats panel */
+.stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(0,240,255,0.08); font-size: 0.8rem; }
+.stat-row .s-label { color: rgba(0,240,255,0.6); }
+.stat-row .s-value { color: var(--green); font-family: 'VT323', monospace; font-size: 1rem; }
+
+/* Prestige panel */
+#prestige-panel { padding: 16px; text-align: center; }
+#prestige-panel h2 { font-family: 'VT323', monospace; font-size: 2rem; color: var(--yellow); text-shadow: 0 0 10px var(--yellow); margin-bottom: 8px; }
+#prestige-panel p { font-size: 0.8rem; color: rgba(0,240,255,0.7); margin-bottom: 8px; line-height: 1.5; }
+#prestige-gain { font-size: 1rem; color: var(--orange); text-shadow: 0 0 8px var(--orange); margin: 12px 0; font-family: 'VT323', monospace; }
+#prestige-btn {
+  background: linear-gradient(135deg, #4a0000, #1a0000);
+  border: 2px solid var(--orange); color: var(--orange);
+  font-family: 'VT323', monospace; font-size: 1.4rem;
+  padding: 12px 32px; border-radius: 8px; cursor: pointer;
+  box-shadow: 0 0 15px rgba(255,107,0,0.3); letter-spacing: 2px;
+  transition: all 0.2s;
+}
+#prestige-btn:hover { box-shadow: 0 0 30px rgba(255,107,0,0.6); transform: scale(1.03); }
+#prestige-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.prestige-bonus-card {
+  background: var(--bg2); border: 1px solid rgba(255,107,0,0.3); border-radius: 8px;
+  padding: 10px; margin: 8px 0; text-align: left;
+}
+.prestige-bonus-card .pb-title { color: var(--orange); font-family: 'VT323', monospace; font-size: 1.1rem; }
+.prestige-bonus-card .pb-desc { font-size: 0.65rem; color: rgba(0,240,255,0.6); margin-top: 4px; }
+
+/* Float text */
+.float-text {
+  position: fixed; pointer-events: none; z-index: 9998;
+  font-family: 'VT323', monospace; font-size: 1.3rem;
+  color: var(--green); text-shadow: 0 0 6px var(--green);
+  animation: float-up 1.2s ease-out forwards;
+}
+@keyframes float-up {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+}
+
+/* Notification */
+#notification {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--bg3); border: 1px solid var(--pink);
+  color: var(--blue); font-size: 0.85rem; padding: 10px 20px;
+  border-radius: 8px; box-shadow: 0 0 20px rgba(255,0,255,0.4);
+  transition: transform 0.4s; z-index: 9997; text-align: center; max-width: 300px;
+}
+#notification.show { transform: translateX(-50%) translateY(0); }
+
+/* Offline modal */
+#offline-modal {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+}
+#offline-modal.show { display: flex; }
+#offline-box {
+  background: var(--bg2); border: 2px solid var(--blue); border-radius: 12px;
+  padding: 24px; text-align: center; max-width: 320px; width: 90%;
+  box-shadow: 0 0 40px rgba(0,240,255,0.4);
+}
+#offline-box h2 { font-family: 'VT323', monospace; font-size: 2rem; color: var(--blue); margin-bottom: 8px; }
+#offline-coins { font-family: 'VT323', monospace; font-size: 2.5rem; color: var(--green); text-shadow: 0 0 10px var(--green); margin: 12px 0; }
+#offline-box button {
+  background: var(--blue); color: var(--bg); font-family: 'VT323', monospace;
+  font-size: 1.4rem; padding: 10px 28px; border: none; border-radius: 6px;
+  cursor: pointer; letter-spacing: 2px; transition: all 0.2s;
+}
+#offline-box button:hover { background: var(--pink); }
+
+/* Responsive adjustments */
+@media (min-width: 480px) { #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); } }
+</style>
 </head>
-<body class="select-none">
-    <div id="app" class="container rounded-lg">
-        <!-- 標題與資源顯示 -->
-        <h1 class="text-3xl text-center mb-4 border-b-2 border-cyborg-pink pb-2">CYBER MINER TWA</h1>
-        <div class="text-center mb-6">
-            <p class="text-lg">資源：<span id="resourceCount" class="resource-text text-4xl">0</span> C-COIN</p>
-            <p class="text-sm text-cyborg-green">CPM: <span id="cpm">0.00</span> | CPS: <span id="cps">0</span></p>
-        </div>
-
-        <!-- 主要點擊區域 -->
-        <div class="flex justify-center mb-6">
-            <button id="mineButton" class="btn-cyborg w-3/4 py-4 rounded-full text-2xl" onclick="mine()">
-                [:: 挖礦 / HACK ::]
-            </button>
-        </div>
-
-        <!-- 升級區塊 -->
-        <h2 class="text-2xl border-b-2 border-cyborg-blue pb-1 mb-3">升級 / UPGRADES</h2>
-        <div id="upgradesContainer" class="space-y-3">
-            <!-- 升級卡片將由 JS 生成 -->
-        </div>
+<body>
+<canvas id="canvas-bg"></canvas>
+<div id="offline-modal">
+  <div id="offline-box">
+    <h2>⚡ 離線收益</h2>
+    <p style="font-size:0.8rem;color:rgba(0,240,255,0.6)">你離開了 <span id="offline-time"></span></p>
+    <div id="offline-coins">+0</div>
+    <p style="font-size:0.7rem;color:rgba(0,240,255,0.4)">C-COIN</p>
+    <button onclick="closeOfflineModal()">領取!</button>
+  </div>
+</div>
+<div id="notification"></div>
+<div id="app">
+  <div id="header">
+    <h1>◈ CYBER MINER TYCOON ◈</h1>
+    <div id="resource-bar">
+      <div>
+        <div id="coins-display">0</div>
+        <div style="font-size:0.65rem;color:rgba(0,240,255,0.5)">C-COIN</div>
+      </div>
+      <div id="cps-display">
+        <div>CPS: <span id="cps-val">0.0</span></div>
+        <div>總計: <span id="total-earned">0</span></div>
+      </div>
     </div>
+    <div id="prestige-bar">
+      <span>⭐ 聲望:</span>
+      <span id="prestige-count">0</span>
+      <span id="prestige-multi" style="margin-left:8px"></span>
+    </div>
+  </div>
+  <div id="tabs">
+    <button class="tab-btn active" onclick="switchTab('mine')">⛏ 挖礦</button>
+    <button class="tab-btn" onclick="switchTab('shop')">🏪 商店</button>
+    <button class="tab-btn" onclick="switchTab('upgrades')">⚡ 升級</button>
+    <button class="tab-btn" onclick="switchTab('achieve')">🏆 成就</button>
+    <button class="tab-btn" onclick="switchTab('prestige')">🌟 聲望</button>
+  </div>
+  <div id="content">
+    <!-- MINE TAB -->
+    <div id="tab-mine" class="tab-panel active">
+      <div id="click-zone">
+        <button id="mine-btn" onclick="handleClick(event)">
+          <span class="mine-icon">⚡</span>
+          <span>HACK</span>
+        </button>
+        <div id="click-power">點擊力: +<span id="click-power-val">1</span></div>
+      </div>
+      <div id="mini-stats">
+        <div class="mini-stat"><div class="label">每秒收益</div><div class="value" id="stat-cps">0</div></div>
+        <div class="mini-stat"><div class="label">點擊加成</div><div class="value" id="stat-click-bonus">x1</div></div>
+        <div class="mini-stat"><div class="label">聲望加成</div><div class="value" id="stat-prestige-bonus">x1</div></div>
+      </div>
+      <div class="section-title">
+        <span>礦機部隊</span>
+        <span style="font-size:0.8rem;color:rgba(0,240,255,0.5)">點擊購買</span>
+      </div>
+      <div id="miners-list"></div>
+    </div>
+    <!-- SHOP TAB -->
+    <div id="tab-shop" class="tab-panel">
+      <div class="section-title">礦機商店</div>
+      <div id="shop-miners-list"></div>
+    </div>
+    <!-- UPGRADES TAB -->
+    <div id="tab-upgrades" class="tab-panel">
+      <div class="section-title">升級研究</div>
+      <div id="upgrades-list"></div>
+    </div>
+    <!-- ACHIEVEMENTS TAB -->
+    <div id="tab-achieve" class="tab-panel">
+      <div class="section-title">成就系統</div>
+      <div class="achievement-grid" id="achieve-grid"></div>
+    </div>
+    <!-- PRESTIGE TAB -->
+    <div id="tab-prestige" class="tab-panel">
+      <div id="prestige-panel">
+        <h2>⭐ 聲望系統</h2>
+        <p>重置你的進度，獲得永久生產加成。<br>每次聲望需要 <span style="color:var(--yellow)">1T C-COIN</span> 總收入。</p>
+        <div id="prestige-gain">下次聲望獲得: +0 聲望點</div>
+        <button id="prestige-btn" onclick="doPrestige()" disabled>⭐ 執行聲望重置</button>
+        <div style="margin-top:16px;text-align:left">
+          <div class="section-title" style="font-size:1rem">聲望加成</div>
+          <div class="prestige-bonus-card">
+            <div class="pb-title">🚀 生產倍增器</div>
+            <div class="pb-desc">每個聲望點使所有生產 +15%<br>目前: x<span id="current-prestige-multi">1.00</span></div>
+          </div>
+          <div class="prestige-bonus-card">
+            <div class="pb-title">⚡ 點擊強化</div>
+            <div class="pb-desc">每個聲望點使點擊力 +10%<br>目前: x<span id="current-click-multi">1.00</span></div>
+          </div>
+          <div class="prestige-bonus-card">
+            <div class="pb-title">💰 起始資金</div>
+            <div class="pb-desc">聲望後保留 1% 的 C-COIN</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;text-align:left">
+          <div class="section-title" style="font-size:1rem">統計資料</div>
+          <div id="stats-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // 全域變數
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+<script>
+// ============================================================
+// GAME DATA DEFINITIONS
+// ============================================================
+const MINERS_DEF = [
+  { id:'microbot',   name:'微型礦機',     icon:'🤖', desc:'最基本的挖礦機器人',         baseCps:0.1,  baseCost:10,      costMult:1.15 },
+  { id:'drone',      name:'駭客無人機',   icon:'🚁', desc:'無線入侵區塊鏈節點',          baseCps:0.5,  baseCost:100,     costMult:1.15 },
+  { id:'quantum',    name:'量子處理器',   icon:'💎', desc:'利用量子態平行運算',           baseCps:4,    baseCost:1100,    costMult:1.15 },
+  { id:'ai_farm',    name:'AI礦場',       icon:'🧠', desc:'自我優化的人工智慧叢集',       baseCps:20,   baseCost:12000,   costMult:1.15 },
+  { id:'neural',     name:'神經網路',     icon:'⚡', desc:'仿生神經網路挖礦矩陣',         baseCps:100,  baseCost:130000,  costMult:1.15 },
+  { id:'cyber_core', name:'賽博核心',     icon:'🔮', desc:'城市電力核心接入',             baseCps:400,  baseCost:1400000, costMult:1.15 },
+  { id:'matrix',     name:'矩陣伺服器',   icon:'🌐', desc:'佔領矩陣中的平行宇宙節點',    baseCps:2000, baseCost:2e7,     costMult:1.15 },
+  { id:'dimension',  name:'量子維度',     icon:'🌌', desc:'折疊時空提取跨維度算力',       baseCps:10000,baseCost:3.3e8,   costMult:1.15 },
+];
 
-        // 初始化遊戲狀態
-        let game = {
-            resources: 0,
-            cpm: 1, // Click Power Multiplier
-            cps: 0, // Click Per Second (放置收益)
-            upgrades: {
-                clickPower: { level: 0, baseCost: 10, costMultiplier: 1.5, baseCpm: 1, type: 'click', name: '駭客工具優化' },
-                drone: { level: 0, baseCost: 100, costMultiplier: 1.8, baseCps: 1, type: 'passive', name: '部署礦工無人機' },
-                aiFarm: { level: 0, baseCost: 5000, costMultiplier: 2.0, baseCps: 20, type: 'passive', name: 'AI礦場自動化' },
-            },
-            userId: null,
-        };
+const UPGRADES_DEF = [
+  // Click upgrades
+  { id:'click1',  name:'駭客工具 v2',     icon:'🔧', desc:'點擊力 ×2',          effect:'click×2',  cost:100,     req:null },
+  { id:'click2',  name:'強化晶片',        icon:'💡', desc:'點擊力 ×3',          effect:'click×3',  cost:5000,    req:null },
+  { id:'click3',  name:'量子鍵盤',        icon:'⌨️', desc:'點擊力 ×5',          effect:'click×5',  cost:500000,  req:null },
+  { id:'click4',  name:'神經接口',        icon:'🧬', desc:'點擊力 ×10',         effect:'click×10', cost:5e7,     req:null },
+  // Miner upgrades
+  { id:'micro1',  name:'微型礦機強化I',   icon:'🤖', desc:'微型礦機效率 ×2',    effect:'microbot×2',  cost:200,    req:'microbot:10' },
+  { id:'micro2',  name:'微型礦機強化II',  icon:'🤖', desc:'微型礦機效率 ×3',    effect:'microbot×3',  cost:8000,   req:'microbot:25' },
+  { id:'drone1',  name:'無人機升級I',     icon:'🚁', desc:'無人機效率 ×2',      effect:'drone×2',     cost:2000,   req:'drone:10' },
+  { id:'drone2',  name:'無人機升級II',    icon:'🚁', desc:'無人機效率 ×3',      effect:'drone×3',     cost:50000,  req:'drone:25' },
+  { id:'quant1',  name:'量子糾纏I',       icon:'💎', desc:'量子處理器 ×2',      effect:'quantum×2',   cost:20000,  req:'quantum:10' },
+  { id:'quant2',  name:'量子糾纏II',      icon:'💎', desc:'量子處理器 ×3',      effect:'quantum×3',   cost:500000, req:'quantum:25' },
+  { id:'ai1',     name:'AI自我進化I',     icon:'🧠', desc:'AI礦場 ×2',          effect:'ai_farm×2',   cost:200000, req:'ai_farm:10' },
+  { id:'ai2',     name:'AI自我進化II',    icon:'🧠', desc:'AI礦場 ×3',          effect:'ai_farm×3',   cost:5e6,    req:'ai_farm:25' },
+  { id:'neuro1',  name:'突觸加速I',       icon:'⚡', desc:'神經網路 ×2',        effect:'neural×2',    cost:2e6,    req:'neural:10' },
+  { id:'core1',   name:'核心超頻I',       icon:'🔮', desc:'賽博核心 ×2',        effect:'cyber_core×2',cost:2e7,    req:'cyber_core:10' },
+  { id:'matrix1', name:'矩陣優化I',       icon:'🌐', desc:'矩陣伺服器 ×2',      effect:'matrix×2',    cost:4e8,    req:'matrix:10' },
+  { id:'dim1',    name:'維度共鳴I',       icon:'🌌', desc:'量子維度 ×2',        effect:'dimension×2', cost:7e9,    req:'dimension:10' },
+  // Global upgrades
+  { id:'global1', name:'全域超頻',        icon:'🌟', desc:'所有礦機 ×1.5',      effect:'global×1.5',  cost:1e6,    req:null },
+  { id:'global2', name:'賽博時代',        icon:'🎆', desc:'所有礦機 ×2',        effect:'global×2',    cost:1e9,    req:null },
+];
 
-        // UI 元素
-        const resourceCountEl = document.getElementById('resourceCount');
-        const cpmEl = document.getElementById('cpm');
-        const cpsEl = document.getElementById('cps');
-        const mineButton = document.getElementById('mineButton');
-        const upgradesContainer = document.getElementById('upgradesContainer');
+const ACHIEVEMENTS_DEF = [
+  { id:'first_click',  name:'第一鍬',        icon:'⛏', desc:'進行第一次點擊',               check: g => g.stats.totalClicks >= 1 },
+  { id:'click_100',    name:'點擊狂人',       icon:'🖱', desc:'累計點擊 100 次',              check: g => g.stats.totalClicks >= 100 },
+  { id:'click_1000',   name:'手速之神',       icon:'👆', desc:'累計點擊 1,000 次',            check: g => g.stats.totalClicks >= 1000 },
+  { id:'earn_1k',      name:'千分之一',       icon:'💰', desc:'累計賺取 1,000 C-COIN',        check: g => g.stats.totalEarned >= 1000 },
+  { id:'earn_1m',      name:'百萬富翁',       icon:'💎', desc:'累計賺取 1,000,000 C-COIN',    check: g => g.stats.totalEarned >= 1e6 },
+  { id:'earn_1b',      name:'億萬大亨',       icon:'🏆', desc:'累計賺取 1,000,000,000 C-COIN',check: g => g.stats.totalEarned >= 1e9 },
+  { id:'first_miner',  name:'第一名礦工',     icon:'🤖', desc:'購買第一台礦機',               check: g => g.miners.microbot >= 1 },
+  { id:'10_miners',    name:'小型礦場',       icon:'🏭', desc:'擁有10台任意礦機',             check: g => totalMiners(g) >= 10 },
+  { id:'100_miners',   name:'大型礦場',       icon:'🌆', desc:'擁有100台任意礦機',            check: g => totalMiners(g) >= 100 },
+  { id:'first_upg',    name:'初次升級',       icon:'⚡', desc:'購買第一個升級',               check: g => g.stats.upgradesBought >= 1 },
+  { id:'all_miners',   name:'全收藏家',       icon:'🌟', desc:'每種礦機至少 1 台',            check: g => MINERS_DEF.every(m => g.miners[m.id] >= 1) },
+  { id:'prestige1',    name:'重生',           icon:'⭐', desc:'完成第一次聲望',               check: g => g.prestigeCount >= 1 },
+  { id:'prestige5',    name:'不朽傳說',       icon:'🌈', desc:'完成 5 次聲望',                check: g => g.prestigeCount >= 5 },
+  { id:'cps_1k',       name:'速度機器',       icon:'🚀', desc:'達到 1,000 CPS',              check: g => calcCps(g) >= 1000 },
+  { id:'cps_1m',       name:'光速算力',       icon:'💫', desc:'達到 1,000,000 CPS',          check: g => calcCps(g) >= 1e6 },
+  { id:'spend_1m',     name:'大手筆',         icon:'💸', desc:'花費 1,000,000 C-COIN',        check: g => g.stats.totalSpent >= 1e6 },
+];
 
-        // --- Firebase/Firestore 設置與認證 ---
-        let db, auth;
-        let isAuthReady = false;
+// ============================================================
+// GAME STATE
+// ============================================================
+let G = {
+  coins: 0,
+  miners: {},    // { id: count }
+  upgrades: {},  // { id: true }
+  prestigeCount: 0,
+  stats: {
+    totalClicks: 0,
+    totalEarned: 0,
+    totalSpent: 0,
+    upgradesBought: 0,
+    playTime: 0,
+  },
+  lastSave: Date.now(),
+  achievements: {},
+};
+MINERS_DEF.forEach(m => G.miners[m.id] = 0);
 
-        // 引入 Firebase 模組
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// ============================================================
+// HELPERS
+// ============================================================
+const fmt = (n) => {
+  if (n === undefined || n === null || isNaN(n)) return '0';
+  if (n >= 1e24) return (n/1e24).toFixed(2)+'Y';
+  if (n >= 1e21) return (n/1e21).toFixed(2)+'Z';
+  if (n >= 1e18) return (n/1e18).toFixed(2)+'E';
+  if (n >= 1e15) return (n/1e15).toFixed(2)+'P';
+  if (n >= 1e12) return (n/1e12).toFixed(2)+'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3)  return (n/1e3).toFixed(2)+'K';
+  return Math.floor(n).toLocaleString();
+};
 
-        // 設定 Firebase 登入
-        const initFirebase = async () => {
-            try {
-                // setLogLevel('Debug'); // 開啟除錯日誌
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+const fmtTime = (sec) => {
+  if (sec < 60) return `${Math.floor(sec)}秒`;
+  if (sec < 3600) return `${Math.floor(sec/60)}分${Math.floor(sec%60)}秒`;
+  if (sec < 86400) return `${Math.floor(sec/3600)}時${Math.floor((sec%3600)/60)}分`;
+  return `${Math.floor(sec/86400)}天${Math.floor((sec%86400)/3600)}時`;
+};
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        game.userId = user.uid;
-                        isAuthReady = true;
-                        console.log("Firebase Auth Ready. User ID:", game.userId);
-                        // 確保在身份驗證完成後立即開始監聽資料
-                        loadGameData();
-                    } else {
-                        // 首次載入或匿名登入
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    }
-                });
+const totalMiners = (g) => MINERS_DEF.reduce((s,m) => s + (g.miners[m.id]||0), 0);
 
-            } catch (error) {
-                console.error("Firebase 初始化失敗:", error);
-            }
-        };
+const prestigeMulti = (g) => 1 + (g.prestigeCount * 0.15);
+const prestigeClickMulti = (g) => 1 + (g.prestigeCount * 0.10);
 
-        // 獲取 Firestore 文件參考
-        const getGameDocRef = (userId) => {
-            // 私人資料路徑: /artifacts/{appId}/users/{userId}/gameData/current
-            return doc(db, 'artifacts', appId, 'users', userId, 'gameData', 'current');
-        };
+const upgradeMultiplierFor = (minerId, g) => {
+  let mult = 1;
+  UPGRADES_DEF.forEach(u => {
+    if (!g.upgrades[u.id]) return;
+    const e = u.effect;
+    if (e === 'global×1.5') mult *= 1.5;
+    if (e === 'global×2')   mult *= 2;
+    if (e.startsWith(minerId+'×')) mult *= parseFloat(e.split('×')[1]);
+  });
+  return mult;
+};
 
-        // 從 Firestore 載入資料 (使用 onSnapshot 實時監聽)
-        const loadGameData = () => {
-            if (!isAuthReady || !game.userId || !db) return;
-            
-            const docRef = getGameDocRef(game.userId);
-            
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const savedData = docSnap.data();
-                    console.log("從 Firestore 載入資料:", savedData);
-                    // 更新遊戲狀態
-                    game.resources = savedData.resources || 0;
-                    // 確保升級資料被正確合併，以防新增升級
-                    Object.keys(game.upgrades).forEach(key => {
-                        if (savedData.upgrades && savedData.upgrades[key]) {
-                            game.upgrades[key].level = savedData.upgrades[key].level;
-                        }
-                    });
-                } else {
-                    console.log("Firestore 文件不存在，將使用預設值並儲存。");
-                    // 文件不存在時，使用預設值並觸發首次儲存
-                    saveGameData();
-                }
-                updateGameStats();
-                updateUI();
-            }, (error) => {
-                console.error("監聽遊戲資料失敗:", error);
-            });
-        };
+const clickMultiplier = (g) => {
+  let mult = 1;
+  UPGRADES_DEF.forEach(u => {
+    if (!g.upgrades[u.id]) return;
+    const e = u.effect;
+    if (e.startsWith('click×')) mult *= parseFloat(e.split('×')[1]);
+  });
+  return mult * prestigeClickMulti(g);
+};
 
-        // 儲存遊戲資料到 Firestore
-        const saveGameData = async () => {
-            if (!isAuthReady || !game.userId || !db) return;
+const calcCps = (g) => {
+  let cps = 0;
+  MINERS_DEF.forEach(m => {
+    const count = g.miners[m.id] || 0;
+    if (count === 0) return;
+    cps += m.baseCps * count * upgradeMultiplierFor(m.id, g);
+  });
+  return cps * prestigeMulti(g);
+};
 
-            try {
-                const docRef = getGameDocRef(game.userId);
-                
-                // 僅儲存 level
-                const upgradesToSave = {};
-                Object.keys(game.upgrades).forEach(key => {
-                    upgradesToSave[key] = { level: game.upgrades[key].level };
-                });
+const calcClickPower = (g) => {
+  const base = 1 + calcCps(g) * 0.01;
+  return base * clickMultiplier(g);
+};
 
-                await setDoc(docRef, {
-                    resources: Math.round(game.resources),
-                    upgrades: upgradesToSave,
-                    updatedAt: new Date().toISOString()
-                });
-                // console.log("遊戲資料已儲存。");
-            } catch (error) {
-                console.error("儲存遊戲資料失敗:", error);
-            }
-        };
+const minerCost = (mDef, count) => Math.ceil(mDef.baseCost * Math.pow(mDef.costMult, count));
 
-        // --- 遊戲邏輯 ---
+const canAfford = (cost) => G.coins >= cost;
 
-        // 更新 CPM 和 CPS
-        const updateGameStats = () => {
-            game.cpm = 0; // 重置點擊倍率
-            game.cps = 0; // 重置放置收益
-            
-            Object.keys(game.upgrades).forEach(key => {
-                const upgrade = game.upgrades[key];
-                if (upgrade.type === 'click') {
-                    // 點擊升級: 基礎 CPM * (級別 + 1)
-                    game.cpm += upgrade.baseCpm * (upgrade.level + 1);
-                } else if (upgrade.type === 'passive') {
-                    // 放置升級: 基礎 CPS * 級別
-                    game.cps += upgrade.baseCps * upgrade.level;
-                }
-            });
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+const SAVE_KEY = 'cyber_miner_v2';
 
-            // 確保 cpm 至少為 1 (基礎點擊)
-            if (game.cpm === 0) game.cpm = 1;
+const saveGame = () => {
+  const data = JSON.stringify({ ...G, lastSave: Date.now() });
+  try { localStorage.setItem(SAVE_KEY, data); } catch(e) {}
+};
 
-            cpmEl.textContent = game.cpm.toFixed(2);
-            cpsEl.textContent = game.cps;
-        };
+const loadGame = () => {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    // Merge carefully
+    G.coins = saved.coins || 0;
+    G.miners = { ...G.miners, ...saved.miners };
+    G.upgrades = saved.upgrades || {};
+    G.prestigeCount = saved.prestigeCount || 0;
+    G.achievements = saved.achievements || {};
+    G.stats = { ...G.stats, ...saved.stats };
+    G.lastSave = saved.lastSave || Date.now();
 
-        // 點擊挖礦
-        function mine() {
-            game.resources += game.cpm;
-            updateUI();
-            
-            // 點擊特效
-            mineButton.classList.add('animate-click');
-            setTimeout(() => {
-                mineButton.classList.remove('animate-click');
-            }, 200);
-            
-            // 頻繁點擊時，每隔一段時間儲存一次
-            if (Date.now() % 5 === 0) {
-                saveGameData();
-            }
-        }
+    // Offline income
+    const elapsed = (Date.now() - G.lastSave) / 1000;
+    if (elapsed > 60) {
+      const cps = calcCps(G);
+      const maxOffline = 12 * 3600;
+      const offlineSec = Math.min(elapsed, maxOffline);
+      const earned = cps * offlineSec * 0.5;
+      if (earned > 0) {
+        showOfflineModal(earned, offlineSec);
+        G.coins += earned;
+        G.stats.totalEarned += earned;
+      }
+    }
+  } catch(e) { console.warn('Load failed', e); }
+};
 
-        // 被動收益
-        const passiveIncome = () => {
-            if (game.cps > 0) {
-                // 由於計時器是每秒一次，直接加上 CPS 即可
-                game.resources += game.cps;
-                updateUI();
-                saveGameData(); // 每次被動收益都儲存
-            }
-        };
+// ============================================================
+// OFFLINE MODAL
+// ============================================================
+let offlineEarned = 0;
+const showOfflineModal = (coins, secs) => {
+  offlineEarned = coins;
+  document.getElementById('offline-time').textContent = fmtTime(secs);
+  document.getElementById('offline-coins').textContent = '+' + fmt(coins);
+  document.getElementById('offline-modal').classList.add('show');
+};
+const closeOfflineModal = () => {
+  document.getElementById('offline-modal').classList.remove('show');
+};
 
-        // 升級邏輯
-        function buyUpgrade(key) {
-            const upgrade = game.upgrades[key];
-            const cost = calculateCost(upgrade);
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+let notifTimer = null;
+const notify = (msg) => {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 3500);
+};
 
-            if (game.resources >= cost) {
-                game.resources -= cost;
-                upgrade.level += 1;
-                updateGameStats();
-                updateUI();
-                saveGameData(); // 升級後儲存
-            } else {
-                showTemporaryMessage('資源不足！');
-            }
-        }
+// ============================================================
+// CLICK HANDLER
+// ============================================================
+const handleClick = (e) => {
+  const power = calcClickPower(G);
+  G.coins += power;
+  G.stats.totalClicks++;
+  G.stats.totalEarned += power;
 
-        // 計算升級成本
-        const calculateCost = (upgrade) => {
-            return Math.round(upgrade.baseCost * Math.pow(upgrade.costMultiplier, upgrade.level));
-        };
+  // Float text
+  const ft = document.createElement('div');
+  ft.className = 'float-text';
+  ft.textContent = '+' + fmt(power);
+  ft.style.left = (e.clientX - 30) + 'px';
+  ft.style.top  = (e.clientY - 20) + 'px';
+  document.body.appendChild(ft);
+  setTimeout(() => ft.remove(), 1200);
 
-        // --- UI 渲染與更新 ---
+  checkAchievements();
+};
 
-        // 渲染單個升級卡片
-        const renderUpgradeCard = (key) => {
-            const upgrade = game.upgrades[key];
-            const cost = calculateCost(upgrade);
-            const nextBonus = upgrade.type === 'click' 
-                ? `下次 +${(upgrade.baseCpm * upgrade.costMultiplier).toFixed(2)} CPM` 
-                : `下次 +${upgrade.baseCps} CPS`;
-            
-            const cardEl = document.createElement('div');
-            cardEl.className = `upgrade-card p-3 rounded-md flex justify-between items-center ${game.resources >= cost ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
-            cardEl.onclick = () => buyUpgrade(key);
-            
-            cardEl.innerHTML = `
-                <div>
-                    <p class="text-xl text-cyborg-pink">${upgrade.name} [Lvl ${upgrade.level}]</p>
-                    <p class="text-xs text-cyborg-green">${nextBonus}</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-lg resource-text">${cost} C-COIN</p>
-                    <button class="px-2 py-1 bg-cyborg-blue text-dark-bg text-sm rounded-md mt-1 font-mono hover:bg-cyborg-pink">購買</button>
-                </div>
-            `;
-            
-            return cardEl;
-        };
+// ============================================================
+// BUY MINER
+// ============================================================
+const buyMiner = (id) => {
+  const def = MINERS_DEF.find(m => m.id === id);
+  const count = G.miners[id] || 0;
+  const cost = minerCost(def, count);
+  if (!canAfford(cost)) { notify('⚠ C-COIN 不足！'); return; }
+  G.coins -= cost;
+  G.stats.totalSpent += cost;
+  G.miners[id] = count + 1;
+  checkAchievements();
+  saveGame();
+};
 
-        // 更新所有 UI 
-        const updateUI = () => {
-            resourceCountEl.textContent = Math.round(game.resources).toLocaleString();
-            upgradesContainer.innerHTML = ''; // 清空舊的
-            
-            Object.keys(game.upgrades).forEach(key => {
-                const card = renderUpgradeCard(key);
-                upgradesContainer.appendChild(card);
-            });
-        };
+// ============================================================
+// BUY UPGRADE
+// ============================================================
+const buyUpgrade = (id) => {
+  const def = UPGRADES_DEF.find(u => u.id === id);
+  if (G.upgrades[id]) return;
+  if (!canAfford(def.cost)) { notify('⚠ C-COIN 不足！'); return; }
+  G.coins -= def.cost;
+  G.stats.totalSpent += def.cost;
+  G.stats.upgradesBought++;
+  G.upgrades[id] = true;
+  notify(`✅ 升級完成: ${def.name}`);
+  checkAchievements();
+  saveGame();
+};
 
-        // 顯示暫時訊息（取代 alert）
-        function showTemporaryMessage(message) {
-            const messageEl = document.createElement('div');
-            messageEl.textContent = message;
-            messageEl.style.cssText = `
-                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                background: #FF00FF; color: #0f172a; padding: 15px 30px;
-                border: 2px solid #00F0FF; border-radius: 8px; z-index: 1000;
-                box-shadow: 0 0 20px #FF00FF; font-size: 1.5rem;
-                animation: fadeout 3s forwards;
-            `;
-            document.body.appendChild(messageEl);
+// ============================================================
+// PRESTIGE
+// ============================================================
+const calcPrestigeGain = () => {
+  if (G.stats.totalEarned < 1e12) return 0;
+  return Math.floor(Math.log10(G.stats.totalEarned / 1e12) + 1);
+};
 
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeout {
-                    0% { opacity: 1; }
-                    80% { opacity: 1; }
-                    100% { opacity: 0; display: none; }
-                }
-            `;
-            document.head.appendChild(style);
+const doPrestige = () => {
+  const gain = calcPrestigeGain();
+  if (gain <= 0) return;
+  if (!confirm(`確定要執行聲望重置嗎？\n你將獲得 ${gain} 個聲望點，所有礦機和升級將被重置。`)) return;
 
-            setTimeout(() => {
-                document.body.removeChild(messageEl);
-                document.head.removeChild(style);
-            }, 3000);
-        }
+  const carryCoins = G.coins * 0.01;
+  G.prestigeCount += gain;
+  G.coins = carryCoins;
+  MINERS_DEF.forEach(m => G.miners[m.id] = 0);
+  G.upgrades = {};
+  G.stats.totalEarned = 0;
+  G.stats.totalSpent = 0;
+  notify(`⭐ 聲望重置完成！獲得 ${gain} 聲望點`);
+  checkAchievements();
+  saveGame();
+  renderAll();
+};
 
-        // --- 啟動遊戲 ---
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+const checkAchievements = () => {
+  let newUnlock = false;
+  ACHIEVEMENTS_DEF.forEach(a => {
+    if (!G.achievements[a.id] && a.check(G)) {
+      G.achievements[a.id] = true;
+      newUnlock = true;
+      notify(`🏆 成就解鎖: ${a.name}`);
+    }
+  });
+  if (newUnlock) renderAchievements();
+};
 
-        // 遊戲初始化
-        initFirebase();
+// ============================================================
+// TABS
+// ============================================================
+const switchTab = (tab) => {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const tabMap = { mine:0, shop:1, upgrades:2, achieve:3, prestige:4 };
+  document.querySelectorAll('.tab-btn')[tabMap[tab]].classList.add('active');
+  if (tab === 'prestige') renderPrestigePanel();
+  if (tab === 'achieve') renderAchievements();
+};
 
-        // 被動收益計時器 (每秒一次)
-        setInterval(passiveIncome, 1000); 
+// ============================================================
+// RENDER
+// ============================================================
+const renderMiners = () => {
+  const list = document.getElementById('miners-list');
+  list.innerHTML = '';
+  MINERS_DEF.forEach(def => {
+    const count = G.miners[def.id] || 0;
+    const cost = minerCost(def, count);
+    const cps = def.baseCps * count * upgradeMultiplierFor(def.id, G) * prestigeMulti(G);
+    const affordable = canAfford(cost);
 
-    </script>
+    const div = document.createElement('div');
+    div.className = `miner-card ${affordable ? 'affordable' : ''}`;
+    div.onclick = () => { buyMiner(def.id); renderMiners(); };
+    div.innerHTML = `
+      <div class="miner-icon">${def.icon}</div>
+      <div class="miner-info">
+        <div class="miner-name">${def.name}</div>
+        <div class="miner-desc">${def.desc}</div>
+        ${count > 0 ? `<div class="miner-production">${fmt(cps)} CPS</div>` : ''}
+        <div class="miner-progress"><div class="miner-progress-fill" style="width:${Math.min(100,(count%10)*10)}%"></div></div>
+      </div>
+      <div class="miner-right">
+        <div class="miner-count">${count}</div>
+        <div class="miner-cost">${fmt(cost)}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+};
+
+const renderShop = () => {
+  const list = document.getElementById('shop-miners-list');
+  list.innerHTML = '';
+  MINERS_DEF.forEach(def => {
+    const count = G.miners[def.id] || 0;
+    const cost = minerCost(def, count);
+    const nextCps = def.baseCps * upgradeMultiplierFor(def.id, G) * prestigeMulti(G);
+    const affordable = canAfford(cost);
+    const div = document.createElement('div');
+    div.className = `miner-card ${affordable ? 'affordable' : ''}`;
+    div.onclick = () => { buyMiner(def.id); renderShop(); renderMiners(); };
+    div.innerHTML = `
+      <div class="miner-icon">${def.icon}</div>
+      <div class="miner-info">
+        <div class="miner-name">${def.name}</div>
+        <div class="miner-desc">${def.desc}</div>
+        <div class="miner-production">+${fmt(nextCps)} CPS / 台</div>
+      </div>
+      <div class="miner-right">
+        <div class="miner-count">${count}</div>
+        <div class="miner-cost">${fmt(cost)}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+};
+
+const isUpgradeVisible = (def) => {
+  if (G.upgrades[def.id]) return true;
+  if (!def.req) return true;
+  const [mid, minCount] = def.req.split(':');
+  return (G.miners[mid] || 0) >= parseInt(minCount);
+};
+
+const renderUpgrades = () => {
+  const list = document.getElementById('upgrades-list');
+  list.innerHTML = '';
+  UPGRADES_DEF.forEach(def => {
+    if (!isUpgradeVisible(def)) return;
+    const purchased = !!G.upgrades[def.id];
+    const affordable = !purchased && canAfford(def.cost);
+    const div = document.createElement('div');
+    div.className = `upgrade-card ${affordable ? 'affordable' : ''} ${purchased ? 'purchased' : ''}`;
+    div.onclick = () => { if (!purchased) { buyUpgrade(def.id); renderUpgrades(); } };
+    div.innerHTML = `
+      <div class="upgrade-icon">${purchased ? '✅' : def.icon}</div>
+      <div class="upgrade-info">
+        <div class="upgrade-name">${def.name}</div>
+        <div class="upgrade-effect">${def.desc}</div>
+        <div class="upgrade-desc">${purchased ? '已購買' : (def.req ? `需要: ${def.req.replace(':',' ×')} 台` : '立即可用')}</div>
+      </div>
+      ${!purchased ? `<div class="upgrade-cost">${fmt(def.cost)}</div>` : ''}`;
+    list.appendChild(div);
+  });
+};
+
+const renderAchievements = () => {
+  const grid = document.getElementById('achieve-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS_DEF.forEach(a => {
+    const unlocked = !!G.achievements[a.id];
+    const div = document.createElement('div');
+    div.className = `achievement-card ${unlocked ? 'unlocked' : 'locked'}`;
+    div.innerHTML = `
+      <div class="achievement-icon">${unlocked ? a.icon : '🔒'}</div>
+      <div class="achievement-name" style="color:${unlocked ? 'var(--yellow)' : 'rgba(0,240,255,0.4)'}">${a.name}</div>
+      <div class="achievement-desc">${unlocked ? a.desc : '???'}</div>`;
+    grid.appendChild(div);
+  });
+};
+
+const renderPrestigePanel = () => {
+  const gain = calcPrestigeGain();
+  document.getElementById('prestige-gain').textContent = `下次聲望獲得: +${gain} 聲望點`;
+  document.getElementById('prestige-btn').disabled = gain <= 0;
+  document.getElementById('current-prestige-multi').textContent = prestigeMulti(G).toFixed(2);
+  document.getElementById('current-click-multi').textContent = prestigeClickMulti(G).toFixed(2);
+
+  const statsList = document.getElementById('stats-list');
+  const rows = [
+    ['總點擊次數', G.stats.totalClicks.toLocaleString()],
+    ['累計賺取', fmt(G.stats.totalEarned) + ' C-COIN'],
+    ['累計花費', fmt(G.stats.totalSpent) + ' C-COIN'],
+    ['購買升級', G.stats.upgradesBought + ' 個'],
+    ['礦機總數', totalMiners(G) + ' 台'],
+    ['聲望次數', G.prestigeCount + ' 次'],
+    ['成就解鎖', Object.keys(G.achievements).length + ' / ' + ACHIEVEMENTS_DEF.length],
+    ['遊玩時間', fmtTime(G.stats.playTime)],
+  ];
+  statsList.innerHTML = rows.map(([l,v]) => `<div class="stat-row"><span class="s-label">${l}</span><span class="s-value">${v}</span></div>`).join('');
+};
+
+// ============================================================
+// HUD UPDATE
+// ============================================================
+let lastRenderCoins = -1;
+const updateHUD = () => {
+  const coins = G.coins;
+  const cps = calcCps(G);
+  const clickPow = calcClickPower(G);
+  const pm = prestigeMulti(G);
+
+  // Only update DOM if changed
+  if (Math.abs(coins - lastRenderCoins) > 0.01 || lastRenderCoins < 0) {
+    document.getElementById('coins-display').textContent = fmt(coins);
+    document.getElementById('cps-val').textContent = fmt(cps);
+    document.getElementById('total-earned').textContent = fmt(G.stats.totalEarned);
+    document.getElementById('click-power-val').textContent = fmt(clickPow);
+    document.getElementById('stat-cps').textContent = fmt(cps);
+    document.getElementById('stat-click-bonus').textContent = 'x' + clickMultiplier(G).toFixed(1);
+    document.getElementById('stat-prestige-bonus').textContent = 'x' + pm.toFixed(2);
+    document.getElementById('prestige-count').textContent = G.prestigeCount;
+    if (G.prestigeCount > 0) {
+      document.getElementById('prestige-multi').textContent = `(×${pm.toFixed(2)} 生產)`;
+    }
+    lastRenderCoins = coins;
+  }
+};
+
+const renderAll = () => {
+  renderMiners();
+  renderShop();
+  renderUpgrades();
+  renderAchievements();
+  updateHUD();
+};
+
+// ============================================================
+// BACKGROUND CANVAS
+// ============================================================
+const initCanvas = () => {
+  const canvas = document.getElementById('canvas-bg');
+  const ctx = canvas.getContext('2d');
+  const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = Array.from({length: 60}, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vy: -(0.2 + Math.random() * 0.5),
+    opacity: Math.random(),
+    size: Math.random() * 1.5 + 0.5,
+  }));
+
+  const draw = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.y += p.vy;
+      if (p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,240,255,${p.opacity * 0.4})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  };
+  draw();
+};
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let lastTick = Date.now();
+let ticksSinceSave = 0;
+let ticksSinceRender = 0;
+
+const gameLoop = () => {
+  const now = Date.now();
+  const dt = (now - lastTick) / 1000;
+  lastTick = now;
+
+  const cps = calcCps(G);
+  const earned = cps * dt;
+  G.coins += earned;
+  G.stats.totalEarned += earned;
+  G.stats.playTime += dt;
+
+  ticksSinceSave++;
+  ticksSinceRender++;
+
+  // Update HUD every frame
+  updateHUD();
+
+  // Re-render miners/upgrades every ~2s
+  if (ticksSinceRender >= 120) {
+    renderMiners();
+    renderUpgrades();
+    ticksSinceRender = 0;
+  }
+
+  // Save every 30s
+  if (ticksSinceSave >= 1800) {
+    saveGame();
+    ticksSinceSave = 0;
+  }
+
+  checkAchievements();
+  requestAnimationFrame(gameLoop);
+};
+
+// ============================================================
+// INIT
+// ============================================================
+loadGame();
+initCanvas();
+renderAll();
+requestAnimationFrame(gameLoop);
+
+// Auto-save on page hide
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) saveGame();
+});
+window.addEventListener('beforeunload', saveGame);
+</script>
 </body>
 </html>
