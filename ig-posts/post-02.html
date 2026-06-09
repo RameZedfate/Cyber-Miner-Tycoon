@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 48px 20px;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 90px;
+    background: #07070f;
+  }
+
+  /* 背景漸層光暈 */
+  .glow-purple {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(109,40,217,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .glow-blue {
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* 細邊框 */
+  .border-frame {
+    position: absolute;
+    inset: 20px;
+    border: 1px solid rgba(109,40,217,0.35);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* 帳號名 */
+  .handle {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    z-index: 20;
+    white-space: nowrap;
+  }
+
+  /* 頁碼 */
+  .page {
+    position: absolute;
+    top: 48px;
+    right: 56px;
+    font-size: 22px;
+    color: rgba(255,255,255,0.25);
+    z-index: 20;
+  }
+
+  /* ─── content 層 ─── */
+  .content {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* ═══════════════════════
+     SLIDE 1 — 封面
+  ═══════════════════════ */
+  .s1 .label {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #a78bfa;
+    margin-bottom: 48px;
+    text-transform: uppercase;
+  }
+
+  .s1 .tool {
+    font-size: 130px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 50px rgba(167,139,250,0.6));
+  }
+
+  .s1 .headline {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.35;
+    margin-bottom: 44px;
+  }
+
+  .s1 .headline em {
+    font-style: normal;
+    background: linear-gradient(90deg, #f0abfc, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .s1 .swipe {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 28px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ═══════════════════════
+     SLIDE 2 — 痛點
+  ═══════════════════════ */
+  .s2 .q {
+    font-size: 36px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+  }
+
+  .s2 .pain {
+    font-size: 58px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 56px;
+  }
+
+  .s2 .pain em {
+    font-style: normal;
+    color: #f87171;
+  }
+
+  .s2 .scene-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 780px;
+  }
+
+  .s2 .scene {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 14px;
+    padding: 24px 36px;
+    font-size: 34px;
+    color: rgba(255,255,255,0.8);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* ═══════════════════════
+     SLIDE 3 — 解法
+  ═══════════════════════ */
+  .s3 .before-after {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 100%;
+    max-width: 860px;
+    margin-bottom: 0;
+  }
+
+  .ba-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .ba-tag {
+    width: 140px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+
+  .ba-tag.before { background: rgba(239,68,68,0.25); color: #f87171; }
+  .ba-tag.after  { background: rgba(16,185,129,0.25); color: #34d399; }
+
+  .ba-text {
+    flex: 1;
+    padding: 28px 32px;
+    font-size: 34px;
+    color: rgba(255,255,255,0.85);
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .ba-tag.before + .ba-text { background: rgba(239,68,68,0.06); }
+  .ba-tag.after  + .ba-text { background: rgba(16,185,129,0.06); }
+
+  .s3 .section-title {
+    font-size: 44px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 44px;
+  }
+
+  .s3 .section-title span {
+    background: linear-gradient(90deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ═══════════════════════
+     SLIDE 4 — 示範
+  ═══════════════════════ */
+  .s4 .step-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #a78bfa;
+    letter-spacing: 3px;
+    margin-bottom: 52px;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 840px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 16px;
+    padding: 28px 36px;
+  }
+
+  .step-num {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #06b6d4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .step-text {
+    font-size: 34px;
+    color: rgba(255,255,255,0.85);
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .s4 .prompt-box {
+    margin-top: 36px;
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.35);
+    border-radius: 16px;
+    padding: 28px 40px;
+    max-width: 840px;
+    width: 100%;
+  }
+
+  .s4 .prompt-label {
+    font-size: 22px;
+    color: #67e8f9;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .s4 .prompt-text {
+    font-size: 32px;
+    color: rgba(255,255,255,0.8);
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  /* ═══════════════════════
+     SLIDE 5 — 結果
+  ═══════════════════════ */
+  .s5 .result-title {
+    font-size: 46px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 56px;
+    line-height: 1.3;
+  }
+
+  .s5 .result-title span {
+    background: linear-gradient(90deg, #34d399, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .result-card {
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.25);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+
+  .result-card .r-icon { font-size: 52px; margin-bottom: 16px; }
+  .result-card .r-num {
+    font-size: 52px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #34d399, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .result-card .r-desc { font-size: 28px; color: rgba(255,255,255,0.65); }
+
+  /* ═══════════════════════
+     SLIDE 6 — CTA
+  ═══════════════════════ */
+  .s6 .cta-headline {
+    font-size: 62px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 48px;
+  }
+
+  .s6 .cta-headline span {
+    background: linear-gradient(135deg, #c4b5fd, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .s6 .cta-desc {
+    font-size: 34px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 56px;
+    max-width: 760px;
+  }
+
+  .s6 .btn {
+    background: linear-gradient(135deg, #7c3aed, #06b6d4);
+    color: #fff;
+    font-size: 36px;
+    font-weight: 900;
+    padding: 24px 72px;
+    border-radius: 100px;
+    letter-spacing: 3px;
+    box-shadow: 0 0 40px rgba(124,58,237,0.5);
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SLIDE 1 ══ 封面 ══ -->
+<div class="slide">
+  <div class="glow-purple" style="top:-100px;left:-100px;"></div>
+  <div class="glow-blue" style="bottom:-80px;right:-80px;"></div>
+  <div class="border-frame"></div>
+  <div class="content s1">
+    <div class="label">AI 工具介紹</div>
+    <div class="tool">Claude</div>
+    <div class="headline">丟一份文件給它<br><em>5 秒拿到完整重點</em></div>
+    <div class="swipe">左滑看怎麼做 →</div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">1 / 6</div>
+</div>
+
+<!-- ══ SLIDE 2 ══ 痛點 ══ -->
+<div class="slide">
+  <div class="glow-purple" style="top:100px;right:-150px;"></div>
+  <div class="border-frame"></div>
+  <div class="content s2">
+    <div class="q">你有沒有遇過這些情況？</div>
+    <div class="pain">一份長文件<br><em>讀了半小時</em><br>還抓不到重點</div>
+    <div class="scene-list">
+      <div class="scene"><span>📄</span>老闆傳來 20 頁的報告要你總結</div>
+      <div class="scene"><span>📰</span>英文文章看不完，截止日還在倒數</div>
+      <div class="scene"><span>📑</span>合約條款密密麻麻，不知道風險在哪</div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">2 / 6</div>
+</div>
+
+<!-- ══ SLIDE 3 ══ 解法 ══ -->
+<div class="slide">
+  <div class="glow-blue" style="top:-50px;left:50%;transform:translateX(-50%);"></div>
+  <div class="border-frame"></div>
+  <div class="content s3">
+    <div class="section-title">用 <span>Claude</span> 之後</div>
+    <div class="before-after">
+      <div class="ba-row">
+        <div class="ba-tag before">以前</div>
+        <div class="ba-text">花 30 分鐘讀完<br>還不確定重點是什麼</div>
+      </div>
+      <div class="ba-row">
+        <div class="ba-tag after">現在</div>
+        <div class="ba-text">貼進去 5 秒<br>重點摘要＋行動建議全拿到</div>
+      </div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">3 / 6</div>
+</div>
+
+<!-- ══ SLIDE 4 ══ 操作步驟 ══ -->
+<div class="slide">
+  <div class="glow-purple" style="bottom:-100px;left:-100px;"></div>
+  <div class="border-frame"></div>
+  <div class="content s4">
+    <div class="step-title">實際操作 3 步驟</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">打開 claude.ai（免費版就夠用）</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">把文件內容貼進對話框</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">輸入下面這句話，按送出</div>
+      </div>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-label">▶ 複製這個提示詞</div>
+      <div class="prompt-text">「請幫我摘要這份文件的重點，<br>並列出 3 個我需要注意的地方」</div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">4 / 6</div>
+</div>
+
+<!-- ══ SLIDE 5 ══ 效果 ══ -->
+<div class="slide">
+  <div class="glow-blue" style="top:50px;right:-100px;"></div>
+  <div class="border-frame"></div>
+  <div class="content s5">
+    <div class="result-title">你會拿到<span>這些結果</span></div>
+    <div class="result-cards">
+      <div class="result-card">
+        <div class="r-icon">⚡</div>
+        <div class="r-num">5 秒</div>
+        <div class="r-desc">完整摘要生成</div>
+      </div>
+      <div class="result-card">
+        <div class="r-icon">🎯</div>
+        <div class="r-num">3 點</div>
+        <div class="r-desc">關鍵注意事項</div>
+      </div>
+      <div class="result-card">
+        <div class="r-icon">🌐</div>
+        <div class="r-num">中文</div>
+        <div class="r-desc">英文文件也能看</div>
+      </div>
+      <div class="result-card">
+        <div class="r-icon">🆓</div>
+        <div class="r-num">免費</div>
+        <div class="r-desc">不用付錢就能用</div>
+      </div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">5 / 6</div>
+</div>
+
+<!-- ══ SLIDE 6 ══ CTA ══ -->
+<div class="slide">
+  <div class="glow-purple" style="top:-80px;left:-80px;"></div>
+  <div class="glow-blue" style="bottom:-80px;right:-80px;"></div>
+  <div class="border-frame"></div>
+  <div class="content s6">
+    <div class="cta-headline">這只是<br><span>Claude 最基礎</span><br>的一個用法</div>
+    <div class="cta-desc">我每 2 天分享一個<br>讓你真正省時間的 AI 技巧</div>
+    <div class="btn">追蹤 @adam_ai_plus</div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">6 / 6</div>
+</div>
+
+</body>
+</html>
