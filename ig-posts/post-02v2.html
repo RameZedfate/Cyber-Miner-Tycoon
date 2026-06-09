@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e8e0d8;
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 48px 20px;
+  }
+
+  .slide {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: #f5f0ea;
+  }
+
+  /* 背景紋理感疊層 */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(210,185,160,0.45) 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 80%, rgba(195,170,145,0.3) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  /* New post 徽章 */
+  .badge {
+    position: absolute;
+    top: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1.5px solid #9b7b5a;
+    border-radius: 100px;
+    padding: 12px 44px;
+    font-size: 26px;
+    font-family: 'Playfair Display', Georgia, serif;
+    color: #9b7b5a;
+    letter-spacing: 3px;
+    background: rgba(255,255,255,0.4);
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  /* 帳號 */
+  .handle {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #b0907a;
+    letter-spacing: 2px;
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  /* 頁碼 */
+  .page {
+    position: absolute;
+    bottom: 52px;
+    right: 60px;
+    font-size: 22px;
+    color: rgba(155,123,90,0.5);
+    z-index: 10;
+  }
+
+  /* content 層 */
+  .content {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 100px;
+  }
+
+  /* 細分隔線 */
+  .divider {
+    width: 60px;
+    height: 1.5px;
+    background: #c4a882;
+    margin: 32px auto;
+  }
+
+  /* ═══════════════════════
+     SLIDE 1 — 封面
+  ═══════════════════════ */
+  .s1 .tool-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 148px;
+    font-weight: 700;
+    color: #6b3f1f;
+    line-height: 1;
+    margin-bottom: 40px;
+    letter-spacing: -2px;
+  }
+
+  .s1 .headline {
+    font-size: 46px;
+    font-weight: 500;
+    color: #7a5c3e;
+    line-height: 1.6;
+    letter-spacing: 4px;
+  }
+
+  /* ═══════════════════════
+     SLIDE 2 — 痛點
+  ═══════════════════════ */
+  .s2 .label {
+    font-size: 26px;
+    letter-spacing: 5px;
+    color: #b0907a;
+    margin-bottom: 36px;
+  }
+
+  .s2 .question {
+    font-size: 54px;
+    font-weight: 900;
+    color: #5c3a1e;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .s2 .question em {
+    font-style: normal;
+    color: #c0603a;
+  }
+
+  .pain-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    margin-top: 48px;
+  }
+
+  .pain-item {
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(155,123,90,0.2);
+    border-radius: 12px;
+    padding: 26px 40px;
+    font-size: 34px;
+    color: #6b4c30;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* ═══════════════════════
+     SLIDE 3 — Before/After
+  ═══════════════════════ */
+  .s3 .sec-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #5c3a1e;
+    margin-bottom: 12px;
+  }
+
+  .ba-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    margin-top: 48px;
+  }
+
+  .ba-card {
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .ba-label {
+    width: 130px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+
+  .ba-label.before { background: #e8c5b0; color: #a0502a; }
+  .ba-label.after  { background: #c5ddc8; color: #3a7a45; }
+
+  .ba-body {
+    flex: 1;
+    padding: 28px 36px;
+    font-size: 33px;
+    color: #5c3a1e;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .ba-label.before + .ba-body { background: rgba(232,197,176,0.2); }
+  .ba-label.after  + .ba-body { background: rgba(197,221,200,0.2); }
+
+  /* ═══════════════════════
+     SLIDE 4 — 步驟
+  ═══════════════════════ */
+  .s4 .sec-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #5c3a1e;
+    margin-bottom: 48px;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(155,123,90,0.2);
+    border-radius: 14px;
+    padding: 26px 36px;
+  }
+
+  .step-num {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid #9b7b5a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #9b7b5a;
+    flex-shrink: 0;
+  }
+
+  .step-text {
+    font-size: 33px;
+    color: #5c3a1e;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  .prompt-box {
+    margin-top: 28px;
+    background: rgba(155,123,90,0.1);
+    border: 1.5px dashed #c4a882;
+    border-radius: 14px;
+    padding: 28px 40px;
+    width: 100%;
+  }
+
+  .prompt-label {
+    font-size: 22px;
+    color: #9b7b5a;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .prompt-text {
+    font-size: 31px;
+    color: #5c3a1e;
+    text-align: left;
+    line-height: 1.6;
+  }
+
+  /* ═══════════════════════
+     SLIDE 5 — 結果
+  ═══════════════════════ */
+  .s5 .sec-title {
+    font-size: 46px;
+    font-weight: 900;
+    color: #5c3a1e;
+    margin-bottom: 52px;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .r-card {
+    background: rgba(255,255,255,0.65);
+    border: 1px solid rgba(155,123,90,0.2);
+    border-radius: 16px;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .r-icon { font-size: 48px; }
+
+  .r-num {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 54px;
+    font-weight: 700;
+    color: #6b3f1f;
+  }
+
+  .r-desc { font-size: 27px; color: #9b7b5a; }
+
+  /* ═══════════════════════
+     SLIDE 6 — CTA
+  ═══════════════════════ */
+  .s6 .cta-title {
+    font-size: 56px;
+    font-weight: 900;
+    color: #5c3a1e;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+
+  .s6 .cta-title em {
+    font-style: normal;
+    color: #9b4a20;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .s6 .cta-desc {
+    font-size: 33px;
+    color: #9b7b5a;
+    line-height: 1.8;
+    margin-bottom: 56px;
+  }
+
+  .s6 .follow-btn {
+    border: 2px solid #6b3f1f;
+    border-radius: 100px;
+    padding: 22px 68px;
+    font-size: 34px;
+    font-weight: 800;
+    color: #6b3f1f;
+    letter-spacing: 3px;
+    background: transparent;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SLIDE 1 ══ 封面 ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s1">
+    <div class="tool-name">Claude</div>
+    <div class="divider"></div>
+    <div class="headline">丟一份文件給它<br>5 秒拿到完整重點</div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+</div>
+
+<!-- ══ SLIDE 2 ══ 痛點 ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s2">
+    <div class="label">你有沒有遇過這些？</div>
+    <div class="question">一份長文件<br>讀了 <em>30 分鐘</em><br>還抓不到重點</div>
+    <div class="pain-list">
+      <div class="pain-item"><span>📄</span>老闆傳來 20 頁報告要你總結</div>
+      <div class="pain-item"><span>📰</span>英文文章看不完，截止日倒數</div>
+      <div class="pain-item"><span>📑</span>合約條款密密麻麻不知哪裡有風險</div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">2 / 6</div>
+</div>
+
+<!-- ══ SLIDE 3 ══ Before/After ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s3">
+    <div class="sec-title">用 Claude 之後，差在哪？</div>
+    <div class="divider"></div>
+    <div class="ba-wrap">
+      <div class="ba-card">
+        <div class="ba-label before">以前</div>
+        <div class="ba-body">花 30 分鐘讀完<br>還不確定重點是什麼</div>
+      </div>
+      <div class="ba-card">
+        <div class="ba-label after">現在</div>
+        <div class="ba-body">貼進去 5 秒<br>重點摘要＋行動建議全拿到</div>
+      </div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">3 / 6</div>
+</div>
+
+<!-- ══ SLIDE 4 ══ 步驟 ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s4">
+    <div class="sec-title">實際操作 3 步驟</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">打開 claude.ai（免費版就夠用）</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">把文件內容貼進對話框</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">輸入下面這句提示詞，送出</div>
+      </div>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-label">複製這個提示詞 ↓</div>
+      <div class="prompt-text">「請幫我摘要這份文件的重點，<br>並列出 3 個我需要注意的地方」</div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">4 / 6</div>
+</div>
+
+<!-- ══ SLIDE 5 ══ 結果 ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s5">
+    <div class="sec-title">你會拿到這些</div>
+    <div class="result-grid">
+      <div class="r-card">
+        <div class="r-icon">⚡</div>
+        <div class="r-num">5 秒</div>
+        <div class="r-desc">完整摘要生成</div>
+      </div>
+      <div class="r-card">
+        <div class="r-icon">🎯</div>
+        <div class="r-num">3 點</div>
+        <div class="r-desc">關鍵注意事項</div>
+      </div>
+      <div class="r-card">
+        <div class="r-icon">🌐</div>
+        <div class="r-num">中文</div>
+        <div class="r-desc">英文文件也能看</div>
+      </div>
+      <div class="r-card">
+        <div class="r-icon">🆓</div>
+        <div class="r-num">免費</div>
+        <div class="r-desc">不用付錢就能用</div>
+      </div>
+    </div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">5 / 6</div>
+</div>
+
+<!-- ══ SLIDE 6 ══ CTA ══ -->
+<div class="slide">
+  <div class="badge">New post</div>
+  <div class="content s6">
+    <div class="cta-title">這只是<br><em>Claude</em> 最基礎<br>的一個用法</div>
+    <div class="divider"></div>
+    <div class="cta-desc">我每 2 天分享一個<br>讓你真正省時間的 AI 技巧</div>
+    <div class="follow-btn">追蹤 @adam_ai_plus</div>
+  </div>
+  <div class="handle">@adam_ai_plus</div>
+  <div class="page">6 / 6</div>
+</div>
+
+</body>
+</html>
