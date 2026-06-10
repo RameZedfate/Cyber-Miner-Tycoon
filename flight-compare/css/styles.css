@@ -1,0 +1,595 @@
+:root {
+  --color-primary: #1a73e8;
+  --color-primary-dark: #0b57c4;
+  --color-accent: #ff6b35;
+  --color-bg: #f4f6fb;
+  --color-card: #ffffff;
+  --color-text: #1f2430;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e9f2;
+  --color-success: #1e8e3e;
+  --radius: 12px;
+  --shadow: 0 2px 10px rgba(20, 30, 60, 0.06);
+  --shadow-hover: 0 6px 20px rgba(20, 30, 60, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.app-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #4a90f7 100%);
+  color: #fff;
+  padding: 1.25rem 1rem 5.5rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.app-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+/* ---- 搜尋表單 ---- */
+.search-card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  padding: 1.25rem;
+  margin-top: -4rem;
+  margin-bottom: 1.5rem;
+}
+
+.trip-type {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.trip-type label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  user-select: none;
+}
+
+.trip-type input {
+  accent-color: var(--color-primary);
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) repeat(2, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .search-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.field select,
+.field input {
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.field select:focus,
+.field input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.swap-btn {
+  align-self: center;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.swap-btn:hover {
+  background: #eef3ff;
+  transform: rotate(180deg);
+}
+
+.search-btn {
+  grid-column: span 1;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background: var(--color-primary-dark);
+}
+
+@media (max-width: 900px) {
+  .search-btn,
+  .swap-btn {
+    grid-column: span 2;
+    width: 100%;
+    border-radius: 8px;
+    height: auto;
+  }
+  .swap-btn {
+    transform: rotate(90deg);
+  }
+}
+
+/* ---- 區塊標題 ---- */
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.section-title h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.section-title .updated-at {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- 即期特價 ---- */
+.deals-scroll {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+}
+
+.deal-card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.9rem;
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.deal-card .badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.deal-card .route {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 0.25rem;
+}
+
+.deal-card .meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0.15rem 0;
+}
+
+.deal-card .price-row {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.deal-card .price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.deal-card .original-price {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.deal-card .countdown {
+  margin-top: 0.4rem;
+  font-size: 0.74rem;
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* ---- 篩選 / 排序列 ---- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.toolbar .group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.toolbar select {
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+}
+
+.toolbar label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.toolbar .result-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- 航班結果卡片 ---- */
+.flight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.flight-card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  border: 1px solid transparent;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.flight-card:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-border);
+}
+
+.flight-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.airline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.airline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.airline-row .flight-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.airline-row .lcc-tag,
+.airline-row .fsc-tag {
+  font-size: 0.7rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.lcc-tag {
+  background: #fff4e5;
+  color: #b35900;
+}
+
+.fsc-tag {
+  background: #e6f4ea;
+  color: var(--color-success);
+}
+
+.route-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.route-time {
+  text-align: center;
+}
+
+.route-time .time {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.route-time .code {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.route-time .city {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.route-line {
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+  position: relative;
+  padding-top: 0.5rem;
+}
+
+.route-line .duration {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.route-line .line {
+  height: 2px;
+  background: var(--color-border);
+  position: relative;
+}
+
+.route-line .line::before,
+.route-line .line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translateY(-50%);
+}
+
+.route-line .line::before { left: -2px; }
+.route-line .line::after { right: -2px; }
+
+.route-line .stops {
+  font-size: 0.72rem;
+  margin-top: 0.2rem;
+  color: var(--color-text-muted);
+}
+
+.route-line .stops.direct {
+  color: var(--color-success);
+}
+
+.day-offset {
+  font-size: 0.7rem;
+  vertical-align: super;
+  color: var(--color-accent);
+}
+
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.detail-row .item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.detail-row .item strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---- 價格區 ---- */
+.flight-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 150px;
+  text-align: right;
+}
+
+.flight-price .price-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.flight-price .price-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.flight-price .price-platform {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.book-btn {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.book-btn:hover {
+  background: #e25c2b;
+}
+
+.compare-toggle {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .flight-card {
+    grid-template-columns: 1fr;
+  }
+  .flight-price {
+    align-items: stretch;
+    text-align: left;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.6rem;
+  }
+}
+
+/* ---- 比價明細 ---- */
+.price-compare {
+  margin-top: 0.5rem;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 0.5rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.price-compare.open {
+  display: flex;
+}
+
+.price-compare .row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  padding: 0.15rem 0;
+}
+
+.price-compare .row.best {
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* ---- 其他 ---- */
+.empty-state {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 2rem 1rem;
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  padding: 1.5rem 1rem;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  margin-right: 0.3rem;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
