@@ -1,0 +1,27 @@
+# Unity (Elemental Guardians project)
+ElementalGuardians/[Ll]ibrary/
+ElementalGuardians/[Tt]emp/
+ElementalGuardians/[Oo]bj/
+ElementalGuardians/[Bb]uild/
+ElementalGuardians/[Bb]uilds/
+ElementalGuardians/[Ll]ogs/
+ElementalGuardians/[Uu]ser[Ss]ettings/
+ElementalGuardians/[Mm]emoryCaptures/
+ElementalGuardians/[Rr]ecordings/
+
+# Visual Studio / Rider / VS Code
+ElementalGuardians/.vs/
+ElementalGuardians/.idea/
+ElementalGuardians/.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# OS
+.DS_Store
+Thumbs.db
