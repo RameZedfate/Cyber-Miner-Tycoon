@@ -29,17 +29,20 @@
 
 ---
 
-## 1. 先改這 3 個地方（檔案：`index.html` 最上方 `<script>` 設定區）
+## 1. 聯盟參數（已幫你填好）
+
+`index.html` 最上方 `<script>` 設定區，已填入你的 Trip.com 聯盟參數：
 
 ```js
 const AFFILIATE = {
-  allianceId: "YOUR_ALLIANCE_ID",   // ← 換成你的 Trip.com Allianceid
-  sid:        "YOUR_SID",           // ← 換成你的 Trip.com SID
-  sub:        "howtravle"           // 追蹤標籤，可自訂（ig / howtravle / story…）
+  allianceId: "7106961",      // Trip.com Allianceid
+  sid:        "261258404",    // Trip.com SID
+  sub:        "howtravle",    // trip_sub1：自訂追蹤標籤
+  sub3:       "D17991192"     // trip_sub3：來自你的官方推廣連結
 };
 ```
 
-`Allianceid` 與 `SID` 可在 **Trip.com 聯盟後台**找到。改完存檔即可。
+訂票連結網域用 `tw.trip.com`（台灣站）。日後若要換帳號或追蹤標籤，改這裡即可。
 
 ### 聯盟連結與 cookie 是怎麼運作的？（你問的重點）
 **一次點擊就同時完成兩件事，不需要分兩個連結。**

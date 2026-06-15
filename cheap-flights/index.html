@@ -300,9 +300,10 @@
    ① 設定區
    ==================================================================== */
 const AFFILIATE = {
-  allianceId: "YOUR_ALLIANCE_ID",   // ← 換成你的 Trip.com Allianceid（數字）
-  sid:        "YOUR_SID",           // ← 換成你的 Trip.com SID（數字）
-  sub:        "howtravle"           // 自訂追蹤標籤（例如 ig / howtravle / story）
+  allianceId: "7106961",      // Trip.com Allianceid
+  sid:        "261258404",    // Trip.com SID
+  sub:        "howtravle",    // trip_sub1：自訂追蹤標籤（可改 ig / story 等分辨流量來源）
+  sub3:       "D17991192"     // trip_sub3：來自你的官方推廣連結，保留以利歸戶
 };
 const CONFIG = {
   currency: "TWD", locale: "zh-TW", monthsAhead: 3, refreshMinutes: 5,
@@ -324,9 +325,9 @@ function tripcomUrl(o){
     rdate:o.returnDate||"", triptype:o.returnDate?"rt":"ow",
     class:"ys", quantity:"1", childqty:"0", babyqty:"0",
     nonstoponly:o.stops===0?"on":"off", locale:CONFIG.locale, curr:CONFIG.currency,
-    Allianceid:AFFILIATE.allianceId, SID:AFFILIATE.sid, trip_sub1:AFFILIATE.sub
+    Allianceid:AFFILIATE.allianceId, SID:AFFILIATE.sid, trip_sub1:AFFILIATE.sub, trip_sub3:AFFILIATE.sub3
   });
-  return "https://www.trip.com/flights/showfarefirst?" + p.toString();
+  return "https://tw.trip.com/flights/showfarefirst?" + p.toString();
 }
 function skyscannerUrl(o){
   const d=o.departDate.replaceAll("-","").slice(2), r=o.returnDate?o.returnDate.replaceAll("-","").slice(2):"";
