@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>便宜機票雷達 ✈️ Cheap Flight Radar｜從台灣出發・近三個月・低於市場均價</title>
+<meta name="description" content="從台灣全部機場出發、近三個月內、低於市場平均價的便宜機票。含/不含託運、傳統航空與廉價航空都看得到，一鍵前往 Trip.com 訂票。" />
+
+<!-- ====== 分享到 IG / HOWTRAVLE 時的預覽（Open Graph）====== -->
+<!-- 之後可把 og:image 換成你做好的封面圖網址（建議 1200x630）。 -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="便宜機票雷達 ✈️ 從台灣出發・低於市場均價" />
+<meta property="og:description" content="近三個月、從台灣全部機場出發、低於市場平均價的便宜機票，自己挑、一鍵訂。" />
+<meta property="og:image" content="" />
+<meta name="theme-color" content="#1b2a4a" />
+
+<style>
+  /* ============================================================
+     便宜機票雷達 — 單檔 HTML（可直接丟 GitHub Pages / Netlify）
+     設計重點：
+       1) 封面為純 CSS/SVG 富士山，無外部圖片相依 → 永遠顯示得出來
+       2) 所有「訂票」按鈕都導到 Trip.com 並帶上你的聯盟參數
+       3) 資料層可抽換（demo / Travelpayouts / 自訂 JSON），詳見最下方 script 設定區
+     ============================================================ */
+
+  :root{
+    --ink:#10203a;
+    --ink-soft:#41506b;
+    --paper:#f6f8fc;
+    --card:#ffffff;
+    --line:#e4e9f2;
+    --brand:#0a66ff;
+    --brand-deep:#0046c7;
+    --accent:#ff5a7a;        /* 櫻花粉 */
+    --good:#0f9d6b;          /* 省錢綠 */
+    --good-soft:#e6f7f0;
+    --warn:#ff8a00;
+    --shadow:0 14px 38px rgba(16,32,58,.12);
+    --radius:18px;
+    --maxw:1180px;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  img{max-width:100%}
+
+  /* ===================== 封面 HERO（富士山）===================== */
+  .hero{
+    position:relative;
+    min-height:100svh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  /* 黎明天空漸層 */
+  .sky{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(120% 90% at 78% 18%, rgba(255,221,170,.85) 0%, rgba(255,221,170,0) 45%),
+      linear-gradient(180deg,
+        #0e1b3d 0%,
+        #2a3a6b 28%,
+        #6a6fa8 50%,
+        #d98a8f 70%,
+        #f6b27a 84%,
+        #ffd9b3 100%);
+  }
+  /* 太陽 */
+  .sun{
+    position:absolute; top:14%; right:20%;
+    width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle,#fff6e6 0%,#ffe2a8 45%,rgba(255,210,140,0) 72%);
+    filter:blur(.3px);
+    box-shadow:0 0 90px 40px rgba(255,224,170,.5);
+  }
+  /* 雲 */
+  .cloud{position:absolute;background:rgba(255,255,255,.55);border-radius:100px;filter:blur(14px)}
+  .cloud.c1{width:280px;height:42px;top:30%;left:8%}
+  .cloud.c2{width:200px;height:32px;top:42%;left:60%}
+  .cloud.c3{width:160px;height:26px;top:22%;left:40%;opacity:.7}
+
+  .fuji-wrap{position:absolute;left:0;right:0;bottom:0;height:62%}
+  .fuji-wrap svg{position:absolute;bottom:0;width:100%;height:100%;display:block}
+
+  /* 飄落的櫻花 */
+  .sakura{position:absolute;top:-20px;width:14px;height:14px;background:var(--accent);
+    border-radius:14px 0 14px 0;opacity:.85;animation:fall linear infinite;z-index:3}
+  @keyframes fall{
+    0%{transform:translateY(-10vh) rotate(0deg);opacity:0}
+    10%{opacity:.9}
+    100%{transform:translateY(105vh) rotate(420deg);opacity:.2}
+  }
+
+  .hero-top{
+    position:relative; z-index:5;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; padding:18px clamp(16px,4vw,40px);
+    color:#fff;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px}
+  .logo .dot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,#fff,#ffe2a8);color:#15264a;font-size:16px}
+  .hero-top .handles{font-size:13px;opacity:.92;text-align:right;line-height:1.5}
+  .hero-top .handles b{font-weight:700}
+
+  .hero-center{
+    position:relative; z-index:5;
+    flex:1; display:flex; flex-direction:column; justify-content:center;
+    padding:0 clamp(16px,5vw,56px) 8vh;
+    color:#fff; max-width:var(--maxw); margin:0 auto; width:100%;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    background:rgba(255,255,255,.16);backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.35);
+    padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:18px}
+  .hero h1{
+    font-size:clamp(34px,6.4vw,68px); line-height:1.05; margin:0 0 16px;
+    font-weight:900; letter-spacing:-.5px;
+    text-shadow:0 4px 30px rgba(8,18,40,.35)}
+  .hero h1 .hl{color:#ffd98a}
+  .hero p.lead{font-size:clamp(15px,2vw,20px);max-width:640px;line-height:1.6;
+    margin:0 0 28px;opacity:.96;text-shadow:0 2px 16px rgba(8,18,40,.4)}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{
+    cursor:pointer;border:none;font-weight:700;border-radius:999px;
+    padding:14px 24px;font-size:15px;transition:transform .15s ease,box-shadow .15s ease,filter .15s;
+    text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:linear-gradient(135deg,#ffd98a,#ff9d4d);color:#3a2400;
+    box-shadow:0 12px 30px rgba(255,157,77,.45)}
+  .btn-ghost{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.5)}
+  .scroll-hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+    color:#fff;opacity:.8;font-size:12px;z-index:5;animation:bob 2s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+  /* ===================== 控制列 ===================== */
+  .toolbar-wrap{position:sticky;top:0;z-index:40;background:rgba(246,248,252,.92);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .toolbar{max-width:var(--maxw);margin:0 auto;padding:14px clamp(14px,3vw,28px);
+    display:flex;flex-direction:column;gap:12px}
+  .tb-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;font-weight:700;color:var(--ink-soft);letter-spacing:.4px}
+  select,input[type=search]{
+    border:1px solid var(--line);background:#fff;border-radius:12px;
+    padding:9px 12px;font-size:14px;color:var(--ink);font-family:inherit;min-width:120px}
+  input[type=search]{min-width:180px}
+  select:focus,input:focus{outline:2px solid var(--brand);border-color:var(--brand)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:7px 14px;font-size:13px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;transition:.15s;user-select:none}
+  .chip[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .chip.small{padding:5px 11px;font-size:12px}
+
+  .switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+    color:var(--ink-soft);cursor:pointer}
+  .switch input{appearance:none;width:40px;height:22px;border-radius:999px;background:#cdd6e6;
+    position:relative;cursor:pointer;transition:.2s;flex:none}
+  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;
+    border-radius:50%;background:#fff;transition:.2s}
+  .switch input:checked{background:var(--good)}
+  .switch input:checked::after{left:20px}
+
+  .refresh-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink-soft)}
+  .live-dot{width:9px;height:9px;border-radius:50%;background:var(--good);
+    box-shadow:0 0 0 0 rgba(15,157,107,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(15,157,107,.55)}70%{box-shadow:0 0 0 9px rgba(15,157,107,0)}100%{box-shadow:0 0 0 0 rgba(15,157,107,0)}}
+  .btn-refresh{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 13px;
+    font-size:13px;font-weight:700;cursor:pointer;color:var(--brand-deep)}
+  .btn-refresh:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+  /* ===================== 統計列 ===================== */
+  .stats{max-width:var(--maxw);margin:22px auto 4px;padding:0 clamp(14px,3vw,28px);
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .stat{background:linear-gradient(135deg,#fff,#f3f7ff);border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px}
+  .stat .n{font-size:26px;font-weight:900;color:var(--brand-deep)}
+  .stat .l{font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:2px}
+
+  /* ===================== 卡片網格 ===================== */
+  .grid{max-width:var(--maxw);margin:18px auto 60px;padding:0 clamp(14px,3vw,28px);
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;
+    transition:transform .18s ease,box-shadow .18s ease}
+  .card:hover{transform:translateY(-4px);box-shadow:0 22px 48px rgba(16,32,58,.18)}
+  .card-top{position:relative;height:96px;color:#fff;padding:14px 16px;display:flex;
+    flex-direction:column;justify-content:space-between}
+  /* 地區色帶 */
+  .rg-jp{background:linear-gradient(120deg,#ff7a9c,#ff5a7a 60%,#b23a6a)}
+  .rg-kr{background:linear-gradient(120deg,#5b8def,#3a6bd6 60%,#2447a8)}
+  .rg-sea{background:linear-gradient(120deg,#19c2a3,#0f9d6b 60%,#0b7d55)}
+  .rg-hk{background:linear-gradient(120deg,#ffaf45,#ff7a45 60%,#d65a2a)}
+  .rg-other{background:linear-gradient(120deg,#8a7bd8,#6a5acd 60%,#4a3ca8)}
+  .card-top .emoji{position:absolute;right:12px;bottom:8px;font-size:46px;opacity:.55;line-height:1}
+  .route{font-size:19px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .route .arrow{opacity:.85}
+  .route-codes{font-size:12px;opacity:.9;font-weight:600;letter-spacing:1px}
+
+  .badges{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0}
+  .badge{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;line-height:1}
+  .b-lcc{background:#fff1e6;color:#c2570a}
+  .b-full{background:#eaf0ff;color:#234fc4}
+  .b-bag-y{background:#e8f6ef;color:#0b7d55}
+  .b-bag-n{background:#f1f3f7;color:#5a6577}
+  .b-direct{background:#eef9ff;color:#1180c2}
+  .b-stop{background:#f5f0ff;color:#6a4ec2}
+
+  .card-body{padding:10px 16px 0;flex:1}
+  .airline{font-size:13px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:6px}
+  .dates{font-size:13px;color:var(--ink-soft);margin-bottom:12px}
+  .dates b{color:var(--ink)}
+  .price-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+  .price-now{font-size:30px;font-weight:900;color:var(--ink);line-height:1}
+  .price-now small{font-size:14px;font-weight:700;margin-right:2px;color:var(--ink-soft)}
+  .price-avg{font-size:13px;color:#9aa3b4;text-decoration:line-through}
+  .save{margin-left:auto;background:var(--good-soft);color:var(--good);font-weight:800;
+    font-size:13px;padding:5px 10px;border-radius:10px;white-space:nowrap}
+
+  .savebar{height:7px;border-radius:999px;background:#eef1f6;margin:12px 0 0;overflow:hidden}
+  .savebar > span{display:block;height:100%;background:linear-gradient(90deg,#0f9d6b,#19c2a3)}
+
+  .card-foot{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px}
+  .book{width:100%;justify-content:center;background:var(--brand);color:#fff;
+    box-shadow:0 8px 20px rgba(10,102,255,.3)}
+  .book:hover{background:var(--brand-deep)}
+  .compare{display:flex;gap:12px;justify-content:center;font-size:12px;color:var(--ink-soft)}
+  .compare a{color:var(--ink-soft);text-decoration:none;border-bottom:1px dotted #b9c2d4}
+  .compare a:hover{color:var(--brand)}
+
+  .empty{grid-column:1/-1;text-align:center;color:var(--ink-soft);padding:60px 20px;
+    font-size:15px}
+
+  /* ===================== 頁尾 ===================== */
+  footer{background:#0e1b3d;color:#c7d2e8;padding:36px clamp(16px,4vw,40px) 44px}
+  .foot-in{max-width:var(--maxw);margin:0 auto;display:grid;gap:18px}
+  .foot-disc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;padding:14px 18px;font-size:13px;line-height:1.7}
+  .foot-disc b{color:#ffd98a}
+  .foot-meta{font-size:12px;opacity:.7;line-height:1.7}
+  .foot-meta a{color:#9ec2ff}
+
+  @media (max-width:560px){
+    .hero-top .handles{display:none}
+    .price-now{font-size:26px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================ 封面 HERO ============================ -->
+<header class="hero" id="top">
+  <div class="sky" aria-hidden="true"></div>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="cloud c1" aria-hidden="true"></div>
+  <div class="cloud c2" aria-hidden="true"></div>
+  <div class="cloud c3" aria-hidden="true"></div>
+
+  <!-- 富士山（純 SVG，永遠顯示） -->
+  <div class="fuji-wrap" aria-hidden="true">
+    <svg viewBox="0 0 1000 620" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="mtn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6f7bb0"/>
+          <stop offset="1" stop-color="#3b4773"/>
+        </linearGradient>
+        <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#46527f"/>
+          <stop offset="1" stop-color="#2c3660"/>
+        </linearGradient>
+        <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(255,255,255,.0)"/>
+          <stop offset="1" stop-color="rgba(255,225,200,.55)"/>
+        </linearGradient>
+      </defs>
+      <!-- 後方小山 -->
+      <path d="M0 620 L0 470 C140 420 230 460 340 500 C430 530 470 560 560 560 L0 560 Z" fill="url(#hill)" opacity=".8"/>
+      <path d="M1000 620 L1000 450 C880 420 760 470 660 520 C560 560 520 560 440 560 L1000 560 Z" fill="url(#hill)" opacity=".8"/>
+      <!-- 富士山主體 -->
+      <path d="M210 620 C300 430 410 220 480 150 C492 138 508 138 520 150 C590 220 700 430 790 620 Z" fill="url(#mtn)"/>
+      <!-- 山頂火山口微凹 -->
+      <path d="M462 168 C478 158 522 158 538 168 C520 182 480 182 462 168 Z" fill="#34406a" opacity=".7"/>
+      <!-- 雪冠（下緣鋸齒狀） -->
+      <path d="M455 175 C476 160 524 160 545 175
+               L560 250
+               C548 240 540 262 528 252
+               C516 244 508 270 498 258
+               C490 248 480 272 470 258
+               C462 248 452 262 442 250 Z" fill="#f7fafff2"/>
+      <!-- 山體積雪紋路 -->
+      <path d="M470 250 C476 268 468 286 480 300 M520 250 C516 270 526 286 516 300"
+            stroke="#eef2fb" stroke-width="4" fill="none" opacity=".55" stroke-linecap="round"/>
+      <!-- 山腳薄霧 -->
+      <rect x="120" y="520" width="760" height="100" fill="url(#mist)"/>
+    </svg>
+  </div>
+
+  <div class="hero-top">
+    <div class="logo"><span class="dot">✈</span><span>便宜機票雷達</span></div>
+    <div class="handles">
+      策展 by <b>@adam_ai_plus</b><br/>機票分享 · <b>HOWTRAVLE</b>
+    </div>
+  </div>
+
+  <div class="hero-center">
+    <span class="eyebrow">🗻 從台灣出發 · 近三個月 · 只留低於市場均價的票</span>
+    <h1>找到<span class="hl">便宜機票</span>，<br/>剩下的旅行交給你自己挑。</h1>
+    <p class="lead">
+      我幫你把「從台灣全部機場出發、未來三個月內、低於市場平均價」的機票整理在這一頁。
+      含託運或不含託運、傳統航空或廉價航空都看得到 —— 看到喜歡的，一鍵就能去 Trip.com 訂。
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#deals">看今天的便宜票 →</a>
+      <a class="btn btn-ghost" href="#how">這頁怎麼用？</a>
+    </div>
+  </div>
+  <div class="scroll-hint">向下捲動 ↓</div>
+</header>
+
+<!-- ============================ 控制列 ============================ -->
+<section id="deals">
+  <div class="toolbar-wrap">
+    <div class="toolbar">
+      <div class="tb-row">
+        <div class="field" style="flex:none">
+          <label>出發機場（可複選）</label>
+          <div class="chips" id="airportChips"></div>
+        </div>
+      </div>
+      <div class="tb-row">
+        <div class="field">
+          <label>託運行李</label>
+          <select id="fBaggage">
+            <option value="all">全部</option>
+            <option value="yes">含託運</option>
+            <option value="no">不含託運（手提）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>航空類型</label>
+          <select id="fType">
+            <option value="all">全部</option>
+            <option value="full">傳統航空</option>
+            <option value="lcc">廉價航空</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>排序</label>
+          <select id="fSort">
+            <option value="discount">省最多 %</option>
+            <option value="price">價格最低</option>
+            <option value="date">出發日期最近</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>搜尋目的地</label>
+          <input type="search" id="fSearch" placeholder="例如：東京、首爾、BKK" />
+        </div>
+        <div class="field" style="justify-content:flex-end">
+          <label>&nbsp;</label>
+          <label class="switch">
+            <input type="checkbox" id="fBelow" checked />
+            只看低於市場均價
+          </label>
+        </div>
+      </div>
+      <div class="refresh-row">
+        <span class="live-dot"></span>
+        <span>即時價格快取 · 最後更新：<b id="updatedAt">—</b></span>
+        <button class="btn-refresh" id="btnRefresh">↻ 重新整理</button>
+        <span style="opacity:.8">每 <b id="intvLabel">5</b> 分鐘自動更新一次</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 統計列 -->
+  <div class="stats" id="stats"></div>
+
+  <!-- 卡片 -->
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- ============================ 怎麼用 ============================ -->
+<section id="how" style="max-width:var(--maxw);margin:10px auto 50px;padding:0 clamp(14px,3vw,28px)">
+  <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow)">
+    <h2 style="margin:0 0 10px;font-size:20px">這頁怎麼用？</h2>
+    <p style="margin:0;color:var(--ink-soft);line-height:1.8;font-size:14px">
+      1️⃣ 上面選「<b>出發機場</b>」（預設台灣全部）→ 再用「託運／航空類型／排序」篩你要的。<br/>
+      2️⃣ 卡片上的價格是<b>低於市場平均價</b>的便宜票，旁邊會標你大約省了幾 %。<br/>
+      3️⃣ 看到喜歡的，按「<b>前往 Trip.com 訂票</b>」就會帶你到 Trip.com 完成預訂。<br/>
+      4️⃣ 想自己比價，也能點卡片下方的 Skyscanner / Google Flights。
+    </p>
+  </div>
+</section>
+
+<!-- ============================ 頁尾 ============================ -->
+<footer>
+  <div class="foot-in">
+    <div class="foot-disc">
+      <b>聯盟行銷揭露：</b>本頁的「前往 Trip.com 訂票」皆為 <b>Trip.com 聯盟行銷連結</b>。
+      你透過這些連結完成訂購時，我可能會獲得少許回饋，<b>不會增加你的票價</b>，感謝支持 🙏
+    </div>
+    <div class="foot-meta">
+      ⚠️ 機票價格為搜尋引擎「快取參考價」，會隨時變動，<b>實際票價、行李與艙等規則以 Trip.com 結帳頁面為準</b>。<br/>
+      資料來源：航班比價快取（可串接 Skyscanner / Google Flights / Travelpayouts 等同等搜尋引擎）。<br/>
+      © <span id="yr"></span> 便宜機票雷達 · 由 <b>@adam_ai_plus</b> 製作 · 分享於 HOWTRAVLE。
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ====================================================================
+   ① 設定區（你最常要改的就在這裡）
+   ==================================================================== */
+
+// ✦ 你的 Trip.com 聯盟參數 —— 換成你自己的！
+//   登入 Trip.com 聯盟後台可看到 Allianceid 與 SID。
+const AFFILIATE = {
+  allianceId: "YOUR_ALLIANCE_ID",   // ← 換成你的 Trip.com Allianceid（數字）
+  sid:        "YOUR_SID",           // ← 換成你的 Trip.com SID（數字）
+  sub:        "howtravle"           // 自訂追蹤標籤（例如 ig / howtravle / story）
+};
+
+const CONFIG = {
+  currency: "TWD",        // 顯示幣別
+  locale:   "zh-TW",      // Trip.com 語系
+  monthsAhead: 3,         // 「近三個月」= 從今天起算 N 個月內出發
+  refreshMinutes: 5,      // 自動更新間隔（分鐘）
+  // 資料來源：
+  //   "demo"          = 內建示範資料（馬上就能看、可分享，價格會模擬跳動）
+  //   "custom"        = 讀你自己的 JSON 網址（最適合非工程師長期維護，見下方 customJsonUrl）
+  //   "travelpayouts" = 串 Travelpayouts(Aviasales) 真實便宜票快取（需 token，且通常要一層 proxy，見 README）
+  dataSource: "demo",
+  customJsonUrl: "",      // dataSource="custom" 時填你的 JSON 網址
+  travelpayoutsToken: ""  // dataSource="travelpayouts" 時填（注意：放前端會外洩，建議走 proxy）
+};
+
+// 台灣出發機場（國際線主要為 TPE/TSA/KHH/RMQ）
+const TW_AIRPORTS = [
+  { code:"TPE", zh:"台北桃園" },
+  { code:"TSA", zh:"台北松山" },
+  { code:"KHH", zh:"高雄" },
+  { code:"RMQ", zh:"台中" },
+  { code:"TNN", zh:"台南" },
+];
+
+/* ====================================================================
+   ② Trip.com 聯盟連結產生器（所有「訂票」都走這裡）
+   ==================================================================== */
+function tripcomUrl(o){
+  const p = new URLSearchParams({
+    dcity: o.depIata.toLowerCase(),
+    acity: o.destIata.toLowerCase(),
+    ddate: o.departDate,
+    rdate: o.returnDate || "",
+    triptype: o.returnDate ? "rt" : "ow",
+    class: "ys",
+    quantity: "1",
+    childqty: "0",
+    babyqty: "0",
+    nonstoponly: o.stops === 0 ? "on" : "off",
+    locale: CONFIG.locale,
+    curr: CONFIG.currency,
+    Allianceid: AFFILIATE.allianceId,
+    SID: AFFILIATE.sid,
+    trip_sub1: AFFILIATE.sub
+  });
+  return "https://www.trip.com/flights/showfarefirst?" + p.toString();
+}
+
+// 比價用（非聯盟，只是方便讀者自己查）
+function skyscannerUrl(o){
+  const d = o.departDate.replaceAll("-","").slice(2); // yymmdd
+  const r = o.returnDate ? o.returnDate.replaceAll("-","").slice(2) : "";
+  return `https://www.skyscanner.com.tw/transport/flights/${o.depIata.toLowerCase()}/${o.destIata.toLowerCase()}/${d}/${r}/`;
+}
+function googleFlightsUrl(o){
+  const q = encodeURIComponent(`Flights from ${o.depIata} to ${o.destIata} on ${o.departDate}`);
+  return `https://www.google.com/travel/flights?q=${q}`;
+}
+
+/* ====================================================================
+   ③ 航線與航空公司資料（示範資料的基礎）
+   ==================================================================== */
+const AIRLINES = {
+  jp: [
+    {zh:"中華航空", type:"full", bag:true,  kg:23},
+    {zh:"長榮航空", type:"full", bag:true,  kg:23},
+    {zh:"星宇航空", type:"full", bag:true,  kg:23},
+    {zh:"日本航空", type:"full", bag:true,  kg:23},
+    {zh:"全日空",   type:"full", bag:true,  kg:23},
+    {zh:"台灣虎航", type:"lcc",  bag:false, kg:0},
+    {zh:"樂桃航空", type:"lcc",  bag:false, kg:0},
+    {zh:"酷航",     type:"lcc",  bag:false, kg:0},
+  ],
+  kr: [
+    {zh:"中華航空", type:"full", bag:true,  kg:23},
+    {zh:"長榮航空", type:"full", bag:true,  kg:23},
+    {zh:"大韓航空", type:"full", bag:true,  kg:23},
+    {zh:"韓亞航空", type:"full", bag:true,  kg:23},
+    {zh:"台灣虎航", type:"lcc",  bag:false, kg:0},
+    {zh:"濟州航空", type:"lcc",  bag:false, kg:0},
+    {zh:"釜山航空", type:"lcc",  bag:false, kg:0},
+  ],
+  sea: [
+    {zh:"中華航空",   type:"full", bag:true,  kg:30},
+    {zh:"長榮航空",   type:"full", bag:true,  kg:30},
+    {zh:"星宇航空",   type:"full", bag:true,  kg:30},
+    {zh:"泰國航空",   type:"full", bag:true,  kg:30},
+    {zh:"新加坡航空", type:"full", bag:true,  kg:30},
+    {zh:"台灣虎航",   type:"lcc",  bag:false, kg:0},
+    {zh:"酷航",       type:"lcc",  bag:false, kg:0},
+    {zh:"越捷航空",   type:"lcc",  bag:false, kg:0},
+    {zh:"亞洲航空",   type:"lcc",  bag:false, kg:0},
+  ],
+  hk: [
+    {zh:"國泰航空",   type:"full", bag:true,  kg:30},
+    {zh:"中華航空",   type:"full", bag:true,  kg:30},
+    {zh:"長榮航空",   type:"full", bag:true,  kg:30},
+    {zh:"香港快運",   type:"lcc",  bag:false, kg:0},
+    {zh:"台灣虎航",   type:"lcc",  bag:false, kg:0},
+  ],
+};
+
+// 目的地：region 決定卡片配色與可用航空公司；avg 為市場平均來回價(TWD)
+const DESTS = [
+  // 日本 🇯🇵
+  {zh:"東京",   en:"Tokyo",    iata:"NRT", region:"jp",  emoji:"🗼", avg:13500},
+  {zh:"大阪",   en:"Osaka",    iata:"KIX", region:"jp",  emoji:"🏯", avg:12000},
+  {zh:"名古屋", en:"Nagoya",   iata:"NGO", region:"jp",  emoji:"🏯", avg:12500},
+  {zh:"福岡",   en:"Fukuoka",  iata:"FUK", region:"jp",  emoji:"🍜", avg:11500},
+  {zh:"沖繩",   en:"Okinawa",  iata:"OKA", region:"jp",  emoji:"🏝️", avg:9000},
+  {zh:"札幌",   en:"Sapporo",  iata:"CTS", region:"jp",  emoji:"❄️", avg:16000},
+  // 韓國 🇰🇷
+  {zh:"首爾",   en:"Seoul",    iata:"ICN", region:"kr",  emoji:"🇰🇷", avg:9500},
+  {zh:"釜山",   en:"Busan",    iata:"PUS", region:"kr",  emoji:"🌊", avg:9000},
+  {zh:"濟州",   en:"Jeju",     iata:"CJU", region:"kr",  emoji:"🍊", avg:9500},
+  // 東南亞 🌏
+  {zh:"曼谷",   en:"Bangkok",  iata:"BKK", region:"sea", emoji:"🛕", avg:11000},
+  {zh:"新加坡", en:"Singapore",iata:"SIN", region:"sea", emoji:"🦁", avg:13000},
+  {zh:"吉隆坡", en:"K. Lumpur",iata:"KUL", region:"sea", emoji:"🕌", avg:11500},
+  {zh:"峴港",   en:"Da Nang",  iata:"DAD", region:"sea", emoji:"🏖️", avg:9500},
+  {zh:"胡志明", en:"Ho Chi Minh",iata:"SGN",region:"sea",emoji:"🛵", avg:9000},
+  {zh:"宿霧",   en:"Cebu",     iata:"CEB", region:"sea", emoji:"🐠", avg:10000},
+  {zh:"曼谷(廊曼)",en:"Don Mueang",iata:"DMK",region:"sea",emoji:"🐘", avg:10500},
+  {zh:"峇里島", en:"Bali",     iata:"DPS", region:"sea", emoji:"🌺", avg:15000},
+  // 港澳 🇭🇰
+  {zh:"香港",   en:"Hong Kong",iata:"HKG", region:"hk",  emoji:"🌃", avg:6500},
+  {zh:"澳門",   en:"Macau",    iata:"MFM", region:"hk",  emoji:"🎰", avg:6500},
+];
+
+const REGION_PRICE_BUMP = { TPE:1, TSA:1.05, KHH:1.08, RMQ:1.1, TNN:1.12 };
+// 哪些出發機場有飛該地區（簡化：TPE/KHH 較多，松山只飛特定點）
+const AIRPORT_SERVES = {
+  TPE:["jp","kr","sea","hk"],
+  KHH:["jp","kr","sea","hk"],
+  RMQ:["jp","kr","sea","hk"],
+  TNN:["jp","kr","hk"],
+  TSA:["jp","kr"],          // 松山主要：羽田/金浦
+};
+
+/* ====================================================================
+   ④ 資料層（可抽換）
+   ==================================================================== */
+function pad(n){ return String(n).padStart(2,"0"); }
+function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// 內建示範資料：產生一批「低於市場均價」的便宜票
+let _seedOffers = null;
+function buildDemoData(){
+  const today = new Date();
+  const horizon = CONFIG.monthsAhead * 30;
+  const offers = [];
+  let id = 0;
+
+  TW_AIRPORTS.forEach(ap => {
+    const serves = AIRPORT_SERVES[ap.code] || [];
+    DESTS.forEach(dest => {
+      if(!serves.includes(dest.region)) return;
+      // 每條航線給 0~2 筆便宜票（隨機，營造「雷達掃到的特價」感）
+      const n = Math.random() < 0.55 ? (Math.random()<0.4?2:1) : 0;
+      for(let i=0;i<n;i++){
+        const al = pick(AIRLINES[dest.region]);
+        const bump = REGION_PRICE_BUMP[ap.code] || 1;
+        const marketAvg = Math.round(dest.avg * bump / 100) * 100;
+        // 便宜票：均價的 55%~90%
+        const price = Math.round(marketAvg * rand(0.55, 0.90) / 100) * 100;
+        const depOffset = Math.floor(rand(5, horizon - 8));
+        const tripLen = Math.floor(rand(4, 9));
+        const departDate = fmtDate(addDays(today, depOffset));
+        const returnDate = fmtDate(addDays(today, depOffset + tripLen));
+        // 廉航多為手提；偶爾加購含託運
+        let bag = al.bag;
+        let kg = al.kg;
+        if(al.type==="lcc" && Math.random()<0.35){ bag = true; kg = 20; }
+        offers.push({
+          id: "d"+(id++),
+          depIata: ap.code, depZh: ap.zh,
+          destIata: dest.iata, destZh: dest.zh, destEn: dest.en,
+          region: dest.region, emoji: dest.emoji,
+          airlineZh: al.zh, airlineType: al.type,
+          baggage: bag, baggageKg: kg,
+          stops: al.type==="lcc" ? 0 : (Math.random()<0.2?1:0),
+          departDate, returnDate, tripType:"rt",
+          price, marketAvg, currency: CONFIG.currency
+        });
+      }
+    });
+  });
+  return offers;
+}
+
+// 模擬「即時跳動」：對既有資料做 ±4% 抖動 + 重新洗一點點
+function jitter(offers){
+  return offers.map(o => {
+    const f = rand(0.96, 1.04);
+    let price = Math.round(o.price * f / 100) * 100;
+    price = Math.min(price, o.marketAvg - 100); // 保持低於均價
+    return {...o, price};
+  });
+}
+
+// 從自訂 JSON 取資料（你可用 Google Sheet 發佈成 JSON、或自己的 API）
+// 期望格式：陣列，每筆欄位同 demo offer（depIata/destIata/destZh/region/airlineZh/
+// airlineType/baggage/baggageKg/stops/departDate/returnDate/price/marketAvg）
+async function fetchCustom(){
+  const res = await fetch(CONFIG.customJsonUrl, {cache:"no-store"});
+  if(!res.ok) throw new Error("custom JSON HTTP "+res.status);
+  const arr = await res.json();
+  return arr.map((o,i)=>({
+    id: o.id || ("c"+i),
+    depIata:o.depIata, depZh:o.depZh||o.depIata,
+    destIata:o.destIata, destZh:o.destZh||o.destIata, destEn:o.destEn||"",
+    region:o.region||"other", emoji:o.emoji||"✈️",
+    airlineZh:o.airlineZh||"", airlineType:o.airlineType||"full",
+    baggage:!!o.baggage, baggageKg:o.baggageKg||0,
+    stops:o.stops||0,
+    departDate:o.departDate, returnDate:o.returnDate||"", tripType:o.returnDate?"rt":"ow",
+    price:Number(o.price), marketAvg:Number(o.marketAvg||o.price),
+    currency:o.currency||CONFIG.currency
+  }));
+}
+
+// 從 Travelpayouts(Aviasales) Data API 取「便宜票快取」。
+// ⚠️ 注意：此 API 通常不帶 CORS 標頭，前端直接打可能被瀏覽器擋；
+//    建議在 README 的「serverless proxy」方式下使用，把下面網址改成你的 proxy。
+async function fetchTravelpayouts(){
+  const out = [];
+  const destByIata = Object.fromEntries(DESTS.map(d=>[d.iata,d]));
+  for(const ap of TW_AIRPORTS){
+    const url = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates`
+      + `?origin=${ap.code}&currency=${CONFIG.currency.toLowerCase()}`
+      + `&sorting=price&direct=false&limit=30&token=${CONFIG.travelpayoutsToken}`;
+    let data;
+    try{ data = await (await fetch(url)).json(); }catch(e){ continue; }
+    (data.data||[]).forEach((row,i)=>{
+      const dest = destByIata[row.destination];
+      if(!dest) return; // 只留我們關心的目的地
+      out.push({
+        id:`tp-${ap.code}-${i}`,
+        depIata:ap.code, depZh:ap.zh,
+        destIata:row.destination, destZh:dest.zh, destEn:dest.en,
+        region:dest.region, emoji:dest.emoji,
+        airlineZh:row.airline||"", airlineType:"full",
+        baggage:false, baggageKg:0,
+        stops:row.transfers||0,
+        departDate:row.departure_at?.slice(0,10) || "",
+        returnDate:row.return_at?.slice(0,10) || "",
+        tripType:row.return_at?"rt":"ow",
+        price:Math.round(row.price), marketAvg:dest.avg,
+        currency:CONFIG.currency
+      });
+    });
+  }
+  return out;
+}
+
+async function loadOffers(){
+  if(CONFIG.dataSource==="custom" && CONFIG.customJsonUrl){
+    try{ return await fetchCustom(); }catch(e){ console.warn("custom 失敗，改用 demo",e); }
+  }
+  if(CONFIG.dataSource==="travelpayouts" && CONFIG.travelpayoutsToken){
+    try{ const r = await fetchTravelpayouts(); if(r.length) return r; }
+    catch(e){ console.warn("travelpayouts 失敗，改用 demo",e); }
+  }
+  // demo
+  if(!_seedOffers) _seedOffers = buildDemoData();
+  else _seedOffers = jitter(_seedOffers);
+  return _seedOffers;
+}
+
+/* ====================================================================
+   ⑤ 篩選 / 排序 / 渲染
+   ==================================================================== */
+const state = {
+  airports: new Set(TW_AIRPORTS.map(a=>a.code)), // 預設全選
+  baggage:"all", type:"all", sort:"discount", search:"", belowAvg:true,
+  raw: []
+};
+
+function discountPct(o){ return Math.max(0, Math.round((1 - o.price/o.marketAvg)*100)); }
+function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
+
+function applyFilters(){
+  let list = state.raw.filter(o=>{
+    if(!state.airports.has(o.depIata)) return false;
+    if(state.baggage==="yes" && !o.baggage) return false;
+    if(state.baggage==="no"  &&  o.baggage) return false;
+    if(state.type!=="all" && o.airlineType!==state.type) return false;
+    if(state.belowAvg && !(o.price < o.marketAvg)) return false;
+    if(state.search){
+      const q = state.search.trim().toLowerCase();
+      const hay = `${o.destZh} ${o.destEn} ${o.destIata} ${o.depZh} ${o.depIata} ${o.airlineZh}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(state.sort==="price")    return a.price - b.price;
+    if(state.sort==="date")     return a.departDate.localeCompare(b.departDate);
+    return discountPct(b) - discountPct(a); // discount
+  });
+  return list;
+}
+
+function renderStats(list){
+  const el = document.getElementById("stats");
+  if(!list.length){ el.innerHTML=""; return; }
+  const avgSave = Math.round(list.reduce((s,o)=>s+discountPct(o),0)/list.length);
+  const lowest  = list.reduce((m,o)=>Math.min(m,o.price), Infinity);
+  const lowestO = list.find(o=>o.price===lowest);
+  el.innerHTML = `
+    <div class="stat"><div class="n">${list.length}</div><div class="l">筆便宜機票（低於均價）</div></div>
+    <div class="stat"><div class="n">${avgSave}%</div><div class="l">平均省下</div></div>
+    <div class="stat"><div class="n">${money(lowest)}</div><div class="l">最低價 · ${lowestO?lowestO.destZh:""}</div></div>
+    <div class="stat"><div class="n">${state.airports.size}</div><div class="l">個出發機場掃描中</div></div>`;
+}
+
+function card(o){
+  const disc = discountPct(o);
+  const typeBadge = o.airlineType==="lcc"
+    ? `<span class="badge b-lcc">廉價航空</span>`
+    : `<span class="badge b-full">傳統航空</span>`;
+  const bagBadge = o.baggage
+    ? `<span class="badge b-bag-y">含託運${o.baggageKg?` ${o.baggageKg}kg`:""}</span>`
+    : `<span class="badge b-bag-n">不含託運</span>`;
+  const stopBadge = o.stops===0
+    ? `<span class="badge b-direct">直飛</span>`
+    : `<span class="badge b-stop">轉機 ${o.stops}</span>`;
+  return `
+  <article class="card">
+    <div class="card-top rg-${o.region}">
+      <div>
+        <div class="route">${o.depZh} <span class="arrow">→</span> ${o.destZh}</div>
+        <div class="route-codes">${o.depIata} → ${o.destIata}</div>
+      </div>
+      <span class="emoji">${o.emoji}</span>
+    </div>
+    <div class="badges">${typeBadge}${bagBadge}${stopBadge}</div>
+    <div class="card-body">
+      <div class="airline">✈ ${o.airlineZh || "多家航空"}・${o.tripType==="rt"?"來回":"單程"}</div>
+      <div class="dates">出發 <b>${o.departDate}</b>${o.returnDate?` · 回程 <b>${o.returnDate}</b>`:""}</div>
+      <div class="price-row">
+        <div class="price-now"><small>${o.currency}</small>${money(o.price).replace("$","")}</div>
+        <div class="price-avg">均價 ${money(o.marketAvg)}</div>
+        <div class="save">省 ${disc}%</div>
+      </div>
+      <div class="savebar"><span style="width:${Math.min(disc,100)}%"></span></div>
+    </div>
+    <div class="card-foot">
+      <a class="btn book" href="${tripcomUrl(o)}" target="_blank" rel="noopener nofollow sponsored">
+        前往 Trip.com 訂票 →
+      </a>
+      <div class="compare">
+        比價：
+        <a href="${skyscannerUrl(o)}" target="_blank" rel="noopener">Skyscanner</a>
+        ·
+        <a href="${googleFlightsUrl(o)}" target="_blank" rel="noopener">Google Flights</a>
+      </div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const list = applyFilters();
+  renderStats(list);
+  const grid = document.getElementById("grid");
+  grid.innerHTML = list.length
+    ? list.map(card).join("")
+    : `<div class="empty">😶 目前這個篩選條件下沒有低於市場均價的票。<br/>試試多選幾個出發機場、或把「只看低於市場均價」關掉看看。</div>`;
+}
+
+/* ====================================================================
+   ⑥ 互動 / 啟動
+   ==================================================================== */
+function buildAirportChips(){
+  const wrap = document.getElementById("airportChips");
+  const all = document.createElement("button");
+  all.className="chip"; all.textContent="全部台灣機場";
+  all.setAttribute("aria-pressed", state.airports.size===TW_AIRPORTS.length);
+  all.onclick=()=>{
+    if(state.airports.size===TW_AIRPORTS.length){ state.airports.clear(); }
+    else { TW_AIRPORTS.forEach(a=>state.airports.add(a.code)); }
+    syncChips(); render();
+  };
+  wrap.appendChild(all);
+  TW_AIRPORTS.forEach(a=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.dataset.code=a.code;
+    b.textContent=`${a.zh} ${a.code}`;
+    b.setAttribute("aria-pressed", state.airports.has(a.code));
+    b.onclick=()=>{
+      if(state.airports.has(a.code)) state.airports.delete(a.code);
+      else state.airports.add(a.code);
+      syncChips(); render();
+    };
+    wrap.appendChild(b);
+  });
+}
+function syncChips(){
+  const wrap=document.getElementById("airportChips");
+  const chips=[...wrap.querySelectorAll(".chip")];
+  chips[0].setAttribute("aria-pressed", state.airports.size===TW_AIRPORTS.length);
+  chips.slice(1).forEach(c=>c.setAttribute("aria-pressed", state.airports.has(c.dataset.code)));
+}
+
+function setUpdatedNow(){
+  const d=new Date();
+  document.getElementById("updatedAt").textContent =
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+async function refresh(){
+  const btn=document.getElementById("btnRefresh");
+  btn.textContent="↻ 更新中…"; btn.disabled=true;
+  try{
+    state.raw = await loadOffers();
+    setUpdatedNow();
+    render();
+  }finally{
+    btn.textContent="↻ 重新整理"; btn.disabled=false;
+  }
+}
+
+function init(){
+  document.getElementById("yr").textContent = new Date().getFullYear();
+  document.getElementById("intvLabel").textContent = CONFIG.refreshMinutes;
+  buildAirportChips();
+
+  document.getElementById("fBaggage").onchange = e=>{ state.baggage=e.target.value; render(); };
+  document.getElementById("fType").onchange    = e=>{ state.type=e.target.value; render(); };
+  document.getElementById("fSort").onchange    = e=>{ state.sort=e.target.value; render(); };
+  document.getElementById("fSearch").oninput   = e=>{ state.search=e.target.value; render(); };
+  document.getElementById("fBelow").onchange   = e=>{ state.belowAvg=e.target.checked; render(); };
+  document.getElementById("btnRefresh").onclick= refresh;
+
+  // 飄落櫻花
+  const hero=document.getElementById("top");
+  for(let i=0;i<12;i++){
+    const s=document.createElement("div"); s.className="sakura";
+    s.style.left=Math.random()*100+"%";
+    s.style.animationDuration=(6+Math.random()*8)+"s";
+    s.style.animationDelay=(Math.random()*8)+"s";
+    s.style.transform=`scale(${0.6+Math.random()*0.8})`;
+    hero.appendChild(s);
+  }
+
+  refresh();
+  setInterval(refresh, CONFIG.refreshMinutes*60*1000); // 自動更新
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
