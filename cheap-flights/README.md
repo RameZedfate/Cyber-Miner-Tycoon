@@ -128,6 +128,10 @@ const AFFILIATE = {
 - `currency` / `locale`：顯示幣別與 Trip.com 語系
 - `TW_AIRPORTS`：要列出的台灣出發機場
 - `DESTS`：要掃描的目的地與市場均價
+- `topN` / `maxN`：每排先顯示前幾名、按「查看更多」展開到第幾名（預設 10 → 30）
+- `autoRotate` / `rotateSeconds`：旋轉輪播是否自動換頁、間隔幾秒（不想自動換就把 `autoRotate` 改成 `false`，仍可用 ‹ › 或手滑）
+
+> 💡 **價格提醒**：`deals.json` 裡「來回」票的 `price`/`marketAvg` 要填**來回的金額**（例如 KHH↔胡志明來回約 9,000–12,000），不要填單程價，否則會像之前那樣看起來怪怪的。單程票（沒有 `returnDate`）才填單程價。
 
 ### 換封面照片（重要）
 - **最簡單**：把你的照片命名為 `cover.jpg` 放進 `cheap-flights/images/`，網頁封面就會自動變那張。

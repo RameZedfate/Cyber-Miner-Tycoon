@@ -110,12 +110,20 @@
   .section-head h2{font-size:23px;margin:0;font-weight:900}
   .section-head h2 .cnt{font-size:15px;color:var(--ink-soft);font-weight:700}
   .section-head .sub{font-size:12.5px;color:var(--ink-soft)}
-  .carousel{display:flex;gap:16px;overflow-x:auto;padding:8px 2px 18px;scroll-snap-type:x proximity}
+  .carousel-wrap{position:relative}
+  .carousel{display:flex;gap:16px;overflow-x:auto;padding:8px 2px 18px;scroll-snap-type:x mandatory;scroll-behavior:smooth}
   .carousel::-webkit-scrollbar{height:8px}
   .carousel::-webkit-scrollbar-thumb{background:#cdd6e6;border-radius:999px}
   .carousel::-webkit-scrollbar-track{background:transparent}
   .carousel .card{flex:0 0 300px;scroll-snap-align:start}
   .empty-sm{color:var(--ink-soft);font-size:14px;padding:30px 4px}
+  /* 輪播左右箭頭 */
+  .car-arrow{position:absolute;top:42%;transform:translateY(-50%);z-index:6;width:44px;height:44px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(255,255,255,.96);box-shadow:var(--shadow);cursor:pointer;
+    font-size:24px;line-height:1;color:var(--brand-deep);display:flex;align-items:center;justify-content:center;transition:.15s}
+  .car-arrow:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .car-arrow.prev{left:-10px} .car-arrow.next{right:-10px}
+  @media (max-width:600px){ .car-arrow{display:none} }  /* 手機用手滑就好 */
 
   /* ===================== 卡片 ===================== */
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
@@ -237,18 +245,26 @@
 <section class="section" id="sec-ow">
   <div class="section-head">
     <h2>🛫 單程機票 <span class="cnt">(共 <span id="count-ow">0</span> 筆)</span></h2>
-    <span class="sub">價格由低到高 · 前 10 名｜←　左右滑動　→</span>
+    <span class="sub">價格由低到高 · 前 10 名｜自動輪播 · 也可用 ‹ › 或左右滑動</span>
   </div>
-  <div class="carousel" id="car-ow"></div>
+  <div class="carousel-wrap">
+    <button class="car-arrow prev" data-car="ow" aria-label="上一張">‹</button>
+    <div class="carousel" id="car-ow"></div>
+    <button class="car-arrow next" data-car="ow" aria-label="下一張">›</button>
+  </div>
 </section>
 
 <!-- ============================ 來回機票排行 ============================ -->
 <section class="section" id="sec-rt">
   <div class="section-head">
     <h2>🔁 來回機票 <span class="cnt">(共 <span id="count-rt">0</span> 筆)</span></h2>
-    <span class="sub">價格由低到高 · 前 10 名｜←　左右滑動　→</span>
+    <span class="sub">價格由低到高 · 前 10 名｜自動輪播 · 也可用 ‹ › 或左右滑動</span>
   </div>
-  <div class="carousel" id="car-rt"></div>
+  <div class="carousel-wrap">
+    <button class="car-arrow prev" data-car="rt" aria-label="上一張">‹</button>
+    <div class="carousel" id="car-rt"></div>
+    <button class="car-arrow next" data-car="rt" aria-label="下一張">›</button>
+  </div>
 </section>
 
 <!-- ============================ 怎麼用 ============================ -->
@@ -291,6 +307,7 @@ const AFFILIATE = {
 const CONFIG = {
   currency: "TWD", locale: "zh-TW", monthsAhead: 3, refreshMinutes: 5,
   topN: 10, maxN: 30,            // 先顯示前 topN，查看更多展開到 maxN
+  autoRotate: true, rotateSeconds: 4,   // 旋轉輪播：自動每幾秒換一張（滑鼠移上去會暫停）；不想自動就改 false
   dataSource: "custom", customJsonUrl: "deals.json", travelpayoutsToken: ""
 };
 const TW_AIRPORTS = [
@@ -329,15 +346,15 @@ const AIRLINES = {
   hk:[{zh:"國泰航空",type:"full",bag:true,kg:30},{zh:"中華航空",type:"full",bag:true,kg:30},{zh:"長榮航空",type:"full",bag:true,kg:30},{zh:"香港快運",type:"lcc",bag:false,kg:0},{zh:"台灣虎航",type:"lcc",bag:false,kg:0}],
 };
 const DESTS = [
-  {zh:"東京",en:"Tokyo",iata:"NRT",region:"jp",emoji:"🗼",avg:13500},{zh:"大阪",en:"Osaka",iata:"KIX",region:"jp",emoji:"🏯",avg:12000},
-  {zh:"名古屋",en:"Nagoya",iata:"NGO",region:"jp",emoji:"🏯",avg:12500},{zh:"福岡",en:"Fukuoka",iata:"FUK",region:"jp",emoji:"🍜",avg:11500},
-  {zh:"沖繩",en:"Okinawa",iata:"OKA",region:"jp",emoji:"🏝️",avg:9000},{zh:"札幌",en:"Sapporo",iata:"CTS",region:"jp",emoji:"❄️",avg:16000},
-  {zh:"首爾",en:"Seoul",iata:"ICN",region:"kr",emoji:"🇰🇷",avg:9500},{zh:"釜山",en:"Busan",iata:"PUS",region:"kr",emoji:"🌊",avg:9000},
-  {zh:"濟州",en:"Jeju",iata:"CJU",region:"kr",emoji:"🍊",avg:9500},{zh:"曼谷",en:"Bangkok",iata:"BKK",region:"sea",emoji:"🛕",avg:11000},
-  {zh:"新加坡",en:"Singapore",iata:"SIN",region:"sea",emoji:"🦁",avg:13000},{zh:"吉隆坡",en:"K. Lumpur",iata:"KUL",region:"sea",emoji:"🕌",avg:11500},
-  {zh:"峴港",en:"Da Nang",iata:"DAD",region:"sea",emoji:"🏖️",avg:9500},{zh:"胡志明",en:"Ho Chi Minh",iata:"SGN",region:"sea",emoji:"🛵",avg:9000},
-  {zh:"宿霧",en:"Cebu",iata:"CEB",region:"sea",emoji:"🐠",avg:10000},{zh:"峇里島",en:"Bali",iata:"DPS",region:"sea",emoji:"🌺",avg:15000},
-  {zh:"香港",en:"Hong Kong",iata:"HKG",region:"hk",emoji:"🌃",avg:6500},{zh:"澳門",en:"Macau",iata:"MFM",region:"hk",emoji:"🎰",avg:6500},
+  {zh:"東京",en:"Tokyo",iata:"NRT",region:"jp",emoji:"🗼",avg:15000},{zh:"大阪",en:"Osaka",iata:"KIX",region:"jp",emoji:"🏯",avg:13500},
+  {zh:"名古屋",en:"Nagoya",iata:"NGO",region:"jp",emoji:"🏯",avg:13000},{zh:"福岡",en:"Fukuoka",iata:"FUK",region:"jp",emoji:"🍜",avg:12000},
+  {zh:"沖繩",en:"Okinawa",iata:"OKA",region:"jp",emoji:"🏝️",avg:9800},{zh:"札幌",en:"Sapporo",iata:"CTS",region:"jp",emoji:"❄️",avg:18000},
+  {zh:"首爾",en:"Seoul",iata:"ICN",region:"kr",emoji:"🇰🇷",avg:10500},{zh:"釜山",en:"Busan",iata:"PUS",region:"kr",emoji:"🌊",avg:10500},
+  {zh:"濟州",en:"Jeju",iata:"CJU",region:"kr",emoji:"🍊",avg:11000},{zh:"曼谷",en:"Bangkok",iata:"BKK",region:"sea",emoji:"🛕",avg:12500},
+  {zh:"新加坡",en:"Singapore",iata:"SIN",region:"sea",emoji:"🦁",avg:15000},{zh:"吉隆坡",en:"K. Lumpur",iata:"KUL",region:"sea",emoji:"🕌",avg:12500},
+  {zh:"峴港",en:"Da Nang",iata:"DAD",region:"sea",emoji:"🏖️",avg:11500},{zh:"胡志明",en:"Ho Chi Minh",iata:"SGN",region:"sea",emoji:"🛵",avg:11500},
+  {zh:"宿霧",en:"Cebu",iata:"CEB",region:"sea",emoji:"🐠",avg:12000},{zh:"峇里島",en:"Bali",iata:"DPS",region:"sea",emoji:"🌺",avg:16000},
+  {zh:"香港",en:"Hong Kong",iata:"HKG",region:"hk",emoji:"🌃",avg:7500},{zh:"澳門",en:"Macau",iata:"MFM",region:"hk",emoji:"🎰",avg:7500},
 ];
 const REGION_PRICE_BUMP = { TPE:1, TSA:1.05, KHH:1.08, RMQ:1.1, TNN:1.12 };
 const AIRPORT_SERVES = { TPE:["jp","kr","sea","hk"], KHH:["jp","kr","sea","hk"], RMQ:["jp","kr","sea","hk"], TNN:["jp","kr","hk"], TSA:["jp","kr"] };
@@ -362,9 +379,9 @@ function buildDemoData(){
       for(let i=0;i<n;i++){
         const al=pick(AIRLINES[dest.region]), bump=REGION_PRICE_BUMP[ap.code]||1;
         const isOW=Math.random()<0.4;
-        let marketAvg=Math.round(dest.avg*bump/100)*100;
-        if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100;
-        const price=Math.round(marketAvg*rand(0.55,0.9)/100)*100;
+        let marketAvg=Math.round(dest.avg*bump/100)*100;       // dest.avg = 來回市場均價
+        if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100; // 單程約來回的 55%
+        const price=Math.round(marketAvg*rand(0.72,0.92)/100)*100; // 便宜票：均價的 72%~92%（真實水位）
         const depOffset=Math.floor(rand(5,horizon-8)), tripLen=Math.floor(rand(4,9));
         const departDate=fmtDate(addDays(today,depOffset));
         const returnDate=isOW?"":fmtDate(addDays(today,depOffset+tripLen));
@@ -552,6 +569,33 @@ async function refresh(){
   const btn=document.getElementById("btnRefresh"); btn.textContent="↻ 更新中…"; btn.disabled=true;
   try{ state.raw=await loadOffers(); setUpdatedNow(); render(); }finally{ btn.textContent="↻ 重新整理"; btn.disabled=false; }
 }
+// 輪播：前進/後退一張，到頭到尾會循環（旋轉）
+function carStep(carEl, dir){
+  const first = carEl.querySelector(".card, .more-card");
+  const step = first ? Math.round(first.getBoundingClientRect().width + 16) : 316;
+  const maxLeft = carEl.scrollWidth - carEl.clientWidth;
+  let target = carEl.scrollLeft + dir*step;
+  if(dir>0 && carEl.scrollLeft >= maxLeft - 4) target = 0;        // 到底 → 回到開頭
+  else if(dir<0 && carEl.scrollLeft <= 4) target = maxLeft;       // 在開頭 → 跳到結尾
+  carEl.scrollTo({ left: target, behavior:"smooth" });
+}
+let _rotTimers = [];
+function setupCarousels(){
+  document.querySelectorAll(".car-arrow").forEach(btn=>{
+    btn.onclick=()=>{ const car=document.getElementById("car-"+btn.dataset.car); carStep(car, btn.classList.contains("next")?1:-1); };
+  });
+  _rotTimers.forEach(t=>clearInterval(t)); _rotTimers=[];
+  if(!CONFIG.autoRotate) return;
+  ["ow","rt"].forEach(tt=>{
+    const car=document.getElementById("car-"+tt); let paused=false;
+    car.addEventListener("mouseenter",()=>paused=true);
+    car.addEventListener("mouseleave",()=>paused=false);
+    car.addEventListener("touchstart",()=>paused=true,{passive:true});
+    car.addEventListener("touchend",()=>setTimeout(()=>paused=false,4000),{passive:true});
+    _rotTimers.push(setInterval(()=>{ if(!paused && car.querySelector(".card")) carStep(car,1); }, CONFIG.rotateSeconds*1000));
+  });
+}
+
 function openDrawer(){ document.getElementById("drawer").classList.add("open"); document.getElementById("backdrop").classList.add("show"); document.getElementById("btnMenu").classList.add("open"); document.getElementById("btnMenu").setAttribute("aria-expanded","true"); }
 function closeDrawer(){ document.getElementById("drawer").classList.remove("open"); document.getElementById("backdrop").classList.remove("show"); document.getElementById("btnMenu").classList.remove("open"); document.getElementById("btnMenu").setAttribute("aria-expanded","false"); }
 
@@ -576,6 +620,7 @@ function init(){
   document.getElementById("backdrop").onclick=closeDrawer;
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
 
+  setupCarousels();   // 旋轉輪播：箭頭 + 自動換頁
   refresh();
   setInterval(refresh, CONFIG.refreshMinutes*60*1000);
 }
