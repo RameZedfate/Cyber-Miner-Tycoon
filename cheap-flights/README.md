@@ -8,6 +8,19 @@
 
 ---
 
+## 0. 這個資料夾有什麼
+
+| 檔案 | 用途 |
+| --- | --- |
+| `index.html` | 主程式（封面 + 篩選 + 卡片 + Trip.com 訂票按鈕） |
+| `deals.json` | **你的機票資料檔 — 平常就改這個來更新便宜票**（預設資料來源） |
+| `README.md` | 本說明 |
+
+> 預設 `index.html` 會讀同資料夾的 `deals.json`。上線到 GitHub Pages 後，**你只要編輯 `deals.json` 並推上去，網頁就會更新**（同網域、免 CORS、免 API 金鑰）。
+> ⚠️ 若你在本機用滑鼠雙擊 `index.html`（file:// 開啟），瀏覽器會擋住讀取本機 JSON，這時會**自動退回內建示範資料**——這是正常的，上線後就會讀 `deals.json`。
+
+---
+
 ## 1. 先改這 3 個地方（檔案：`index.html` 最上方 `<script>` 設定區）
 
 ```js
@@ -46,26 +59,38 @@ const AFFILIATE = {
 
 | 模式 | 說明 | 適合誰 |
 | --- | --- | --- |
-| `"demo"`（預設） | 內建示範資料，馬上能看、能分享，價格會模擬跳動 | 先上線、先測版面 |
-| `"custom"` | 讀**你自己的 JSON 網址**（最推薦給非工程師長期維護） | 你想自己掌控要推哪些特價 |
+| `"custom"`（**預設**，讀 `deals.json`） | 讀同資料夾或你指定網址的 JSON，**你自己掌控要推哪些特價** | 你（最推薦） |
+| `"demo"` | 內建示範資料，價格會模擬跳動 | 只想先測版面 |
 | `"travelpayouts"` | 串 Travelpayouts(Aviasales) 真實便宜票快取 | 想全自動抓便宜票 |
 
-### 4-1. `custom`：用 Google Sheet 當資料庫（最省事）
-1. 開一張 Google Sheet，每列一筆票，欄位：
-   `depIata, destIata, destZh, region, airlineZh, airlineType, baggage, baggageKg, stops, departDate, returnDate, price, marketAvg`
-   - `region`：`jp / kr / sea / hk`（決定卡片配色）
-   - `airlineType`：`full`（傳統）或 `lcc`（廉航）
-   - `baggage`：`true`（含託運）或 `false`
-   - `price` < `marketAvg` 才會被當成「便宜票」
-2. 用任一服務把這張表發佈成 JSON（例如 Opensheet、SheetDB、或 Apps Script）。
-3. 在 `CONFIG` 設定：
-   ```js
-   dataSource: "custom",
-   customJsonUrl: "你的 JSON 網址",
-   ```
-這樣你只要改 Google Sheet，網頁就會即時更新（重新整理或每 5 分鐘自動更新）。
+### 4-1. 日常維護：直接改 `deals.json`（預設、最省事）
+`deals.json` 是一個陣列，每筆一張票，欄位如下：
 
-### 4-2. `travelpayouts`：自動抓便宜票快取
+```json
+{
+  "depIata":"TPE", "depZh":"台北桃園",
+  "destIata":"NRT", "destZh":"東京", "destEn":"Tokyo",
+  "region":"jp", "emoji":"🗼",
+  "airlineZh":"樂桃航空", "airlineType":"lcc",
+  "baggage":false, "baggageKg":0, "stops":0,
+  "departDate":"2026-07-08", "returnDate":"2026-07-13",
+  "price":8200, "marketAvg":13500, "currency":"TWD"
+}
+```
+
+- `region`：`jp / kr / sea / hk`（決定卡片配色；其他填 `other`）
+- `airlineType`：`full`（傳統）或 `lcc`（廉航）
+- `baggage`：`true`（含託運，記得填 `baggageKg`）或 `false`
+- **`price` 一定要 < `marketAvg`**，才會被當成「便宜票」並算出省幾 %
+
+改完 `git push`，GitHub Pages 上的網頁就更新了。
+
+### 4-2.（進階）想用 Google Sheet 編輯而不是改 JSON
+1. 開一張 Google Sheet，欄位同上。
+2. 用 Opensheet / SheetDB / Apps Script 把它發佈成 JSON 網址。
+3. 把 `CONFIG.customJsonUrl` 改成那個網址即可（其餘不用動）。
+
+### 4-3. `travelpayouts`：自動抓便宜票快取
 - 到 <https://www.travelpayouts.com> 免費註冊，取得 **API token**。
 - ⚠️ 重點：這個 API 通常**沒有 CORS 標頭**，前端網頁直接打會被瀏覽器擋；
   而且 token 放在前端會外洩。**正確做法是架一層輕量 proxy**（Cloudflare Worker / Vercel Function），

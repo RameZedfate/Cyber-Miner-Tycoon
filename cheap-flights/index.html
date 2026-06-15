@@ -443,8 +443,9 @@ const CONFIG = {
   //   "demo"          = 內建示範資料（馬上就能看、可分享，價格會模擬跳動）
   //   "custom"        = 讀你自己的 JSON 網址（最適合非工程師長期維護，見下方 customJsonUrl）
   //   "travelpayouts" = 串 Travelpayouts(Aviasales) 真實便宜票快取（需 token，且通常要一層 proxy，見 README）
-  dataSource: "demo",
-  customJsonUrl: "",      // dataSource="custom" 時填你的 JSON 網址
+  dataSource: "custom",
+  customJsonUrl: "deals.json", // 同資料夾的機票資料檔；編輯它即可更新（上線後同網域、免 CORS/免金鑰）
+                               // 本機用 file:// 直接開時瀏覽器會擋讀取 → 會自動退回 demo 示範資料
   travelpayoutsToken: ""  // dataSource="travelpayouts" 時填（注意：放前端會外洩，建議走 proxy）
 };
 
