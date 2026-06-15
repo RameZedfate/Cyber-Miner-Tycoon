@@ -309,7 +309,9 @@ const CONFIG = {
   currency: "TWD", locale: "zh-TW", monthsAhead: 3, refreshMinutes: 5,
   topN: 10, maxN: 30,            // 先顯示前 topN，查看更多展開到 maxN
   autoRotate: true, rotateSeconds: 4,   // 旋轉輪播：自動每幾秒換一張（滑鼠移上去會暫停）；不想自動就改 false
-  dataSource: "custom", customJsonUrl: "deals.json", travelpayoutsToken: ""
+  // 資料來源優先序：proxyUrl(即時真實價) → customJsonUrl(deals.json) → 內建 demo
+  proxyUrl: "",                  // ← 部署 Cloudflare Worker 後，把它的網址貼這裡，就會改用「即時真實價」
+  customJsonUrl: "deals.json"    // 還沒部署 Worker 時的後備資料
 };
 const TW_AIRPORTS = [
   { code:"TPE", zh:"台北桃園" },{ code:"TSA", zh:"台北松山" },{ code:"KHH", zh:"高雄" },
@@ -345,6 +347,22 @@ const AIRLINES = {
   kr:[{zh:"中華航空",type:"full",bag:true,kg:23},{zh:"長榮航空",type:"full",bag:true,kg:23},{zh:"大韓航空",type:"full",bag:true,kg:23},{zh:"韓亞航空",type:"full",bag:true,kg:23},{zh:"台灣虎航",type:"lcc",bag:false,kg:0},{zh:"濟州航空",type:"lcc",bag:false,kg:0},{zh:"釜山航空",type:"lcc",bag:false,kg:0}],
   sea:[{zh:"中華航空",type:"full",bag:true,kg:30},{zh:"長榮航空",type:"full",bag:true,kg:30},{zh:"星宇航空",type:"full",bag:true,kg:30},{zh:"泰國航空",type:"full",bag:true,kg:30},{zh:"新加坡航空",type:"full",bag:true,kg:30},{zh:"台灣虎航",type:"lcc",bag:false,kg:0},{zh:"酷航",type:"lcc",bag:false,kg:0},{zh:"越捷航空",type:"lcc",bag:false,kg:0},{zh:"亞洲航空",type:"lcc",bag:false,kg:0}],
   hk:[{zh:"國泰航空",type:"full",bag:true,kg:30},{zh:"中華航空",type:"full",bag:true,kg:30},{zh:"長榮航空",type:"full",bag:true,kg:30},{zh:"香港快運",type:"lcc",bag:false,kg:0},{zh:"台灣虎航",type:"lcc",bag:false,kg:0}],
+};
+// 航空公司 IATA 代碼 → 中文名 / 類型（給「即時真實價」用，API 只回代碼）
+const AIRLINE_BY_CODE = {
+  CI:{zh:"中華航空",type:"full"}, BR:{zh:"長榮航空",type:"full"}, JX:{zh:"星宇航空",type:"full"},
+  IT:{zh:"台灣虎航",type:"lcc"}, JL:{zh:"日本航空",type:"full"}, NH:{zh:"全日空",type:"full"},
+  MM:{zh:"樂桃航空",type:"lcc"}, GK:{zh:"捷星日本",type:"lcc"}, TR:{zh:"酷航",type:"lcc"},
+  CX:{zh:"國泰航空",type:"full"}, HX:{zh:"香港航空",type:"full"}, UO:{zh:"香港快運",type:"lcc"},
+  NX:{zh:"澳門航空",type:"full"}, KE:{zh:"大韓航空",type:"full"}, OZ:{zh:"韓亞航空",type:"full"},
+  TW:{zh:"德威航空",type:"lcc"}, LJ:{zh:"真航空",type:"lcc"}, "7C":{zh:"濟州航空",type:"lcc"},
+  BX:{zh:"釜山航空",type:"lcc"}, RS:{zh:"首爾航空",type:"lcc"}, TG:{zh:"泰國航空",type:"full"},
+  SQ:{zh:"新加坡航空",type:"full"}, TR2:{zh:"酷航",type:"lcc"}, MH:{zh:"馬來西亞航空",type:"full"},
+  AK:{zh:"亞洲航空",type:"lcc"}, D7:{zh:"亞洲航空 X",type:"lcc"}, VJ:{zh:"越捷航空",type:"lcc"},
+  VN:{zh:"越南航空",type:"full"}, "5J":{zh:"宿霧太平洋",type:"lcc"}, PR:{zh:"菲律賓航空",type:"full"},
+  SL:{zh:"泰國獅子航空",type:"lcc"}, FD:{zh:"泰國亞航",type:"lcc"}, "3K":{zh:"捷星亞洲",type:"lcc"},
+  JQ:{zh:"捷星航空",type:"lcc"}, OD:{zh:"馬印航空",type:"lcc"}, GA:{zh:"嘉魯達印尼",type:"full"},
+  ID:{zh:"巴澤航空",type:"lcc"}, QH:{zh:"曼谷航空",type:"full"}, PG:{zh:"曼谷航空",type:"full"},
 };
 const DESTS = [
   {zh:"東京",en:"Tokyo",iata:"NRT",region:"jp",emoji:"🗼",avg:15000},{zh:"大阪",en:"Osaka",iata:"KIX",region:"jp",emoji:"🏯",avg:13500},
@@ -408,24 +426,44 @@ async function fetchCustom(){
     stops:o.stops||0, departDate:o.departDate, returnDate:o.returnDate||"", tripType:o.returnDate?"rt":"ow",
     price:Number(o.price), marketAvg:Number(o.marketAvg||o.price), currency:o.currency||CONFIG.currency }));
 }
-async function fetchTravelpayouts(){
-  const out=[], destByIata=Object.fromEntries(DESTS.map(d=>[d.iata,d]));
-  for(const ap of TW_AIRPORTS){
-    const url=`https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${ap.code}&currency=${CONFIG.currency.toLowerCase()}&sorting=price&direct=false&limit=30&token=${CONFIG.travelpayoutsToken}`;
-    let data; try{ data=await (await fetch(url)).json(); }catch(e){ continue; }
-    (data.data||[]).forEach((row,i)=>{
-      const dest=destByIata[row.destination]; if(!dest) return;
-      out.push({ id:`tp-${ap.code}-${i}`, depIata:ap.code, depZh:ap.zh, destIata:row.destination, destZh:dest.zh, destEn:dest.en,
-        region:dest.region, emoji:dest.emoji, airlineZh:row.airline||"", airlineType:"full", baggage:false, baggageKg:0,
-        stops:row.transfers||0, departDate:row.departure_at?.slice(0,10)||"", returnDate:row.return_at?.slice(0,10)||"",
-        tripType:row.return_at?"rt":"ow", price:Math.round(row.price), marketAvg:dest.avg, currency:CONFIG.currency });
-    });
-  }
-  return out;
+// 從你的 Cloudflare Worker 取「即時真實便宜票」（token 藏在 Worker、已補 CORS）
+// 回傳格式：{ data: [ Travelpayouts prices_for_dates 的列 ... ] }
+async function fetchProxy(){
+  const res=await fetch(CONFIG.proxyUrl,{cache:"no-store"});
+  if(!res.ok) throw new Error("proxy HTTP "+res.status);
+  const j=await res.json();
+  const rows=j.data||[];
+  const destByIata=Object.fromEntries(DESTS.map(d=>[d.iata,d]));
+  const today=new Date(); const startDay=new Date(today.toDateString());
+  const maxDay=addDays(today, CONFIG.monthsAhead*31);
+  return rows.map((row,i)=>{
+    const dest=destByIata[row.destination];
+    const depAp=TW_AIRPORTS.find(a=>a.code===row.origin);
+    const ai=AIRLINE_BY_CODE[row.airline]||{zh:(row.airline||"多家航空"),type:"full"};
+    const isOW=!row.return_at;
+    const bump=REGION_PRICE_BUMP[row.origin]||1;
+    let marketAvg=Math.round((dest?dest.avg:Math.round(row.price*1.3))*bump/100)*100;
+    if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100;
+    if(marketAvg<=row.price) marketAvg=Math.round(row.price*1.18/100)*100; // 保底：讓 price<avg
+    return {
+      id:"tp"+i, depIata:row.origin, depZh:depAp?depAp.zh:row.origin,
+      destIata:row.destination, destZh:dest?dest.zh:row.destination, destEn:dest?dest.en:"",
+      region:dest?dest.region:"other", emoji:dest?dest.emoji:"✈️",
+      airlineZh:ai.zh, airlineType:ai.type, baggage:null, baggageKg:0,   // 資料 API 不含行李資訊
+      stops:row.transfers||0,
+      departDate:(row.departure_at||"").slice(0,10),
+      returnDate:isOW?"":(row.return_at||"").slice(0,10),
+      tripType:isOW?"ow":"rt", price:Math.round(row.price), marketAvg, currency:CONFIG.currency
+    };
+  }).filter(o=>{
+    if(!o.destIata||!o.departDate||!(o.price>0)) return false;
+    const d=new Date(o.departDate);
+    return d>=startDay && d<=maxDay;   // 只留「近三個月」內出發
+  });
 }
 async function loadOffers(){
-  if(CONFIG.dataSource==="custom"&&CONFIG.customJsonUrl){ try{ return await fetchCustom(); }catch(e){ console.warn("custom 失敗，改用 demo",e); } }
-  if(CONFIG.dataSource==="travelpayouts"&&CONFIG.travelpayoutsToken){ try{ const r=await fetchTravelpayouts(); if(r.length) return r; }catch(e){ console.warn("travelpayouts 失敗，改用 demo",e); } }
+  if(CONFIG.proxyUrl){ try{ const r=await fetchProxy(); if(r.length) return r; }catch(e){ console.warn("proxy 失敗，改用 deals.json",e); } }
+  if(CONFIG.customJsonUrl){ try{ return await fetchCustom(); }catch(e){ console.warn("custom 失敗，改用 demo",e); } }
   if(!_seedOffers) _seedOffers=buildDemoData(); else _seedOffers=jitter(_seedOffers);
   return _seedOffers;
 }
@@ -446,8 +484,8 @@ function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
 function applyFilters(){
   return state.raw.filter(o=>{
     if(!state.airports.has(o.depIata)) return false;
-    if(state.baggage==="yes"&&!o.baggage) return false;
-    if(state.baggage==="no"&&o.baggage) return false;
+    if(state.baggage==="yes"&&o.baggage!==true) return false;
+    if(state.baggage==="no"&&o.baggage!==false) return false;
     if(state.type!=="all"&&o.airlineType!==state.type) return false;
     if(state.belowAvg&&!(o.price<o.marketAvg)) return false;
     if(state.search){
@@ -477,7 +515,9 @@ function card(o, rank){
   const disc=discountPct(o);
   const rk = rank!=null ? `<span class="rank${rank<3?" top":""}">#${rank+1}</span>` : "";
   const typeBadge=o.airlineType==="lcc"?`<span class="badge b-lcc">廉價航空</span>`:`<span class="badge b-full">傳統航空</span>`;
-  const bagBadge=o.baggage?`<span class="badge b-bag-y">含託運${o.baggageKg?` ${o.baggageKg}kg`:""}</span>`:`<span class="badge b-bag-n">不含託運</span>`;
+  const bagBadge=o.baggage===true?`<span class="badge b-bag-y">含託運${o.baggageKg?` ${o.baggageKg}kg`:""}</span>`
+    :o.baggage===false?`<span class="badge b-bag-n">不含託運</span>`
+    :`<span class="badge b-bag-n">託運看航司</span>`;
   const stopBadge=o.stops===0?`<span class="badge b-direct">直飛</span>`:`<span class="badge b-stop">轉機 ${o.stops}</span>`;
   return `
   <article class="card">

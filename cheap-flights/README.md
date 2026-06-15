@@ -20,7 +20,8 @@
 | 檔案 | 用途 |
 | --- | --- |
 | `index.html` | 主程式（封面 + ≡ 篩選選單 + 卡片 + Trip.com 訂票按鈕） |
-| `deals.json` | **你的機票資料檔 — 平常就改這個來更新便宜票**（預設資料來源） |
+| `deals.json` | 手動維護的機票清單（**還沒接即時價時**就用這個） |
+| `cloudflare-worker.js` | 接「即時真實價」用的中介程式（見 4-3，部署一次即可） |
 | `images/cover.jpg` | **封面照片（放這裡會自動使用）**；沒放就用線上富士山照備援 |
 | `README.md` | 本說明 |
 
@@ -74,17 +75,19 @@ const AFFILIATE = {
 
 ---
 
-## 4. 換成「真實、會即時更新」的價格（之後再做）
+## 4. 價格來源
 
-目前資料來源（`CONFIG.dataSource`）有三種：
+資料來源**優先序**（程式會由上往下試，前面拿不到才用後面）：
 
-| 模式 | 說明 | 適合誰 |
+| 順序 | 設定 | 說明 |
 | --- | --- | --- |
-| `"custom"`（**預設**，讀 `deals.json`） | 讀同資料夾或你指定網址的 JSON，**你自己掌控要推哪些特價** | 你（最推薦） |
-| `"demo"` | 內建示範資料，價格會模擬跳動 | 只想先測版面 |
-| `"travelpayouts"` | 串 Travelpayouts(Aviasales) 真實便宜票快取 | 想全自動抓便宜票 |
+| 1（即時真實價） | `CONFIG.proxyUrl` | 你的 Cloudflare Worker 網址；抓 Travelpayouts 真實便宜票快取。**填了就用這個**。見 4-3 |
+| 2（手動） | `CONFIG.customJsonUrl`（預設 `deals.json`） | 你自己維護的便宜票清單。**還沒部署 Worker 時就用這個** |
+| 3（後備） | 內建 demo | 本機 `file://` 開、或上面都失敗時，顯示示範資料 |
 
-### 4-1. 日常維護：直接改 `deals.json`（預設、最省事）
+> 卡片價格與「省 X%」：即時模式下 `price` 是 Travelpayouts 抓到的**真實最低快取價**，`marketAvg`（市場均價）用程式內建的參考值估算，所以「省 X%」是約略值。**最終票價一律以點進 Trip.com 結帳頁為準**（頁尾已標註）。
+
+### 4-1. 手動維護：直接改 `deals.json`（還沒接即時價時用）
 `deals.json` 是一個陣列，每筆一張票，欄位如下：
 
 ```json
@@ -113,13 +116,29 @@ const AFFILIATE = {
 2. 用 Opensheet / SheetDB / Apps Script 把它發佈成 JSON 網址。
 3. 把 `CONFIG.customJsonUrl` 改成那個網址即可（其餘不用動）。
 
-### 4-3. `travelpayouts`：自動抓便宜票快取
-- 到 <https://www.travelpayouts.com> 免費註冊，取得 **API token**。
-- ⚠️ 重點：這個 API 通常**沒有 CORS 標頭**，前端網頁直接打會被瀏覽器擋；
-  而且 token 放在前端會外洩。**正確做法是架一層輕量 proxy**（Cloudflare Worker / Vercel Function），
-  由 proxy 去打 Travelpayouts，再把結果回給網頁，token 藏在 proxy。
-- 把 `index.html` 裡 `fetchTravelpayouts()` 的網址改成你的 proxy 網址即可。
-- 監理錢的還是 Trip.com：價格資料來自 Travelpayouts，但「訂票按鈕」依舊導到你的 Trip.com 聯盟連結。
+### 4-3. 接「即時真實價」（推薦）— 一次性設定，之後全自動
+價格資料來自 **Travelpayouts(Aviasales) 免費 API**；因為 token 不能放前端、且要處理 CORS，
+所以用一支免費的 **Cloudflare Worker** 當中介。**訂票按鈕仍然是你的 Trip.com 聯盟連結**，這裡只借它的「價格」。
+
+**步驟：**
+1. **拿 Travelpayouts token**：到 <https://www.travelpayouts.com> 免費註冊 → 後台 API token 區，複製你的 **API token**。
+2. **建 Cloudflare Worker**（免費）：
+   - 到 <https://dash.cloudflare.com> 註冊/登入 → 左側 **Workers & Pages** → **Create** → **Create Worker** → 命名後 **Deploy**。
+   - 點 **Edit code**，把本資料夾的 **`cloudflare-worker.js`** 整份貼上去 → **Deploy**。
+3. **設定 token（重要，別寫進程式）**：Worker 的 **Settings → Variables and Secrets** → 新增
+   名稱 `TP_TOKEN`、值＝你的 Travelpayouts token（類型選 **Secret**）→ 存檔 / 重新部署。
+4. **複製 Worker 網址**（長得像 `https://你的worker.你的帳號.workers.dev`），用瀏覽器打開應該會看到一包 JSON。
+5. **接到網頁**：把那個網址貼到 `index.html` 的 `CONFIG.proxyUrl`，例如：
+   ```js
+   proxyUrl: "https://你的worker.你的帳號.workers.dev",
+   ```
+6. `git push`。完成後網頁就改用**即時真實價**，每 5 分鐘自動更新；Worker 端也有 15 分鐘快取省額度。
+
+**小提醒：**
+- Travelpayouts 是「市場快取價」，數字會非常接近、但不一定與 Trip.com 完全相同（不同資料來源）；客人點進 Trip.com 看到的才是當下成交價。
+- 即時資料**不含行李資訊**，所以卡片會顯示「託運看航司」；「含/不含託運」篩選主要對手動的 `deals.json` 有效。
+- 想改抓哪些出發機場 / 抓幾筆，改 `cloudflare-worker.js` 最上面的 `ORIGINS` / `LIMIT`。
+- 想擴充目的地中文名／配色：在 `index.html` 的 `DESTS` 加一筆即可（沒列到的目的地會直接顯示機場代碼）。
 
 ---
 
