@@ -310,7 +310,7 @@ const CONFIG = {
   topN: 10, maxN: 30,            // 先顯示前 topN，查看更多展開到 maxN
   autoRotate: true, rotateSeconds: 4,   // 旋轉輪播：自動每幾秒換一張（滑鼠移上去會暫停）；不想自動就改 false
   // 資料來源優先序：proxyUrl(即時真實價) → customJsonUrl(deals.json) → 內建 demo
-  proxyUrl: "",                  // ← 部署 Cloudflare Worker 後，把它的網址貼這裡，就會改用「即時真實價」
+  proxyUrl: "https://cold-union-5668.a8225012.workers.dev/",   // 你的 Cloudflare Worker（即時真實價來源）
   customJsonUrl: "deals.json"    // 還沒部署 Worker 時的後備資料
 };
 const TW_AIRPORTS = [
