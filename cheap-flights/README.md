@@ -156,9 +156,12 @@ const AFFILIATE = {
 > 💡 **價格提醒**：`deals.json` 裡「來回」票的 `price`/`marketAvg` 要填**來回的金額**（例如 KHH↔胡志明來回約 9,000–12,000），不要填單程價，否則會像之前那樣看起來怪怪的。單程票（沒有 `returnDate`）才填單程價。
 
 ### 換封面照片（重要）
-- **最簡單**：把你的照片命名為 `cover.jpg` 放進 `cheap-flights/images/`，網頁封面就會自動變那張。
-- 封面讀取順序：`images/cover.jpg` → 線上富士山＋忠靈塔照片（備援）→ 漸層（最後備援）。
-- 想換線上備援照／或社群分享預覽圖：改 `index.html` 裡 `.hero::before` 的圖片網址、以及 `<meta property="og:image">`。
+你有兩種方式，擇一即可：
+- **方式 A（貼網址，最快）**：把任何一張圖的網址填到 `index.html` 的 `CONFIG.coverImage`，例如
+  `coverImage: "https://你的圖網址.jpg"`。存檔即生效。
+- **方式 B（放檔案）**：把照片命名為 `cover.jpg` 放進 `cheap-flights/images/`，封面就會自動變那張。
+- 封面讀取順序：`CONFIG.coverImage`（若有填）→ `images/cover.jpg` → 線上富士山＋忠靈塔照片 → 漸層（最後備援）。
+- 社群分享預覽圖另外吃 `<meta property="og:image">`，要換也改那裡。
 
 ---
 
