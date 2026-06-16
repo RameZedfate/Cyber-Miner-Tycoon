@@ -33,10 +33,11 @@
   a{color:inherit} img{max-width:100%}
 
   /* ===================== 封面 HERO ===================== */
-  .hero{position:relative;min-height:100svh;overflow:hidden;display:flex;flex-direction:column;background:#0e1b3d}
+  .hero{position:relative;min-height:100svh;overflow:hidden;display:flex;flex-direction:column;background:#0e1b3d;
+    --cover:url("images/cover.jpg")}
   .hero::before{content:"";position:absolute;inset:0;z-index:0;
     background-image:
-      url("images/cover.jpg"),
+      var(--cover),
       url("https://images.pexels.com/photos/15829427/pexels-photo-15829427.jpeg?auto=compress&cs=tinysrgb&w=1920"),
       linear-gradient(180deg,#0e1b3d 0%,#2a3a6b 35%,#6a6fa8 60%,#d98a8f 80%,#ffd9b3 100%);
     background-size:cover,cover,cover;background-position:center;background-repeat:no-repeat}
@@ -309,6 +310,7 @@ const CONFIG = {
   currency: "TWD", locale: "zh-TW", monthsAhead: 3, refreshMinutes: 5,
   topN: 10, maxN: 30,            // 先顯示前 topN，查看更多展開到 maxN
   autoRotate: true, rotateSeconds: 4,   // 旋轉輪播：自動每幾秒換一張（滑鼠移上去會暫停）；不想自動就改 false
+  coverImage: "",                // 封面圖網址：貼任何一張圖的網址即可；留空＝用 images/cover.jpg → 線上富士山照 → 漸層
   // 資料來源優先序：proxyUrl(即時真實價) → customJsonUrl(deals.json) → 內建 demo
   proxyUrl: "https://cold-union-5668.a8225012.workers.dev/",   // 你的 Cloudflare Worker（即時真實價來源）
   customJsonUrl: "deals.json"    // 還沒部署 Worker 時的後備資料
@@ -643,6 +645,7 @@ function closeDrawer(){ document.getElementById("drawer").classList.remove("open
 function init(){
   document.getElementById("yr").textContent=new Date().getFullYear();
   document.getElementById("intvLabel").textContent=CONFIG.refreshMinutes;
+  if(CONFIG.coverImage) document.getElementById("top").style.setProperty("--cover", `url("${CONFIG.coverImage}")`);
   buildAirportChips();
 
   // 封面「單趟機票 / 來回機票」→ 展開該排並捲過去
