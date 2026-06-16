@@ -1,0 +1,5 @@
+# 測試/實際產出的 PDF 與資料 JSON 都不進 repo（可能含個資）
+*.pdf
+data_*.json
+mapping_*.json
+filled_*.pdf
