@@ -130,7 +130,8 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
     box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease}
   .card:hover{transform:translateY(-4px);box-shadow:0 22px 48px rgba(16,32,58,.18)}
-  .card-top{position:relative;height:96px;color:#fff;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end}
+  .card-top{position:relative;height:108px;color:#fff;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;
+    background-size:cover;background-position:center;text-shadow:0 1px 6px rgba(0,0,0,.45)}
   .rg-jp{background:linear-gradient(120deg,#ff7a9c,#ff5a7a 60%,#b23a6a)}
   .rg-kr{background:linear-gradient(120deg,#5b8def,#3a6bd6 60%,#2447a8)}
   .rg-sea{background:linear-gradient(120deg,#19c2a3,#0f9d6b 60%,#0b7d55)}
@@ -316,8 +317,8 @@ const CONFIG = {
   customJsonUrl: "deals.json"    // 還沒部署 Worker 時的後備資料
 };
 const TW_AIRPORTS = [
-  { code:"TPE", zh:"台北桃園" },{ code:"TSA", zh:"台北松山" },{ code:"KHH", zh:"高雄" },
-  { code:"RMQ", zh:"台中" },{ code:"TNN", zh:"台南" },
+  { code:"TPE", zh:"台北桃園", en:"Taipei Taoyuan" },{ code:"TSA", zh:"台北松山", en:"Taipei Songshan" },{ code:"KHH", zh:"高雄", en:"Kaohsiung" },
+  { code:"RMQ", zh:"台中", en:"Taichung" },{ code:"TNN", zh:"台南", en:"Tainan" },
 ];
 
 /* ====================================================================
@@ -380,6 +381,26 @@ const DESTS = [
 const REGION_PRICE_BUMP = { TPE:1, TSA:1.05, KHH:1.08, RMQ:1.1, TNN:1.12 };
 const AIRPORT_SERVES = { TPE:["jp","kr","sea","hk"], KHH:["jp","kr","sea","hk"], RMQ:["jp","kr","sea","hk"], TNN:["jp","kr","hk"], TSA:["jp","kr"] };
 
+// 台灣機場（本島＋離島）：目的地若是這些＝國內線，不顯示（只留出國的便宜票）
+const TW_DOMESTIC = new Set(["TPE","TSA","KHH","RMQ","TNN","HUN","TTT","MZG","KNH","CYI","KYD","LZN","MFK","GNI","CMJ","WOT","HCN","TXG"]);
+
+// 各地區卡片底色（圖片載入失敗時的後備）
+const REGION_GRAD = {
+  jp:"linear-gradient(120deg,#ff7a9c,#ff5a7a 60%,#b23a6a)",
+  kr:"linear-gradient(120deg,#5b8def,#3a6bd6 60%,#2447a8)",
+  sea:"linear-gradient(120deg,#19c2a3,#0f9d6b 60%,#0b7d55)",
+  hk:"linear-gradient(120deg,#ffaf45,#ff7a45 60%,#d65a2a)",
+  other:"linear-gradient(120deg,#8a7bd8,#6a5acd 60%,#4a3ca8)"
+};
+// 各地區卡片背景照片（可換成你喜歡的圖網址；留空＝只用底色漸層）
+// 想換日本卡片的圖（例如鳥居那張）：把 jp 的網址換掉即可。
+const REGION_IMAGE = {
+  jp:"https://images.pexels.com/photos/15829427/pexels-photo-15829427.jpeg?auto=compress&cs=tinysrgb&w=800",
+  kr:"",
+  sea:"",
+  hk:""
+};
+
 /* ====================================================================
    ④ 資料層
    ==================================================================== */
@@ -408,7 +429,7 @@ function buildDemoData(){
         const returnDate=isOW?"":fmtDate(addDays(today,depOffset+tripLen));
         let bag=al.bag, kg=al.kg;
         if(al.type==="lcc"&&Math.random()<0.35){ bag=true; kg=20; }
-        offers.push({ id:"d"+(id++), depIata:ap.code, depZh:ap.zh, destIata:dest.iata, destZh:dest.zh, destEn:dest.en,
+        offers.push({ id:"d"+(id++), depIata:ap.code, depZh:ap.zh, depEn:ap.en, destIata:dest.iata, destZh:dest.zh, destEn:dest.en,
           region:dest.region, emoji:dest.emoji, airlineZh:al.zh, airlineType:al.type, baggage:bag, baggageKg:kg,
           stops:al.type==="lcc"?0:(Math.random()<0.2?1:0), departDate, returnDate, tripType:isOW?"ow":"rt",
           price, marketAvg, currency:CONFIG.currency });
@@ -422,7 +443,7 @@ async function fetchCustom(){
   const res=await fetch(CONFIG.customJsonUrl,{cache:"no-store"});
   if(!res.ok) throw new Error("custom JSON HTTP "+res.status);
   const arr=await res.json();
-  return arr.map((o,i)=>({ id:o.id||("c"+i), depIata:o.depIata, depZh:o.depZh||o.depIata, destIata:o.destIata,
+  return arr.map((o,i)=>({ id:o.id||("c"+i), depIata:o.depIata, depZh:o.depZh||o.depIata, depEn:o.depEn||(TW_AIRPORTS.find(a=>a.code===o.depIata)||{}).en||"", destIata:o.destIata,
     destZh:o.destZh||o.destIata, destEn:o.destEn||"", region:o.region||"other", emoji:o.emoji||"✈️",
     airlineZh:o.airlineZh||"", airlineType:o.airlineType||"full", baggage:!!o.baggage, baggageKg:o.baggageKg||0,
     stops:o.stops||0, departDate:o.departDate, returnDate:o.returnDate||"", tripType:o.returnDate?"rt":"ow",
@@ -448,7 +469,7 @@ async function fetchProxy(){
     if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100;
     if(marketAvg<=row.price) marketAvg=Math.round(row.price*1.18/100)*100; // 保底：讓 price<avg
     return {
-      id:"tp"+i, depIata:row.origin, depZh:depAp?depAp.zh:row.origin,
+      id:"tp"+i, depIata:row.origin, depZh:depAp?depAp.zh:row.origin, depEn:depAp?depAp.en:"",
       destIata:row.destination, destZh:dest?dest.zh:row.destination, destEn:dest?dest.en:"",
       region:dest?dest.region:"other", emoji:dest?dest.emoji:"✈️",
       airlineZh:ai.zh, airlineType:ai.type, baggage:null, baggageKg:0,   // 資料 API 不含行李資訊
@@ -485,6 +506,7 @@ function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
 // 套用篩選（不含 單程/來回 與 排名，那是各排自己處理）
 function applyFilters(){
   return state.raw.filter(o=>{
+    if(TW_DOMESTIC.has(o.destIata)) return false;          // 不顯示飛台灣國內線
     if(!state.airports.has(o.depIata)) return false;
     if(state.baggage==="yes"&&o.baggage!==true) return false;
     if(state.baggage==="no"&&o.baggage!==false) return false;
@@ -521,13 +543,19 @@ function card(o, rank){
     :o.baggage===false?`<span class="badge b-bag-n">不含託運</span>`
     :`<span class="badge b-bag-n">託運看航司</span>`;
   const stopBadge=o.stops===0?`<span class="badge b-direct">直飛</span>`:`<span class="badge b-stop">轉機 ${o.stops}</span>`;
+  const grad=REGION_GRAD[o.region]||REGION_GRAD.other;
+  const img=REGION_IMAGE[o.region];
+  const topStyle=img
+    ? `background-image:linear-gradient(rgba(10,16,40,.30),rgba(10,16,40,.62)),url('${img}'),${grad};`
+    : `background:${grad};`;
+  const depEn=o.depEn||o.depIata, destEn=o.destEn||o.destIata;
   return `
   <article class="card">
-    <div class="card-top rg-${o.region}">
+    <div class="card-top" style="${topStyle}">
       ${rk}
       <div>
         <div class="route">${o.depZh} <span class="arrow">→</span> ${o.destZh}</div>
-        <div class="route-codes">${o.depIata} → ${o.destIata}</div>
+        <div class="route-codes">${depEn} (${o.depIata}) → ${destEn} (${o.destIata})</div>
       </div>
       <span class="emoji">${o.emoji}</span>
     </div>
