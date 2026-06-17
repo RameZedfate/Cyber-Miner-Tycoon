@@ -373,7 +373,7 @@ const DESTS = [
   {zh:"沖繩",en:"Okinawa",iata:"OKA",region:"jp",emoji:"🏝️",avg:9800},{zh:"札幌",en:"Sapporo",iata:"CTS",region:"jp",emoji:"❄️",avg:18000},
   {zh:"首爾",en:"Seoul",iata:"ICN",region:"kr",emoji:"🇰🇷",avg:10500},{zh:"釜山",en:"Busan",iata:"PUS",region:"kr",emoji:"🌊",avg:10500},
   {zh:"濟州",en:"Jeju",iata:"CJU",region:"kr",emoji:"🍊",avg:11000},{zh:"曼谷",en:"Bangkok",iata:"BKK",region:"sea",emoji:"🛕",avg:12500},
-  {zh:"新加坡",en:"Singapore",iata:"SIN",region:"sea",emoji:"🦁",avg:15000},{zh:"吉隆坡",en:"K. Lumpur",iata:"KUL",region:"sea",emoji:"🕌",avg:12500},
+  {zh:"新加坡",en:"Singapore",iata:"SIN",region:"sea",emoji:"🦁",avg:15000},{zh:"吉隆坡",en:"Kuala Lumpur",iata:"KUL",region:"sea",emoji:"🕌",avg:12500},
   {zh:"峴港",en:"Da Nang",iata:"DAD",region:"sea",emoji:"🏖️",avg:11500},{zh:"胡志明",en:"Ho Chi Minh",iata:"SGN",region:"sea",emoji:"🛵",avg:11500},
   {zh:"宿霧",en:"Cebu",iata:"CEB",region:"sea",emoji:"🐠",avg:12000},{zh:"峇里島",en:"Bali",iata:"DPS",region:"sea",emoji:"🌺",avg:16000},
   {zh:"香港",en:"Hong Kong",iata:"HKG",region:"hk",emoji:"🌃",avg:7500},{zh:"澳門",en:"Macau",iata:"MFM",region:"hk",emoji:"🎰",avg:7500},
@@ -392,14 +392,24 @@ const REGION_GRAD = {
   hk:"linear-gradient(120deg,#ffaf45,#ff7a45 60%,#d65a2a)",
   other:"linear-gradient(120deg,#8a7bd8,#6a5acd 60%,#4a3ca8)"
 };
-// 各地區卡片背景照片（可換成你喜歡的圖網址；留空＝只用底色漸層）
-// 想換日本卡片的圖（例如鳥居那張）：把 jp 的網址換掉即可。
-const REGION_IMAGE = {
-  jp:"https://images.pexels.com/photos/15829427/pexels-photo-15829427.jpeg?auto=compress&cs=tinysrgb&w=800",
-  kr:"",
-  sea:"",
-  hk:""
-};
+// 想為「特定城市」指定一張固定照片，就填這裡（key 用機場代碼），例如 NRT:"https://…tokyo.jpg"
+// 留空時，系統會自動依目的地名稱抓一張相符的特色照片（見 cardBg）。
+const DEST_IMAGE = {};
+// 各地區關鍵字（給自動抓圖用）
+const REGION_KW = { jp:"Japan", kr:"Korea,Seoul", sea:"Asia", hk:"Hongkong", other:"travel,city" };
+function hashStr(s){ let h=0; for(let i=0;i<(s||"").length;i++){ h=(h*31+s.charCodeAt(i))|0; } return Math.abs(h); }
+// 產生卡片標題區背景：特色照片(可換) → 自動抓的城市照 → 地區底色漸層（多層後備，永遠不會破版）
+function cardBg(o){
+  const grad=REGION_GRAD[o.region]||REGION_GRAD.other;
+  const overlay="linear-gradient(rgba(10,16,40,.26),rgba(10,16,40,.60))"; // 壓暗讓白字清楚
+  const city=((o.destEn||"").replace(/[^A-Za-z ]/g,"").trim().replace(/\s+/g,"%20"))||o.destIata;
+  const kw=`${city},${REGION_KW[o.region]||"travel"}`;
+  const auto=`https://loremflickr.com/640/380/${kw}?lock=${hashStr(o.destIata)%90+1}`; // 依城市名抓特色照，鎖定固定一張
+  const layers=[overlay];
+  if(DEST_IMAGE[o.destIata]) layers.push(`url('${DEST_IMAGE[o.destIata]}')`);
+  layers.push(`url('${auto}')`);
+  return `background-image:${layers.join(",")},${grad};`;
+}
 
 /* ====================================================================
    ④ 資料層
@@ -543,11 +553,7 @@ function card(o, rank){
     :o.baggage===false?`<span class="badge b-bag-n">不含託運</span>`
     :`<span class="badge b-bag-n">託運看航司</span>`;
   const stopBadge=o.stops===0?`<span class="badge b-direct">直飛</span>`:`<span class="badge b-stop">轉機 ${o.stops}</span>`;
-  const grad=REGION_GRAD[o.region]||REGION_GRAD.other;
-  const img=REGION_IMAGE[o.region];
-  const topStyle=img
-    ? `background-image:linear-gradient(rgba(10,16,40,.30),rgba(10,16,40,.62)),url('${img}'),${grad};`
-    : `background:${grad};`;
+  const topStyle=cardBg(o);
   const depEn=o.depEn||o.depIata, destEn=o.destEn||o.destIata;
   return `
   <article class="card">
