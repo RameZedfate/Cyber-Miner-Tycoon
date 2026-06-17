@@ -130,7 +130,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
     box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease}
   .card:hover{transform:translateY(-4px);box-shadow:0 22px 48px rgba(16,32,58,.18)}
-  .card-top{position:relative;height:108px;color:#fff;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;
+  .card-top{position:relative;height:118px;color:#fff;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;
     background-size:cover;background-position:center;text-shadow:0 1px 6px rgba(0,0,0,.45)}
   .rg-jp{background:linear-gradient(120deg,#ff7a9c,#ff5a7a 60%,#b23a6a)}
   .rg-kr{background:linear-gradient(120deg,#5b8def,#3a6bd6 60%,#2447a8)}
@@ -141,9 +141,9 @@
   .rank{position:absolute;top:10px;left:12px;background:rgba(0,0,0,.32);color:#fff;font-size:12px;font-weight:800;
     padding:4px 10px;border-radius:999px;backdrop-filter:blur(4px)}
   .rank.top{background:linear-gradient(135deg,#ffd98a,#ff9d4d);color:#3a2400}
-  .route{font-size:19px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .route{font-size:24px;font-weight:900;display:flex;align-items:center;gap:8px;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.6)}
   .route .arrow{opacity:.85}
-  .route-codes{font-size:12px;opacity:.9;font-weight:600;letter-spacing:1px}
+  .route-codes{font-size:11px;opacity:.82;font-weight:600;letter-spacing:.5px}
   .badges{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0}
   .badge{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;line-height:1}
   .b-lcc{background:#fff1e6;color:#c2570a} .b-full{background:#eaf0ff;color:#234fc4}
@@ -397,14 +397,20 @@ const REGION_GRAD = {
 const DEST_IMAGE = {};
 // 各地區關鍵字（給自動抓圖用）
 const REGION_KW = { jp:"Japan", kr:"Korea,Seoul", sea:"Asia", hk:"Hongkong", other:"travel,city" };
+// 特定城市指定抓圖主題（想要某地標就在這指定；key 用機場代碼）
+const DEST_KW = {
+  ICN:"N Seoul Tower,Seoul",  GMP:"N Seoul Tower,Seoul",   // 首爾 → 首爾塔
+  HKG:"Victoria Harbour,Hong Kong skyline",                // 香港 → 維多利亞港
+  OKA:"Okinawa beach,ocean,Japan"                          // 沖繩 → 換成海灘海景
+};
 function hashStr(s){ let h=0; for(let i=0;i<(s||"").length;i++){ h=(h*31+s.charCodeAt(i))|0; } return Math.abs(h); }
 // 產生卡片標題區背景：特色照片(可換) → 自動抓的城市照 → 地區底色漸層（多層後備，永遠不會破版）
 function cardBg(o){
   const grad=REGION_GRAD[o.region]||REGION_GRAD.other;
-  const overlay="linear-gradient(rgba(10,16,40,.26),rgba(10,16,40,.60))"; // 壓暗讓白字清楚
-  const city=((o.destEn||"").replace(/[^A-Za-z ]/g,"").trim().replace(/\s+/g,"%20"))||o.destIata;
-  const kw=`${city},${REGION_KW[o.region]||"travel"}`;
-  const auto=`https://loremflickr.com/640/380/${kw}?lock=${hashStr(o.destIata)%90+1}`; // 依城市名抓特色照，鎖定固定一張
+  const overlay="linear-gradient(rgba(10,16,40,.12),rgba(10,16,40,.74))"; // 下方壓暗，白字更清楚
+  const kwRaw=DEST_KW[o.destIata] || `${o.destEn||o.destIata},${REGION_KW[o.region]||"travel"}`;
+  const kw=kwRaw.replace(/[^A-Za-z, ]/g,"").trim().replace(/\s+/g,"%20"); // 保留逗號分隔，空白轉 %20
+  const auto=`https://loremflickr.com/640/380/${kw}?lock=${hashStr(o.destIata)%90+1}`; // 依主題抓特色照，鎖定固定一張
   const layers=[overlay];
   if(DEST_IMAGE[o.destIata]) layers.push(`url('${DEST_IMAGE[o.destIata]}')`);
   layers.push(`url('${auto}')`);
