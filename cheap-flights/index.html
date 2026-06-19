@@ -378,6 +378,8 @@ const DESTS = [
   {zh:"宿霧",en:"Cebu",iata:"CEB",region:"sea",emoji:"🐠",avg:12000},{zh:"峇里島",en:"Bali",iata:"DPS",region:"sea",emoji:"🌺",avg:16000},
   {zh:"馬尼拉",en:"Manila",iata:"MNL",region:"sea",emoji:"🌆",avg:8000},{zh:"河內",en:"Hanoi",iata:"HAN",region:"sea",emoji:"🛵",avg:9500},
   {zh:"普吉",en:"Phuket",iata:"HKT",region:"sea",emoji:"🏝️",avg:13000},{zh:"清邁",en:"Chiang Mai",iata:"CNX",region:"sea",emoji:"🛕",avg:11000},
+  {zh:"東京",en:"Tokyo",iata:"TYO",region:"jp",emoji:"🗼",avg:15000},{zh:"大阪",en:"Osaka",iata:"OSA",region:"jp",emoji:"🏯",avg:13500},
+  {zh:"札幌",en:"Sapporo",iata:"SPK",region:"jp",emoji:"❄️",avg:18000},{zh:"首爾",en:"Seoul",iata:"SEL",region:"kr",emoji:"🇰🇷",avg:10500},
   {zh:"香港",en:"Hong Kong",iata:"HKG",region:"hk",emoji:"🌃",avg:7500},{zh:"澳門",en:"Macau",iata:"MFM",region:"hk",emoji:"🎰",avg:7500},
 ];
 const REGION_PRICE_BUMP = { TPE:1, TSA:1.05, KHH:1.08, RMQ:1.1, TNN:1.12 };
@@ -405,7 +407,8 @@ const WIKI_TITLE = {
   BKK:"Wat Arun", DMK:"Wat Arun", SIN:"Marina Bay Sands", KUL:"Petronas Towers",
   DAD:"Dragon Bridge (Da Nang)", SGN:"Ho Chi Minh City", CEB:"Cebu City", DPS:"Tanah Lot",
   MNL:"Manila", MFM:"Ruins of St. Paul's", HKG:"Victoria Harbour",
-  HAN:"Hanoi", HKT:"Phuket Province", CNX:"Chiang Mai", REP:"Angkor Wat", PNH:"Phnom Penh"
+  HAN:"Hanoi", HKT:"Phuket Province", CNX:"Chiang Mai", REP:"Angkor Wat", PNH:"Phnom Penh",
+  TYO:"Tokyo Tower", OSA:"Osaka Castle", SPK:"Sapporo TV Tower", SEL:"N Seoul Tower"
 };
 // 城市照片快取（存 localStorage，跨次開啟不必重抓）
 const photoCache = (()=>{ try{ return JSON.parse(localStorage.getItem("cf_photos")||"{}"); }catch(e){ return {}; } })();
@@ -424,13 +427,17 @@ async function ensurePhoto(o){
   if(!title){ photoCache[code]=""; return; }
   _photoTried.add(code);
   try{
-    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,{cache:"force-cache"});
+    // 維基 Action API + origin=*（瀏覽器可跨站存取的正確方式），抓條目代表縮圖
+    const api=`https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1`
+      +`&prop=pageimages&piprop=thumbnail&pithumbsize=800&titles=${encodeURIComponent(title)}`;
+    const r=await fetch(api);
     const j=await r.json();
-    let src=(j.thumbnail&&j.thumbnail.source) || (j.originalimage&&j.originalimage.source) || "";
-    if(src) src=src.replace(/\/\d+px-/,"/800px-"); // 拉大解析度
+    const pages=(j&&j.query&&j.query.pages)||{};
+    let src="";
+    for(const k in pages){ const t=pages[k]&&pages[k].thumbnail; if(t&&t.source){ src=t.source; break; } }
     photoCache[code]=src||"";
     try{ localStorage.setItem("cf_photos", JSON.stringify(photoCache)); }catch(e){}
-    if(src){ clearTimeout(_photoRerender); _photoRerender=setTimeout(render,150); }
+    if(src){ clearTimeout(_photoRerender); _photoRerender=setTimeout(render,120); }
   }catch(e){ /* 抓不到就維持漸層底色 */ }
 }
 // 卡片標題背景：你指定的照片 → 維基城市照 → 地區底色漸層（抓到才放圖，永不破版）
