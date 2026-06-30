@@ -137,6 +137,8 @@ const AFFILIATE = {
    ```
 6. `git push`。完成後網頁就改用**即時真實價**，每 5 分鐘自動更新；Worker 端也有 15 分鐘快取省額度。
 
+> 🔁 **更新過 Worker 的話要重貼**：之後若 `cloudflare-worker.js` 有更新（例如新增「傳統航空專區」抓取），請回 Cloudflare → 你的 Worker → Edit code → 把最新的 `cloudflare-worker.js` 整份**重新貼上 → Deploy**。「傳統航空專區（華航/長榮/星宇）」就是靠這次更新後的 Worker 才會填滿（它會另外指定路線抓這三家的來回票）。
+
 **小提醒：**
 - Travelpayouts 是「市場快取價」，數字會非常接近、但不一定與 Trip.com 完全相同（不同資料來源）；客人點進 Trip.com 看到的才是當下成交價。
 - 即時資料**不含行李資訊**，所以卡片會顯示「託運看航司」；「含/不含託運」篩選主要對手動的 `deals.json` 有效。

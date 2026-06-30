@@ -422,7 +422,7 @@ const COUNTRY_OF = {
 };
 const ALLOWED_COUNTRIES = new Set(["JP","KR","VN","TH"]);
 // 各國卡片代表照（用維基條目名）：日本=伏見稻荷千本鳥居、韓國=釜山廣安大橋、越南=峴港黃金橋、泰國=天燈節
-const COUNTRY_TITLE = { JP:"Fushimi Inari-taisha", KR:"Gwangan Bridge", VN:"Golden Bridge (Vietnam)", TH:"Yi Peng" };
+const COUNTRY_TITLE = { JP:"Fushimi Inari-taisha", KR:"Gwangan Bridge", VN:"Golden Bridge (Vietnam)", TH:"Yi Peng festival" };
 
 // 各地區卡片底色（圖片載入失敗時的後備）
 const REGION_GRAD = {
@@ -447,7 +447,7 @@ const WIKI_TITLE = {
   TYO:"Tokyo Tower", OSA:"Osaka Castle", SPK:"Sapporo TV Tower", SEL:"N Seoul Tower"
 };
 // 城市照片快取（存 localStorage，跨次開啟不必重抓）
-const photoCache = (()=>{ try{ return JSON.parse(localStorage.getItem("cf_photos")||"{}"); }catch(e){ return {}; } })();
+const photoCache = (()=>{ try{ return JSON.parse(localStorage.getItem("cf_photos_v2")||"{}"); }catch(e){ return {}; } })();
 const _photoTried = new Set(); let _photoRerender;
 function wikiTitle(o){
   const c=COUNTRY_OF[o.destIata];
@@ -474,7 +474,7 @@ async function ensurePhoto(o){
     let src="";
     for(const k in pages){ const t=pages[k]&&pages[k].thumbnail; if(t&&t.source){ src=t.source; break; } }
     photoCache[code]=src||"";
-    try{ localStorage.setItem("cf_photos", JSON.stringify(photoCache)); }catch(e){}
+    try{ localStorage.setItem("cf_photos_v2", JSON.stringify(photoCache)); }catch(e){}
     if(src){ clearTimeout(_photoRerender); _photoRerender=setTimeout(render,120); }
   }catch(e){ /* 抓不到就維持漸層底色 */ }
 }
@@ -539,44 +539,43 @@ async function fetchCustom(){
 }
 // 從你的 Cloudflare Worker 取「即時真實便宜票」（token 藏在 Worker、已補 CORS）
 // 回傳格式：{ data: [ Travelpayouts prices_for_dates 的列 ... ] }
+function _mapRow(row,i,prefix,destByIata){
+  const dest=destByIata[row.destination];
+  const depAp=TW_AIRPORTS.find(a=>a.code===row.origin);
+  const ai=AIRLINE_BY_CODE[row.airline]||{zh:(row.airline||"多家航空"),type:"full"};
+  const isOW=!row.return_at;
+  const bump=REGION_PRICE_BUMP[row.origin]||1;
+  let marketAvg=Math.round((dest?dest.avg:Math.round(row.price*1.3))*bump/100)*100;
+  if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100;
+  if(marketAvg<=row.price) marketAvg=Math.round(row.price*1.18/100)*100;
+  return {
+    id:prefix+i, depIata:row.origin, depZh:depAp?depAp.zh:row.origin, depEn:depAp?depAp.en:"",
+    destIata:row.destination, destZh:dest?dest.zh:row.destination, destEn:dest?dest.en:"",
+    region:dest?dest.region:"other", emoji:dest?dest.emoji:"✈️",
+    airlineZh:ai.zh, airlineType:ai.type, baggage:null, baggageKg:0,
+    stops:row.transfers||0,
+    departDate:(row.departure_at||"").slice(0,10),
+    returnDate:isOW?"":(row.return_at||"").slice(0,10),
+    tripType:isOW?"ow":"rt", price:Math.round(row.price), marketAvg, currency:CONFIG.currency
+  };
+}
 async function fetchProxy(){
   const res=await fetch(CONFIG.proxyUrl,{cache:"no-store"});
   if(!res.ok) throw new Error("proxy HTTP "+res.status);
   const j=await res.json();
-  const rows=j.data||[];
   const destByIata=Object.fromEntries(DESTS.map(d=>[d.iata,d]));
-  const today=new Date(); const startDay=new Date(today.toDateString());
-  const maxDay=addDays(today, CONFIG.monthsAhead*31);
-  return rows.map((row,i)=>{
-    const dest=destByIata[row.destination];
-    const depAp=TW_AIRPORTS.find(a=>a.code===row.origin);
-    const ai=AIRLINE_BY_CODE[row.airline]||{zh:(row.airline||"多家航空"),type:"full"};
-    const isOW=!row.return_at;
-    const bump=REGION_PRICE_BUMP[row.origin]||1;
-    let marketAvg=Math.round((dest?dest.avg:Math.round(row.price*1.3))*bump/100)*100;
-    if(isOW) marketAvg=Math.round(marketAvg*0.55/100)*100;
-    if(marketAvg<=row.price) marketAvg=Math.round(row.price*1.18/100)*100; // 保底：讓 price<avg
-    return {
-      id:"tp"+i, depIata:row.origin, depZh:depAp?depAp.zh:row.origin, depEn:depAp?depAp.en:"",
-      destIata:row.destination, destZh:dest?dest.zh:row.destination, destEn:dest?dest.en:"",
-      region:dest?dest.region:"other", emoji:dest?dest.emoji:"✈️",
-      airlineZh:ai.zh, airlineType:ai.type, baggage:null, baggageKg:0,   // 資料 API 不含行李資訊
-      stops:row.transfers||0,
-      departDate:(row.departure_at||"").slice(0,10),
-      returnDate:isOW?"":(row.return_at||"").slice(0,10),
-      tripType:isOW?"ow":"rt", price:Math.round(row.price), marketAvg, currency:CONFIG.currency
-    };
-  }).filter(o=>{
-    if(!o.destIata||!o.departDate||!(o.price>0)) return false;
-    const d=new Date(o.departDate);
-    return d>=startDay && d<=maxDay;   // 只留「近三個月」內出發
-  });
+  const startDay=new Date(new Date().toDateString());
+  const maxDay=addDays(new Date(), CONFIG.monthsAhead*31);
+  const inRange=o=>{ if(!o.destIata||!o.departDate||!(o.price>0)) return false; const d=new Date(o.departDate); return d>=startDay&&d<=maxDay; };
+  const main=(j.data||[]).map((r,i)=>_mapRow(r,i,"tp",destByIata)).filter(inRange);
+  const air =(j.air ||[]).map((r,i)=>_mapRow(r,i,"air",destByIata)).filter(inRange); // 傳統航空專區用的資料
+  return {main, air};
 }
 async function loadOffers(){
-  if(CONFIG.proxyUrl){ try{ const r=await fetchProxy(); if(r.length) return r; }catch(e){ console.warn("proxy 失敗，改用 deals.json",e); } }
-  if(CONFIG.customJsonUrl){ try{ return await fetchCustom(); }catch(e){ console.warn("custom 失敗，改用 demo",e); } }
+  if(CONFIG.proxyUrl){ try{ const r=await fetchProxy(); if(r.main.length||r.air.length) return r; }catch(e){ console.warn("proxy 失敗，改用 deals.json",e); } }
+  if(CONFIG.customJsonUrl){ try{ return {main:await fetchCustom(), air:[]}; }catch(e){ console.warn("custom 失敗，改用 demo",e); } }
   if(!_seedOffers) _seedOffers=buildDemoData(); else _seedOffers=jitter(_seedOffers);
-  return _seedOffers;
+  return {main:_seedOffers, air:[]};
 }
 
 /* ====================================================================
@@ -586,7 +585,7 @@ const state = {
   airports:new Set(TW_AIRPORTS.map(a=>a.code)),
   baggage:"all", type:"all", search:"", belowAvg:true,
   expanded:{ ow:false, rt:false },   // 各排是否「查看更多」
-  raw:[]
+  raw:[], airRaw:[]                  // airRaw＝傳統航空專區專用資料（Worker 的 air 來源）
 };
 function discountPct(o){ return Math.max(0,Math.round((1-o.price/o.marketAvg)*100)); }
 function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
@@ -688,7 +687,13 @@ function renderSection(tt, base){
 
 // 傳統航空專區：華航/長榮/星宇 各自「來回」前 3 便宜、兩個月內出發
 const TRAD_AIRLINES = [{code:"CI",zh:"中華航空"},{code:"BR",zh:"長榮航空"},{code:"JX",zh:"星宇航空"}];
-function renderAirlineZone(base){
+// 優先用 Worker 專抓的 air 資料；沒有就退回主資料過濾
+function airBase(){
+  const src=(state.airRaw&&state.airRaw.length)?state.airRaw:state.raw;
+  return src.filter(o=> ALLOWED_COUNTRIES.has(COUNTRY_OF[o.destIata]) && state.airports.has(o.depIata));
+}
+function renderAirlineZone(){
+  const base=airBase();
   const limitDay=addDays(new Date(), 60);   // 出發兩個月內
   TRAD_AIRLINES.forEach(a=>{
     const el=document.getElementById("air-"+a.code); if(!el) return;
@@ -706,7 +711,7 @@ function render(){
   renderStats(base);
   renderSection("ow",base);
   renderSection("rt",base);
-  renderAirlineZone(base);
+  renderAirlineZone();
 }
 
 /* ====================================================================
@@ -735,7 +740,7 @@ function syncChips(){
 function setUpdatedNow(){ const d=new Date(); document.getElementById("updatedAt").textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 async function refresh(){
   const btn=document.getElementById("btnRefresh"); btn.textContent="↻ 更新中…"; btn.disabled=true;
-  try{ state.raw=await loadOffers(); setUpdatedNow(); render(); }finally{ btn.textContent="↻ 重新整理"; btn.disabled=false; }
+  try{ const r=await loadOffers(); state.raw=r.main; state.airRaw=r.air||[]; setUpdatedNow(); render(); }finally{ btn.textContent="↻ 重新整理"; btn.disabled=false; }
 }
 // 輪播：前進/後退一張，到頭到尾會循環（旋轉）
 function carStep(carEl, dir){
