@@ -126,6 +126,18 @@
   .car-arrow.prev{left:-10px} .car-arrow.next{right:-10px}
   @media (max-width:600px){ .car-arrow{display:none} }  /* 手機用手滑就好 */
 
+  /* ===================== 傳統航空專區 ===================== */
+  .air-zone{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .air-col{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+  .air-name{margin:2px 2px 12px;font-size:15px;font-weight:900;letter-spacing:.5px;color:#fff;
+    padding:10px 12px;border-radius:10px;line-height:1.2}
+  .air-ci{background:linear-gradient(120deg,#c8102e,#8a0b20)}   /* 華航紅 */
+  .air-br{background:linear-gradient(120deg,#0a7d3c,#0b5e2e)}   /* 長榮綠 */
+  .air-jx{background:linear-gradient(120deg,#2a2f45,#171a2b)}   /* 星宇深藍 */
+  .air-row{display:flex;flex-direction:column;gap:12px}
+  .air-row .card-top{height:96px}
+  @media (max-width:820px){ .air-zone{grid-template-columns:1fr} }
+
   /* ===================== 卡片 ===================== */
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
     box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease}
@@ -269,6 +281,19 @@
   </div>
 </section>
 
+<!-- ============================ 傳統航空專區 ============================ -->
+<section class="section" id="sec-air">
+  <div class="section-head">
+    <h2>🏅 傳統航空專區 <span class="cnt">華航 · 長榮 · 星宇</span></h2>
+    <span class="sub">三大傳統航空・各自「來回」前 3 便宜・兩個月內出發</span>
+  </div>
+  <div class="air-zone">
+    <div class="air-col"><h3 class="air-name air-ci">中華航空 CHINA AIRLINES</h3><div class="air-row" id="air-CI"></div></div>
+    <div class="air-col"><h3 class="air-name air-br">長榮航空 EVA AIR</h3><div class="air-row" id="air-BR"></div></div>
+    <div class="air-col"><h3 class="air-name air-jx">星宇航空 STARLUX</h3><div class="air-row" id="air-JX"></div></div>
+  </div>
+</section>
+
 <!-- ============================ 怎麼用 ============================ -->
 <section class="how" id="how">
   <div class="box">
@@ -292,7 +317,7 @@
     <div class="foot-meta">
       ⚠️ 機票價格為搜尋引擎「快取參考價」，會隨時變動，<b>實際票價、行李與艙等規則以 Trip.com 結帳頁面為準</b>。<br/>
       資料來源：航班比價快取（可串接 Skyscanner / Google Flights / Travelpayouts 等同等搜尋引擎）。<br/>
-      © <span id="yr"></span> 即期／便宜 機票 · 由 <b>@adam_ai_plus</b> 製作 · 分享於 HOWTRAVLE。
+      © <span id="yr"></span> 即期／便宜 機票 · 分享於 HOWTRAVLE。
     </div>
   </div>
 </footer>
@@ -388,6 +413,17 @@ const AIRPORT_SERVES = { TPE:["jp","kr","sea","hk"], KHH:["jp","kr","sea","hk"],
 // 台灣機場（本島＋離島）：目的地若是這些＝國內線，不顯示（只留出國的便宜票）
 const TW_DOMESTIC = new Set(["TPE","TSA","KHH","RMQ","TNN","HUN","TTT","MZG","KNH","CYI","KYD","LZN","MFK","GNI","CMJ","WOT","HCN","TXG"]);
 
+// 目的地 → 國家。只顯示 ALLOWED_COUNTRIES 內的航線（其餘一律不抓，例如馬尼拉/香港/新加坡…）
+const COUNTRY_OF = {
+  NRT:"JP",HND:"JP",TYO:"JP",KIX:"JP",OSA:"JP",NGO:"JP",FUK:"JP",OKA:"JP",CTS:"JP",SPK:"JP", // 日本
+  ICN:"KR",GMP:"KR",SEL:"KR",PUS:"KR",CJU:"KR",                                              // 韓國
+  SGN:"VN",HAN:"VN",DAD:"VN",                                                                // 越南
+  BKK:"TH",DMK:"TH",HKT:"TH",CNX:"TH"                                                        // 泰國
+};
+const ALLOWED_COUNTRIES = new Set(["JP","KR","VN","TH"]);
+// 各國卡片代表照（用維基條目名）：日本=伏見稻荷千本鳥居、韓國=釜山廣安大橋、越南=峴港黃金橋、泰國=天燈節
+const COUNTRY_TITLE = { JP:"Fushimi Inari-taisha", KR:"Gwangan Bridge", VN:"Golden Bridge (Vietnam)", TH:"Yi Peng" };
+
 // 各地區卡片底色（圖片載入失敗時的後備）
 const REGION_GRAD = {
   jp:"linear-gradient(120deg,#ff7a9c,#ff5a7a 60%,#b23a6a)",
@@ -414,6 +450,8 @@ const WIKI_TITLE = {
 const photoCache = (()=>{ try{ return JSON.parse(localStorage.getItem("cf_photos")||"{}"); }catch(e){ return {}; } })();
 const _photoTried = new Set(); let _photoRerender;
 function wikiTitle(o){
+  const c=COUNTRY_OF[o.destIata];
+  if(c && COUNTRY_TITLE[c]) return COUNTRY_TITLE[c];   // 以「國家代表照」為主（日本=鳥居…）
   if(WIKI_TITLE[o.destIata]) return WIKI_TITLE[o.destIata];
   if(o.destEn) return o.destEn;
   if(o.destZh && /[A-Za-z]/.test(o.destZh)) return o.destZh;
@@ -556,6 +594,7 @@ function money(n){ return "$" + Number(n).toLocaleString("en-US"); }
 // 套用篩選（不含 單程/來回 與 排名，那是各排自己處理）
 function applyFilters(){
   return state.raw.filter(o=>{
+    if(!ALLOWED_COUNTRIES.has(COUNTRY_OF[o.destIata])) return false;  // 只留 日本/韓國/越南/泰國（自動排除馬尼拉等）
     if(TW_DOMESTIC.has(o.destIata)) return false;          // 不顯示飛台灣國內線
     if(!state.airports.has(o.depIata)) return false;
     if(state.baggage==="yes"&&o.baggage!==true) return false;
@@ -586,7 +625,6 @@ function renderStats(base){
 }
 
 function card(o, rank){
-  const disc=discountPct(o);
   const rk = rank!=null ? `<span class="rank${rank<3?" top":""}">#${rank+1}</span>` : "";
   const typeBadge=o.airlineType==="lcc"?`<span class="badge b-lcc">廉價航空</span>`:`<span class="badge b-full">傳統航空</span>`;
   const bagBadge=o.baggage===true?`<span class="badge b-bag-y">含託運${o.baggageKg?` ${o.baggageKg}kg`:""}</span>`
@@ -611,10 +649,7 @@ function card(o, rank){
       <div class="dates">出發 <b>${o.departDate}</b>${o.returnDate?` · 回程 <b>${o.returnDate}</b>`:""}</div>
       <div class="price-row">
         <div class="price-now"><small>${o.currency}</small>${money(o.price).replace("$","")}</div>
-        <div class="price-avg">均價 ${money(o.marketAvg)}</div>
-        <div class="save">省 ${disc}%</div>
       </div>
-      <div class="savebar"><span style="width:${Math.min(disc,100)}%"></span></div>
     </div>
     <div class="card-foot">
       <a class="btn book" href="${tripcomUrl(o)}" target="_blank" rel="noopener nofollow sponsored">前往 Trip.com 訂票 →</a>
@@ -651,11 +686,27 @@ function renderSection(tt, base){
   car.innerHTML=html;
 }
 
+// 傳統航空專區：華航/長榮/星宇 各自「來回」前 3 便宜、兩個月內出發
+const TRAD_AIRLINES = [{code:"CI",zh:"中華航空"},{code:"BR",zh:"長榮航空"},{code:"JX",zh:"星宇航空"}];
+function renderAirlineZone(base){
+  const limitDay=addDays(new Date(), 60);   // 出發兩個月內
+  TRAD_AIRLINES.forEach(a=>{
+    const el=document.getElementById("air-"+a.code); if(!el) return;
+    const list=base
+      .filter(o=> o.airlineZh===a.zh && o.tripType==="rt" && new Date(o.departDate)<=limitDay )
+      .sort((x,y)=>x.price-y.price).slice(0,3);
+    el.innerHTML = list.length
+      ? list.map((o,i)=>card(o,i)).join("")
+      : `<div class="empty-sm">目前 ${a.zh} 兩個月內沒有來回特價，稍後再看看 🙂</div>`;
+  });
+}
+
 function render(){
   const base=applyFilters();
   renderStats(base);
   renderSection("ow",base);
   renderSection("rt",base);
+  renderAirlineZone(base);
 }
 
 /* ====================================================================
