@@ -285,7 +285,7 @@
 <section class="section" id="sec-air">
   <div class="section-head">
     <h2>🏅 傳統航空專區 <span class="cnt">華航 · 長榮 · 星宇</span></h2>
-    <span class="sub">三大傳統航空・各自「來回」前 3 便宜・兩個月內出發</span>
+    <span class="sub">三大傳統航空・各自「來回」前 3 便宜・兩個月內出發・TWD 9,999 以下</span>
   </div>
   <div class="air-zone">
     <div class="air-col"><h3 class="air-name air-ci">中華航空 CHINA AIRLINES</h3><div class="air-row" id="air-CI"></div></div>
@@ -685,8 +685,9 @@ function renderSection(tt, base){
   car.innerHTML=html;
 }
 
-// 傳統航空專區：華航/長榮/星宇 各自「來回」前 3 便宜、兩個月內出發
+// 傳統航空專區：華航/長榮/星宇 各自「來回」前 3 便宜、兩個月內出發、只顯示 9999 以下
 const TRAD_AIRLINES = [{code:"CI",zh:"中華航空"},{code:"BR",zh:"長榮航空"},{code:"JX",zh:"星宇航空"}];
+const AIR_MAX_PRICE = 9999;   // 傳統航空專區只列這個價格(含)以下的來回票
 // 優先用 Worker 專抓的 air 資料；沒有就退回主資料過濾
 function airBase(){
   const src=(state.airRaw&&state.airRaw.length)?state.airRaw:state.raw;
@@ -698,11 +699,11 @@ function renderAirlineZone(){
   TRAD_AIRLINES.forEach(a=>{
     const el=document.getElementById("air-"+a.code); if(!el) return;
     const list=base
-      .filter(o=> o.airlineZh===a.zh && o.tripType==="rt" && new Date(o.departDate)<=limitDay )
+      .filter(o=> o.airlineZh===a.zh && o.tripType==="rt" && o.price<=AIR_MAX_PRICE && new Date(o.departDate)<=limitDay )
       .sort((x,y)=>x.price-y.price).slice(0,3);
     el.innerHTML = list.length
       ? list.map((o,i)=>card(o,i)).join("")
-      : `<div class="empty-sm">目前 ${a.zh} 兩個月內沒有來回特價，稍後再看看 🙂</div>`;
+      : `<div class="empty-sm">目前 ${a.zh} 兩個月內沒有 9,999 以下的來回特價，稍後再看看 🙂</div>`;
   });
 }
 
