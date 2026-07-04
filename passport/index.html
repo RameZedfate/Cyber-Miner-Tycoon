@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F8F4">
+<title>護照旅行紀錄 PASSPORT</title>
+<style>
+/* ============================================================
+   數位護照 · 出國紀錄頁
+   風格：護照內頁（安全紋紙張 + 入境章油墨 + 機讀區）
+   主題：亮/暗雙主題，token 驅動
+   ============================================================ */
+:root{
+  --paper:#F6F8F4;        /* 護照簽證頁的淡綠紙色 */
+  --paper-2:#FDFEFC;      /* 卡片 */
+  --ink:#1C2A2E;          /* 深藍墨 */
+  --faded:#5F7069;        /* 說明文字 */
+  --line:#D9E1D5;         /* 分隔線 */
+  --guilloche:#E4EAE0;    /* 底紋 */
+  --stamp-green:#2F6B54;  /* 入境章 · 綠墨 */
+  --stamp-blue:#35558E;   /* 簽證章 · 藍墨 */
+  --stamp-red:#B0492F;    /* 出境章 · 紅墨 */
+  --flash:#2F6B5422;
+  --shadow:0 1px 2px rgba(28,42,46,.05),0 6px 18px rgba(28,42,46,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0F1613; --paper-2:#161F1A; --ink:#E5EDE3; --faded:#8FA096;
+    --line:#25312A; --guilloche:#17211B;
+    --stamp-green:#63AC8E; --stamp-blue:#829BCC; --stamp-red:#D2755C;
+    --flash:#63AC8E22;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="light"]{
+  --paper:#F6F8F4; --paper-2:#FDFEFC; --ink:#1C2A2E; --faded:#5F7069;
+  --line:#D9E1D5; --guilloche:#E4EAE0;
+  --stamp-green:#2F6B54; --stamp-blue:#35558E; --stamp-red:#B0492F;
+  --flash:#2F6B5422;
+  --shadow:0 1px 2px rgba(28,42,46,.05),0 6px 18px rgba(28,42,46,.05);
+}
+:root[data-theme="dark"]{
+  --paper:#0F1613; --paper-2:#161F1A; --ink:#E5EDE3; --faded:#8FA096;
+  --line:#25312A; --guilloche:#17211B;
+  --stamp-green:#63AC8E; --stamp-blue:#829BCC; --stamp-red:#D2755C;
+  --flash:#63AC8E22;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  font-size:15.5px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+/* 護照安全底紋：細波紋，極淡 */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    repeating-radial-gradient(circle at 50% -70vh, transparent 0 42px, var(--guilloche) 42px 43px),
+    repeating-radial-gradient(circle at 50% 170vh, transparent 0 42px, var(--guilloche) 42px 43px);
+  opacity:.55;
+}
+.wrap{position:relative;z-index:1;max-width:27rem;margin:0 auto;padding:0 1.25rem 3rem}
+@media (min-width:600px){ .wrap{max-width:28.5rem} }
+
+/* ---------- 字體角色 ---------- */
+.serif{font-family:"Songti TC","Noto Serif TC","Source Han Serif TC",Georgia,"Times New Roman",serif}
+.mono{
+  font-family:ui-monospace,"SF Mono","IBM Plex Mono",Menlo,Consolas,"Noto Sans Mono",monospace;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- 頁眉（護照封面條） ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 0 .9rem;border-bottom:1px solid var(--line);
+}
+.topbar .brand{
+  font-size:.72rem;letter-spacing:.24em;color:var(--faded);text-transform:uppercase;
+}
+.topbar .brand b{color:var(--ink);font-weight:600}
+.btn-share{
+  appearance:none;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);
+  border-radius:999px;padding:.32rem .85rem;font-size:.78rem;letter-spacing:.12em;
+  cursor:pointer;transition:border-color .2s;
+}
+.btn-share:hover,.btn-share:focus-visible{border-color:var(--stamp-green)}
+.btn-share:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+
+/* ---------- 章節標籤（護照頁碼） ---------- */
+.page-tag{
+  display:flex;align-items:center;gap:.7rem;
+  margin:2.6rem 0 1.3rem;color:var(--faded);
+  font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
+}
+.page-tag::after{content:"";flex:1;border-top:1px dashed var(--line)}
+
+/* ---------- PAGE 01 · 持照人 ---------- */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:2.4rem}
+.avatar{
+  width:104px;height:104px;border-radius:50%;overflow:hidden;flex:none;
+  border:2px solid var(--stamp-green);padding:4px;position:relative;
+}
+.avatar::after{ /* 外圈虛線，像鋼印 */
+  content:"";position:absolute;inset:-8px;border-radius:50%;
+  border:1px dashed var(--line);
+}
+.avatar img,.avatar .initial{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.avatar .initial{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--paper-2);color:var(--stamp-green);
+  font-size:2.4rem;font-weight:600;
+}
+.hero h1{
+  margin-top:1.15rem;font-size:1.85rem;font-weight:600;letter-spacing:.04em;
+  text-wrap:balance;
+}
+.hero .handle{
+  margin-top:.15rem;font-size:.82rem;letter-spacing:.14em;color:var(--stamp-green);
+  text-decoration:none;
+}
+.hero .handle:hover{text-decoration:underline}
+.hero .bio{margin-top:.85rem;max-width:21rem;color:var(--faded);font-size:.92rem}
+.id-rows{
+  margin-top:1.5rem;width:100%;
+  border-top:1px solid var(--line);
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.id-rows div{padding:.65rem .25rem .6rem;border-bottom:1px solid var(--line)}
+.id-rows div:nth-child(odd){border-right:1px solid var(--line);padding-right:1rem}
+.id-rows div:nth-child(even){padding-left:1rem}
+.id-rows dt{font-size:.62rem;letter-spacing:.2em;color:var(--faded);text-transform:uppercase}
+.id-rows dd{font-size:.9rem;margin-top:.1rem}
+.hero-links{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:1.2rem}
+.hero-links a{
+  border:1px solid var(--line);background:var(--paper-2);color:var(--ink);
+  text-decoration:none;border-radius:999px;padding:.34rem .95rem;font-size:.8rem;
+  transition:border-color .2s;
+}
+.hero-links a:hover,.hero-links a:focus-visible{border-color:var(--stamp-green)}
+.hero-links a:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+
+/* ---------- PAGE 02 · 使用次數 ---------- */
+.counter{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:1.9rem 1.4rem 1.5rem;text-align:center;
+}
+.counter .label{font-size:.72rem;letter-spacing:.26em;color:var(--faded);text-transform:uppercase}
+.counter .big{
+  font-size:clamp(4.2rem,22vw,5.6rem);line-height:1.05;font-weight:500;
+  color:var(--stamp-green);letter-spacing:-.02em;
+}
+.counter .unit{font-size:.95rem;color:var(--faded);margin-top:-.2rem}
+.counter .since{font-size:.72rem;letter-spacing:.14em;color:var(--faded);margin-top:.4rem}
+.stat-row{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px dashed var(--line);margin-top:1.4rem;padding-top:1.1rem;gap:.4rem;
+}
+.stat-row b{display:block;font-size:1.35rem;font-weight:500}
+.stat-row span{font-size:.7rem;letter-spacing:.16em;color:var(--faded)}
+.continent-line{
+  margin-top:1.1rem;display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;
+}
+.continent-line em{
+  font-style:normal;font-size:.72rem;letter-spacing:.1em;color:var(--faded);
+  border:1px dashed var(--line);border-radius:999px;padding:.18rem .7rem;
+}
+
+/* ---------- PAGE 03 · 印章收藏牆 ---------- */
+.stamp-wall{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem}
+@media (min-width:420px){ .stamp-wall{grid-template-columns:repeat(3,1fr)} }
+.stamp{
+  position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.1rem;text-align:center;
+  border:2px solid var(--c);color:var(--c);border-radius:10px;
+  background:transparent;cursor:pointer;padding:.5rem;
+  transform:rotate(var(--r)) scale(1);opacity:1;
+  transition:transform .35s cubic-bezier(.2,1.4,.4,1),opacity .35s;
+  -webkit-tap-highlight-color:transparent;
+}
+.stamp:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+.stamp.oval{border-radius:50%}
+.stamp.round{border-radius:22px}
+.stamp::after{ /* 內框，雙線章 */
+  content:"";position:absolute;inset:5px;border:1px solid var(--c);
+  border-radius:inherit;opacity:.55;pointer-events:none;
+}
+.stamp .code{font-size:1.05rem;font-weight:700;letter-spacing:.18em}
+.stamp .place{font-size:.78rem;letter-spacing:.06em}
+.stamp .date{font-size:.6rem;letter-spacing:.1em;opacity:.8}
+.stamp .kind{font-size:.55rem;letter-spacing:.26em;opacity:.75;text-transform:uppercase}
+/* 蓋章進場動畫 */
+.stamp-wall.pending .stamp{opacity:0;transform:rotate(var(--r)) scale(1.5)}
+.stamp{transition-delay:var(--d,0s)}
+/* 未解鎖的收藏格 */
+.stamp.locked{
+  border-style:dashed;color:var(--faded);border-color:var(--line);cursor:default;
+}
+.stamp.locked::after{border-style:dashed;border-color:var(--line)}
+.stamp.locked .flagbig{font-size:1.3rem;filter:grayscale(1);opacity:.75}
+.wall-hint{margin-top:1rem;font-size:.78rem;color:var(--faded);text-align:center}
+
+/* ---------- PAGE 04 · 旅程卡片 ---------- */
+.year-head{
+  display:flex;align-items:baseline;gap:.8rem;margin:2.1rem 0 1rem;
+}
+.year-head .y{font-size:1.5rem;font-weight:600;letter-spacing:.05em}
+.year-head .n{font-size:.75rem;letter-spacing:.14em;color:var(--faded)}
+.year-head::after{content:"";flex:1;border-top:1px solid var(--line)}
+.trip{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:1.15rem 1.15rem 1.2rem;margin-bottom:1.1rem;
+  scroll-margin-top:1.2rem;transition:box-shadow .3s,border-color .3s;
+}
+.trip.flash{border-color:var(--stamp-green);box-shadow:0 0 0 4px var(--flash)}
+.trip-head{display:flex;align-items:flex-start;gap:.75rem}
+.trip-flag{font-size:1.7rem;line-height:1.25}
+.trip-head h3{font-size:1.12rem;font-weight:600;letter-spacing:.03em}
+.trip-head h3 small{font-size:.8rem;font-weight:400;color:var(--faded);margin-left:.4rem}
+.trip-dates{font-size:.73rem;letter-spacing:.04em;color:var(--faded);margin-top:.15rem;white-space:nowrap}
+.trip-no{
+  margin-left:auto;flex:none;font-size:.68rem;letter-spacing:.16em;color:var(--faded);
+  border:1px solid var(--line);border-radius:999px;padding:.14rem .6rem;
+}
+.trip-note{margin-top:.65rem;font-size:.9rem;color:var(--ink)}
+.trip-photos{display:grid;gap:6px;margin-top:.9rem;border-radius:10px;overflow:hidden}
+.trip-photos .shot{
+  position:relative;border-radius:6px;overflow:hidden;background:var(--paper);
+  border:0;padding:0;cursor:zoom-in;display:block;width:100%;height:100%;
+}
+.trip-photos .shot:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+.trip-photos img{width:100%;height:100%;object-fit:cover;display:block}
+.trip-photos.n1{grid-template-columns:1fr}
+.trip-photos.n1 .shot{aspect-ratio:16/9}
+.trip-photos.n2{grid-template-columns:1fr 1fr}
+.trip-photos.n2 .shot{aspect-ratio:4/5}
+.trip-photos.n3{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr}
+.trip-photos.n3 .shot:first-child{grid-row:span 2}
+.trip-photos.n3 .shot{aspect-ratio:auto;min-height:80px}
+.trip-photos.n3 .shot:first-child{min-height:172px}
+/* 照片佔位框：等你把照片放進來 */
+.shot.empty{
+  cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.2rem;border:1px dashed var(--line);background:transparent;color:var(--faded);
+}
+.shot.empty .f{font-size:1.4rem;filter:grayscale(.4)}
+.shot.empty .t{font-size:.62rem;letter-spacing:.14em}
+
+/* ---------- 機讀區（頁尾） ---------- */
+.mrz{
+  margin-top:3rem;border-top:1px solid var(--line);padding:1.4rem 0 .4rem;
+  overflow:hidden;white-space:nowrap;
+  color:var(--faded);font-size:.78rem;letter-spacing:.28em;line-height:1.9;
+}
+.foot-note{margin-top:.9rem;font-size:.72rem;color:var(--faded);text-align:center;letter-spacing:.05em}
+
+/* ---------- 燈箱 ---------- */
+.lightbox{
+  position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+  background:rgba(10,16,13,.88);padding:1.2rem;cursor:zoom-out;
+}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:88vh;border-radius:8px}
+
+/* ---------- 提示浮條 ---------- */
+.toast{
+  position:fixed;left:50%;bottom:1.6rem;z-index:60;
+  transform:translate(-50%,calc(100% + 3rem));visibility:hidden;
+  background:var(--ink);color:var(--paper);border-radius:999px;
+  padding:.5rem 1.2rem;font-size:.8rem;letter-spacing:.08em;
+  transition:transform .3s,visibility .3s;pointer-events:none;
+}
+.toast.show{transform:translate(-50%,0);visibility:visible}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <span class="brand mono">PASSPORT · <b>旅行紀錄</b></span>
+    <button class="btn-share mono" id="btnShare" type="button">分享 ↗</button>
+  </header>
+
+  <!-- PAGE 01 · 持照人資料 -->
+  <section class="hero" id="page-bearer">
+    <div class="avatar" id="avatar"></div>
+    <h1 class="serif" id="pName"></h1>
+    <a class="handle mono" id="pHandle" target="_blank" rel="noopener"></a>
+    <p class="bio" id="pBio"></p>
+    <dl class="id-rows mono" id="idRows"></dl>
+    <nav class="hero-links" id="pLinks" aria-label="連結"></nav>
+  </section>
+
+  <!-- PAGE 02 · 護照使用次數 -->
+  <h2 class="page-tag mono">PAGE 02 · 護照使用次數 / STAMPS</h2>
+  <section class="counter" id="page-counter">
+    <p class="label mono">護照使用次數</p>
+    <p class="big mono" id="bigCount">0</p>
+    <p class="unit">次出國</p>
+    <p class="since mono" id="sinceLine"></p>
+    <div class="stat-row mono" id="statRow"></div>
+    <div class="continent-line" id="continentLine"></div>
+  </section>
+
+  <!-- PAGE 03 · 入境章收藏 -->
+  <h2 class="page-tag mono">PAGE 03 · 入境章收藏 / COLLECTION</h2>
+  <section id="page-collection">
+    <div class="stamp-wall pending" id="stampWall"></div>
+    <p class="wall-hint" id="wallHint"></p>
+  </section>
+
+  <!-- PAGE 04 · 旅程 -->
+  <h2 class="page-tag mono">PAGE 04 · 旅程紀錄 / JOURNEYS</h2>
+  <section id="page-trips"></section>
+
+  <footer>
+    <div class="mrz mono" id="mrz" aria-hidden="true"></div>
+    <p class="foot-note">想更新紀錄？打開這個檔案，修改最上方的 CONFIG 資料區即可。</p>
+  </footer>
+
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-label="照片放大">
+  <img id="lightboxImg" alt="">
+</div>
+<div class="toast" id="toast">已複製連結</div>
+
+<script>
+/* ============================================================
+   ✏️ CONFIG：你的資料都改這裡（以下為示範資料，請換成自己的）
+   ------------------------------------------------------------
+   trips 欄位說明：
+   - city / country / countryCode / flag / continent：目的地資訊
+   - start / end：日期（YYYY-MM-DD），天數會自動計算
+   - note：這趟旅程的一句話（可留空 ""）
+   - photos：最多 3 張精選照片。可放：
+       (1) 網路圖片網址 "https://…"
+       (2) 同資料夾照片 "images/tokyo-1.jpg"
+       (3) 留空 "" → 顯示虛線佔位框，等你之後補
+   - ink：印章墨色 "green" | "blue" | "red"（留空自動輪流）
+   ============================================================ */
+const CONFIG = {
+  profile: {
+    name: "Adam",
+    nameEn: "ADAM",                 // 機讀區用的英文名（大寫）
+    handle: "@adam_ai_plus",
+    handleUrl: "https://instagram.com/adam_ai_plus",
+    nationality: "臺灣 TAIWAN",
+    passportType: "P（普通護照）",
+    bio: "AI 挑戰 100 天進行中。用一頁護照，蒐集我走過的世界。",
+    avatar: "",                     // 大頭貼網址或 "images/me.jpg"；留空顯示姓名首字
+    links: [
+      { label: "Instagram", url: "https://instagram.com/adam_ai_plus" },
+      { label: "便宜機票雷達 ✈", url: "../cheap-flights/" }
+    ]
+  },
+
+  /* 還想蒐集的入境章（顯示為未解鎖的虛線格） */
+  wishlist: [
+    { flag: "🇮🇸", name: "冰島" },
+    { flag: "🇨🇭", name: "瑞士" },
+    { flag: "🇳🇿", name: "紐西蘭" }
+  ],
+
+  trips: [
+    { city:"大阪", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
+      start:"2023-09-15", end:"2023-09-19",
+      note:"人生第一趟自由行，從心齋橋走到梅田，護照蓋下第一個章。",
+      photos:["","",""] },
+
+    { city:"首爾", country:"韓國", countryCode:"KOR", flag:"🇰🇷", continent:"亞洲",
+      start:"2024-03-08", end:"2024-03-12",
+      note:"初春的首爾，弘大咖啡廳一條街收進口袋名單。",
+      photos:["","",""] },
+
+    { city:"曼谷", country:"泰國", countryCode:"THA", flag:"🇹🇭", continent:"亞洲",
+      start:"2024-07-04", end:"2024-07-08",
+      note:"恰圖恰週末市集 + 昭披耶河夜遊，熱但值得。",
+      photos:["","",""] },
+
+    { city:"東京", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
+      start:"2024-12-20", end:"2024-12-25",
+      note:"聖誕點燈季的東京，表參道的燈海名不虛傳。",
+      photos:["","",""] },
+
+    { city:"峴港", country:"越南", countryCode:"VNM", flag:"🇻🇳", continent:"亞洲",
+      start:"2025-04-02", end:"2025-04-06",
+      note:"巴拿山黃金橋 + 美溪沙灘，CP 值超高的一趟。",
+      photos:["","",""] },
+
+    { city:"新加坡", country:"新加坡", countryCode:"SGP", flag:"🇸🇬", continent:"亞洲",
+      start:"2025-06-27", end:"2025-06-30",
+      note:"濱海灣花園的夜間燈光秀，科技感拉滿。",
+      photos:["","",""] },
+
+    { city:"釜山", country:"韓國", countryCode:"KOR", flag:"🇰🇷", continent:"亞洲",
+      start:"2025-10-17", end:"2025-10-21",
+      note:"甘川洞文化村的彩色屋，隨手拍都是明信片。",
+      photos:["","",""] },
+
+    { city:"清邁", country:"泰國", countryCode:"THA", flag:"🇹🇭", continent:"亞洲",
+      start:"2026-02-06", end:"2026-02-10",
+      note:"古城慢步調，夜市烤物一路吃回飯店。",
+      photos:["","",""] },
+
+    { city:"東京", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
+      start:"2026-04-03", end:"2026-04-09",
+      note:"櫻花滿開的目黑川，這輩子一定要看一次。",
+      photos:["","",""] }
+  ]
+};
+
+/* ============================================================
+   以下為程式區，一般情況不用動
+   ============================================================ */
+(function(){
+  "use strict";
+  const $ = (s)=>document.querySelector(s);
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const INKS = ["green","blue","red"];
+  const inkVar = (k)=>`var(--stamp-${k})`;
+
+  /* ---------- 資料整理 ---------- */
+  const trips = CONFIG.trips
+    .map((t,i)=>({...t, _i:i}))
+    .sort((a,b)=> a.start < b.start ? -1 : 1);         // 由舊到新 = 蒐集順序
+  trips.forEach((t,i)=>{
+    t.no = i+1;
+    t.ink = INKS.includes(t.ink) ? t.ink : INKS[i % INKS.length];
+    t.days = Math.round((new Date(t.end)-new Date(t.start))/864e5)+1;
+  });
+  const newestFirst = [...trips].reverse();
+  const uniq = (arr)=>[...new Set(arr)];
+  const countries = uniq(trips.map(t=>t.country));
+  const cities    = uniq(trips.map(t=>t.city+t.country));
+  const totalDays = trips.reduce((s,t)=>s+t.days,0);
+  const firstYear = trips.length ? trips[0].start.slice(0,4) : new Date().getFullYear();
+
+  const fmtRange = (t)=>{
+    const [y1,m1,d1] = t.start.split("-"), [y2,m2,d2] = t.end.split("-");
+    const left = `${y1}.${m1}.${d1}`;
+    const right = (y1===y2) ? `${m2}.${d2}` : `${y2}.${m2}.${d2}`;
+    return `${left} → ${right} · ${t.days}天`;
+  };
+
+  /* ---------- PAGE 01 持照人 ---------- */
+  const P = CONFIG.profile;
+  document.title = `${P.name} 的護照旅行紀錄`;
+  $("#pName").textContent = P.name;
+  $("#pBio").textContent = P.bio;
+  const handleEl = $("#pHandle");
+  handleEl.textContent = P.handle; handleEl.href = P.handleUrl;
+  const av = $("#avatar");
+  if (P.avatar){
+    const img = new Image(); img.src = P.avatar; img.alt = P.name;
+    av.appendChild(img);
+  } else {
+    const d = document.createElement("div");
+    d.className = "initial serif"; d.textContent = (P.name||"?").trim().charAt(0).toUpperCase();
+    av.appendChild(d);
+  }
+  $("#idRows").innerHTML = [
+    ["國籍 / NATIONALITY", P.nationality],
+    ["類別 / TYPE", P.passportType],
+    ["首航 / FIRST TRIP", trips.length ? trips[0].start.replaceAll("-",".") : "—"],
+    ["最近 / LATEST", trips.length ? trips[trips.length-1].start.replaceAll("-",".") : "—"]
+  ].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  $("#pLinks").innerHTML = (P.links||[])
+    .map(l=>`<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("");
+
+  /* ---------- PAGE 02 計數 ---------- */
+  $("#sinceLine").textContent = `${firstYear} 年至今`;
+  $("#statRow").innerHTML = [
+    [countries.length,"個國家"],
+    [cities.length,"座城市"],
+    [totalDays,"天在海外"]
+  ].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
+  const byContinent = {};
+  trips.forEach(t=>{ byContinent[t.continent] = (byContinent[t.continent]||new Set()).add(t.country); });
+  $("#continentLine").innerHTML = Object.entries(byContinent)
+    .map(([c,s])=>`<em>${c} × ${s.size} 國</em>`).join("");
+
+  const big = $("#bigCount");
+  const target = trips.length;
+  function countUp(){
+    if (reduceMotion){ big.textContent = target; return; }
+    const t0 = performance.now(), dur = 1100;
+    (function tick(now){
+      const p = Math.min((now-t0)/dur, 1);
+      big.textContent = Math.round(target * (1 - Math.pow(1-p, 3)));
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  /* ---------- PAGE 03 印章牆 ---------- */
+  const wall = $("#stampWall");
+  const shapes = ["oval","","round"];
+  const stampHTML = trips.map((t,i)=>{
+    const rot = ((i % 5) - 2) * 2.6;
+    return `<button class="stamp ${shapes[i%3]}" type="button"
+      style="--c:${inkVar(t.ink)};--r:${rot}deg;--d:${(i*70)}ms"
+      data-target="trip-${t.no}" aria-label="${t.city} ${t.start}">
+      <span class="code">${t.countryCode}</span>
+      <span class="place">${t.flag} ${t.city}</span>
+      <span class="date">${t.start.replaceAll("-",".")}</span>
+      <span class="kind">${t.ink==="red" ? "departed ↑" : "admitted ↓"}</span>
+    </button>`;
+  }).join("");
+  const lockedHTML = (CONFIG.wishlist||[]).map((w,i)=>{
+    const rot = (((i+trips.length) % 5) - 2) * 2.2;
+    return `<div class="stamp locked" style="--c:var(--line);--r:${rot}deg;--d:${((trips.length+i)*70)}ms">
+      <span class="flagbig">${w.flag}</span>
+      <span class="place">${w.name}</span>
+      <span class="kind">未解鎖 / next</span>
+    </div>`;
+  }).join("");
+  wall.innerHTML = stampHTML + lockedHTML;
+  $("#wallHint").textContent =
+    `已蒐集 ${trips.length} 枚印章 ・ ${countries.length} 個國家${CONFIG.wishlist?.length ? ` ・ 還有 ${CONFIG.wishlist.length} 個目標待解鎖` : ""}`;
+
+  wall.addEventListener("click",(e)=>{
+    const btn = e.target.closest(".stamp[data-target]");
+    if (!btn) return;
+    const card = document.getElementById(btn.dataset.target);
+    if (!card) return;
+    card.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block:"center"});
+    card.classList.remove("flash");
+    requestAnimationFrame(()=>card.classList.add("flash"));
+    setTimeout(()=>card.classList.remove("flash"), 1800);
+  });
+
+  /* ---------- PAGE 04 旅程卡片（新的在上） ---------- */
+  const photoCell = (src, t, idx)=>{
+    if (src){
+      return `<button class="shot" type="button" data-full="${src}">
+        <img src="${src}" alt="${t.city} 照片 ${idx+1}" loading="lazy">
+      </button>`;
+    }
+    return `<div class="shot empty"><span class="f">${t.flag}</span><span class="t mono">PHOTO</span></div>`;
+  };
+  const groups = {};
+  newestFirst.forEach(t=>{ (groups[t.start.slice(0,4)] ||= []).push(t); });
+  $("#page-trips").innerHTML = Object.keys(groups).sort((a,b)=>b-a).map(year=>{
+    const list = groups[year];
+    const cards = list.map(t=>{
+      /* 有幾張真的照片就用幾張的版型；一張都沒有 → 三格虛線佔位框 */
+      const real = (t.photos||[]).filter(p=>p).slice(0,3);
+      const cells = real.length ? real : ["","",""];
+      const cls = "n"+cells.length;
+      return `<article class="trip" id="trip-${t.no}">
+        <div class="trip-head">
+          <span class="trip-flag">${t.flag}</span>
+          <div>
+            <h3>${t.city}<small>${t.country}</small></h3>
+            <p class="trip-dates mono">${fmtRange(t)}</p>
+          </div>
+          <span class="trip-no mono">NO.${String(t.no).padStart(2,"0")}</span>
+        </div>
+        ${t.note ? `<p class="trip-note">${t.note}</p>` : ""}
+        <div class="trip-photos ${cls}">${cells.map((p,i)=>photoCell(p,t,i)).join("")}</div>
+      </article>`;
+    }).join("");
+    return `<div class="year-head"><span class="y serif">${year}</span><span class="n mono">${list.length} 次出國</span></div>${cards}`;
+  }).join("");
+
+  /* ---------- 機讀區 ---------- */
+  const pad = (s,n)=> (s + "<".repeat(n)).slice(0,n);
+  const mrzName = (P.nameEn||"TRAVELER").toUpperCase().replace(/[^A-Z ]/g,"").replace(/ /g,"<");
+  [
+    pad(`P<TWN${mrzName}<<PASSPORT<LOG`, 40),
+    pad(`TRIPS<${String(trips.length).padStart(2,"0")}<COUNTRIES<${String(countries.length).padStart(2,"0")}<DAYS<${String(totalDays).padStart(3,"0")}`, 40)
+  ].forEach(line=>{
+    const d = document.createElement("div");
+    d.textContent = line;               // 用 textContent，避免 < 被當成 HTML 標籤
+    $("#mrz").appendChild(d);
+  });
+
+  /* ---------- 進場動畫 ---------- */
+  if (reduceMotion){
+    wall.classList.remove("pending");
+    big.textContent = target;
+  } else {
+    const io = new IntersectionObserver((ents)=>{
+      ents.forEach(en=>{
+        if (!en.isIntersecting) return;
+        if (en.target.id === "page-counter") countUp();
+        if (en.target.id === "stampWall") wall.classList.remove("pending");
+        io.unobserve(en.target);
+      });
+    },{threshold:.35});
+    io.observe($("#page-counter"));
+    io.observe(wall);
+  }
+
+  /* ---------- 燈箱 ---------- */
+  const lb = $("#lightbox"), lbImg = $("#lightboxImg");
+  document.addEventListener("click",(e)=>{
+    const shot = e.target.closest(".shot[data-full]");
+    if (shot){
+      lbImg.src = shot.dataset.full;
+      lb.classList.add("open");
+      return;
+    }
+    if (e.target.closest("#lightbox")) lb.classList.remove("open");
+  });
+  document.addEventListener("keydown",(e)=>{
+    if (e.key==="Escape") lb.classList.remove("open");
+  });
+
+  /* ---------- 分享 ---------- */
+  const toast = $("#toast"); let toastTimer;
+  $("#btnShare").addEventListener("click", async ()=>{
+    const data = {title: document.title, text:`${P.name} 的護照使用次數：${target} 次`, url: location.href};
+    try{
+      if (navigator.share){ await navigator.share(data); return; }
+      await navigator.clipboard.writeText(location.href);
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toast.classList.remove("show"), 1800);
+    }catch(_){ /* 使用者取消分享 */ }
+  });
+})();
+</script>
+</body>
+</html>
