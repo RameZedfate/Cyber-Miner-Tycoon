@@ -72,7 +72,7 @@ body::before{
 }
 .wrap{position:relative;z-index:1;max-width:27rem;margin:0 auto;padding:0 1.25rem 3rem}
 @media (min-width:600px){ .wrap{max-width:28.5rem} }
-body.owner .wrap{padding-bottom:6.5rem} /* 讓出編輯工具列空間 */
+body.owner .wrap{padding-bottom:7rem} /* 讓出編輯工具列空間 */
 
 /* ---------- 字體角色 ---------- */
 .serif{font-family:"Songti TC","Noto Serif TC","Source Han Serif TC",Georgia,"Times New Roman",serif}
@@ -98,6 +98,8 @@ body.owner .wrap{padding-bottom:6.5rem} /* 讓出編輯工具列空間 */
 }
 .btn-pill:hover,.btn-pill:focus-visible{border-color:var(--stamp-green)}
 .btn-pill:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+.btn-pill.danger{color:var(--stamp-red)}
+.btn-pill.danger:hover,.btn-pill.danger:focus-visible{border-color:var(--stamp-red)}
 
 /* ---------- 章節標籤（護照頁碼） ---------- */
 .page-tag{
@@ -296,6 +298,7 @@ body.owner .wrap{padding-bottom:6.5rem} /* 讓出編輯工具列空間 */
   background:var(--paper-2);border:1px solid var(--line);border-radius:14px;
   box-shadow:var(--shadow);padding:1.15rem 1.15rem 1.2rem;margin-bottom:1.1rem;
   scroll-margin-top:1.2rem;transition:box-shadow .3s,border-color .3s;
+  cursor:pointer;
 }
 .trip.flash{border-color:var(--stamp-green);box-shadow:0 0 0 4px var(--flash)}
 .trip-head{display:flex;align-items:flex-start;gap:.75rem}
@@ -303,11 +306,21 @@ body.owner .wrap{padding-bottom:6.5rem} /* 讓出編輯工具列空間 */
 .trip-head h3{font-size:1.12rem;font-weight:600;letter-spacing:.03em}
 .trip-head h3 small{font-size:.8rem;font-weight:400;color:var(--faded);margin-left:.4rem}
 .trip-dates{font-size:.73rem;letter-spacing:.04em;color:var(--faded);margin-top:.15rem;white-space:nowrap}
+.trip-side{margin-left:auto;flex:none;display:flex;align-items:center;gap:.4rem}
+.vmark{
+  width:1.15rem;height:1.15rem;border-radius:50%;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--stamp-green);color:var(--stamp-green);
+  font-size:.68rem;font-weight:700;
+}
 .trip-no{
-  margin-left:auto;flex:none;font-size:.68rem;letter-spacing:.16em;color:var(--faded);
+  font-size:.68rem;letter-spacing:.16em;color:var(--faded);
   border:1px solid var(--line);border-radius:999px;padding:.14rem .6rem;
 }
 .trip-note{margin-top:.65rem;font-size:.9rem;color:var(--ink)}
+.trip-more{
+  margin-top:.5rem;font-size:.7rem;letter-spacing:.12em;color:var(--faded);
+}
 .trip-crew{
   margin-top:.6rem;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;
   font-size:.72rem;color:var(--faded);letter-spacing:.06em;
@@ -364,13 +377,14 @@ body.owner .shot.empty{cursor:pointer}
 /* ---------- 編輯模式工具列 ---------- */
 .owner-bar{
   position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);z-index:40;
-  display:none;align-items:center;gap:.5rem;white-space:nowrap;
+  display:none;align-items:center;gap:.4rem;white-space:nowrap;
   background:var(--paper-2);border:1px solid var(--stamp-green);border-radius:999px;
-  padding:.4rem .6rem .4rem 1rem;box-shadow:var(--shadow);
+  padding:.4rem .55rem .4rem .9rem;box-shadow:var(--shadow);
   font-size:.74rem;color:var(--faded);letter-spacing:.06em;
+  max-width:94vw;
 }
 body.owner .owner-bar{display:flex}
-.owner-bar .btn-pill{padding:.24rem .7rem;font-size:.72rem}
+.owner-bar .btn-pill{padding:.24rem .62rem;font-size:.72rem}
 
 /* ---------- 燈箱 ---------- */
 .lightbox{
@@ -383,25 +397,37 @@ body.owner .owner-bar{display:flex}
 /* ---------- 對話框 ---------- */
 .modal{
   position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
-  background:rgba(10,16,13,.55);padding:1.2rem;
+  background:rgba(10,16,13,.55);padding:1.2rem;overflow-y:auto;
 }
 .modal.open{display:flex}
 .modal-card{
   background:var(--paper-2);border:1px solid var(--line);border-radius:14px;
   box-shadow:var(--shadow);padding:1.35rem 1.3rem;width:min(92vw,23rem);
+  max-height:88vh;overflow-y:auto;margin:auto 0;
 }
 .modal-card h4{font-size:.72rem;letter-spacing:.24em;color:var(--faded);text-transform:uppercase}
 .modal-card .m-title{font-size:1.1rem;font-weight:600;margin-top:.3rem}
+.modal-card .m-title small{font-size:.8rem;font-weight:400;color:var(--faded);margin-left:.35rem}
 .modal-card p{font-size:.8rem;color:var(--faded);margin-top:.6rem}
 .modal-card p a{color:var(--stamp-blue)}
-.modal-card input[type="password"],.modal-card input[type="text"],.modal-card input[type="month"]{
-  width:100%;margin-top:.8rem;padding:.55rem .8rem;font-size:.9rem;
-  border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);
+.modal-card label.f-label{
+  display:block;margin-top:.8rem;font-size:.68rem;letter-spacing:.18em;color:var(--faded);
 }
-.modal-card input:focus-visible{outline:2px solid var(--stamp-green);outline-offset:1px;border-color:var(--stamp-green)}
-.m-check{display:flex;align-items:center;gap:.5rem;margin-top:.9rem;font-size:.88rem;cursor:pointer}
+.modal-card input[type="password"],.modal-card input[type="text"],
+.modal-card input[type="date"],.modal-card textarea{
+  width:100%;margin-top:.3rem;padding:.55rem .8rem;font-size:.9rem;
+  border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);
+  font-family:inherit;
+}
+.modal-card textarea{resize:vertical;line-height:1.7}
+.modal-card input:focus-visible,.modal-card textarea:focus-visible{
+  outline:2px solid var(--stamp-green);outline-offset:1px;border-color:var(--stamp-green);
+}
+.f-row2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.m-check{display:flex;align-items:center;gap:.5rem;margin-top:.95rem;font-size:.88rem;cursor:pointer}
 .m-check input{width:1.05rem;height:1.05rem;accent-color:var(--stamp-green)}
-.m-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.1rem}
+.m-actions{display:flex;justify-content:flex-end;align-items:center;gap:.5rem;margin-top:1.1rem;flex-wrap:wrap}
+.m-actions .spacer{margin-right:auto}
 .btn-solid{
   appearance:none;border:1px solid var(--stamp-green);background:var(--stamp-green);
   color:var(--paper-2);border-radius:999px;padding:.34rem 1.1rem;font-size:.8rem;
@@ -409,6 +435,44 @@ body.owner .owner-bar{display:flex}
 }
 .btn-solid:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
 .m-err{color:var(--stamp-red);font-size:.75rem;margin-top:.5rem;min-height:1em}
+.m-note{font-size:.75rem;color:var(--faded);margin-top:.6rem;min-height:1em}
+
+/* ---------- 一鍵登入按鈕 ---------- */
+.sso-list{display:flex;flex-direction:column;gap:.55rem;margin-top:1rem}
+.sso-btn{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  appearance:none;cursor:pointer;width:100%;
+  border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  border-radius:10px;padding:.62rem .9rem;font-size:.9rem;transition:border-color .2s;
+}
+.sso-btn:hover,.sso-btn:focus-visible{border-color:var(--stamp-green)}
+.sso-btn:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+.sso-btn .logo{width:18px;height:18px;flex:none}
+.sso-divider{
+  display:flex;align-items:center;gap:.7rem;margin-top:1.1rem;
+  color:var(--faded);font-size:.68rem;letter-spacing:.2em;
+}
+.sso-divider::before,.sso-divider::after{content:"";flex:1;border-top:1px dashed var(--line)}
+.import-preview{
+  margin-top:.6rem;font-size:.78rem;color:var(--stamp-green);min-height:1.2em;letter-spacing:.04em;
+}
+
+/* ---------- 旅程內頁（詳細視窗） ---------- */
+.d-head{display:flex;align-items:flex-start;gap:.7rem;margin-top:.4rem}
+.d-flag{font-size:2.1rem;line-height:1.2}
+.d-dates{font-size:.76rem;letter-spacing:.06em;color:var(--faded);margin-top:.1rem}
+.d-badges{display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap}
+.d-badges span{
+  font-size:.64rem;letter-spacing:.16em;color:var(--faded);
+  border:1px solid var(--line);border-radius:999px;padding:.14rem .6rem;
+}
+.d-badges .ok{color:var(--stamp-green);border-color:var(--stamp-green)}
+.d-note{margin-top:.8rem;font-size:.9rem;color:var(--ink)!important}
+.d-journal{
+  margin-top:.8rem;padding-top:.8rem;border-top:1px dashed var(--line);
+  font-size:.88rem;white-space:pre-wrap;
+}
+.d-journal.empty{color:var(--faded);font-size:.8rem}
 
 /* ---------- 提示浮條 ---------- */
 .toast{
@@ -482,31 +546,51 @@ body.owner .owner-bar{display:flex}
 
   <footer>
     <div class="mrz mono" id="mrz" aria-hidden="true"></div>
-    <p class="foot-note">想更新紀錄？打開這個檔案，修改最上方的 CONFIG 資料區即可。</p>
+    <p class="foot-note">想更新紀錄？登入後直接在頁面編輯，或打開這個檔案修改最上方的 CONFIG。</p>
   </footer>
 
 </div>
 
 <!-- 編輯模式工具列（登入後出現） -->
 <div class="owner-bar mono" id="ownerBar">
-  🛠 編輯模式
-  <button class="btn-pill" id="btnExport" type="button">匯出資料</button>
+  🛠
+  <button class="btn-pill" id="btnAddTrip" type="button">＋新增</button>
+  <button class="btn-pill" id="btnImport" type="button">懶人匯入</button>
+  <button class="btn-pill" id="btnExport" type="button">匯出</button>
   <button class="btn-pill" id="btnLogout" type="button">登出</button>
 </div>
 
-<!-- 登入對話框 -->
-<div class="modal" id="modalLogin" role="dialog" aria-modal="true" aria-label="持照人登入">
-  <form class="modal-card" id="loginForm">
-    <h4 class="mono">OWNER LOGIN</h4>
-    <div class="m-title">持照人登入</div>
-    <p>登入後可以：更換每張卡片的照片／影片、標記「紀錄已核驗」、匯出更新後的資料。</p>
-    <input type="password" id="loginPass" placeholder="輸入通行碼" autocomplete="current-password">
-    <div class="m-err" id="loginErr"></div>
-    <div class="m-actions">
-      <button class="btn-pill" type="button" data-close>取消</button>
-      <button class="btn-solid" type="submit">登入</button>
+<!-- 登入對話框（一鍵登入 / 註冊） -->
+<div class="modal" id="modalLogin" role="dialog" aria-modal="true" aria-label="一鍵登入或註冊">
+  <div class="modal-card">
+    <h4 class="mono">SIGN IN</h4>
+    <div class="m-title">一鍵登入 / 註冊</div>
+    <p>持照人登入後可以：新增旅程卡片、換卡套照片／影片、寫內頁紀錄、懶人匯入、匯出資料。第一次登入即完成註冊。</p>
+    <div class="sso-list">
+      <button class="sso-btn" id="ssoGoogle" type="button">
+        <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        使用 Google 繼續
+      </button>
+      <button class="sso-btn" id="ssoApple" type="button">
+        <svg class="logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 12.9c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.9-1.6 0-3.1 1-4 2.4-1.7 2.9-.4 7.2 1.2 9.6.8 1.2 1.8 2.5 3.1 2.4 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.6-1-2.7-3.6z"/><path d="M14.6 5.6c.7-.8 1.1-2 1-3.1-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.8-1.4z"/></svg>
+        使用 Apple 繼續
+      </button>
+      <button class="sso-btn" id="ssoIG" type="button">
+        <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="#C13584" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="#C13584" stroke="none"/></svg>
+        使用 Instagram 繼續
+      </button>
     </div>
-  </form>
+    <p class="m-note" id="ssoNote"></p>
+    <div class="sso-divider mono">或 用通行碼</div>
+    <form id="loginForm">
+      <input type="password" id="loginPass" placeholder="輸入通行碼" autocomplete="current-password">
+      <div class="m-err" id="loginErr"></div>
+      <div class="m-actions">
+        <button class="btn-pill" type="button" data-close>取消</button>
+        <button class="btn-solid" type="submit">登入</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- 卡套編輯對話框 -->
@@ -523,21 +607,92 @@ body.owner .owner-bar{display:flex}
   </form>
 </div>
 
-<!-- 核驗說明／設定對話框 -->
-<div class="modal" id="modalVerify" role="dialog" aria-modal="true" aria-label="紀錄核驗">
-  <form class="modal-card" id="verifyForm">
-    <h4 class="mono">VERIFICATION</h4>
-    <div class="m-title">出入境紀錄核驗</div>
-    <p>政府目前<b>沒有開放</b>個人出入境紀錄的自動同步 API。官方作法：向內政部移民署線上申請「<b>入出國日期證明書</b>」（<a href="https://www.immigration.gov.tw" target="_blank" rel="noopener">immigration.gov.tw</a>），核對本頁次數相符後，由持照人親自標記「已核驗」。</p>
-    <div id="verifyOwnerZone">
-      <label class="m-check"><input type="checkbox" id="verifyChk"> 我已核對，紀錄與官方證明相符</label>
-      <input type="month" id="verifyMonth" aria-label="核驗年月">
+<!-- 新增／編輯旅程對話框 -->
+<div class="modal" id="modalTrip" role="dialog" aria-modal="true" aria-label="新增或編輯旅程">
+  <form class="modal-card" id="tripForm">
+    <h4 class="mono">TRIP</h4>
+    <div class="m-title" id="tfTitle">新增旅程</div>
+    <label class="f-label mono" for="tfCity">城市</label>
+    <input type="text" id="tfCity" placeholder="例：東京">
+    <label class="f-label mono" for="tfCountry">國家</label>
+    <input type="text" id="tfCountry" list="countryList" placeholder="例：日本（會自動配國旗與地圖座標）">
+    <datalist id="countryList"></datalist>
+    <div class="f-row2">
+      <div>
+        <label class="f-label mono" for="tfStart">出發日</label>
+        <input type="date" id="tfStart">
+      </div>
+      <div>
+        <label class="f-label mono" for="tfEnd">回國日</label>
+        <input type="date" id="tfEnd">
+      </div>
     </div>
+    <label class="f-label mono" for="tfNote">一句話（卡片上顯示）</label>
+    <input type="text" id="tfNote" placeholder="這趟最難忘的一件事">
+    <label class="m-check"><input type="checkbox" id="tfVerified"> ✓ 已比對「入出國日期證明書」（沒有也可以記錄）</label>
+    <div class="m-err" id="tfErr"></div>
     <div class="m-actions">
-      <button class="btn-pill" type="button" data-close>關閉</button>
-      <button class="btn-solid" type="submit" id="verifySave">儲存</button>
+      <button class="btn-pill danger spacer" type="button" id="tfDelete" hidden>刪除這張卡</button>
+      <button class="btn-pill" type="button" data-close>取消</button>
+      <button class="btn-solid" type="submit">儲存</button>
     </div>
   </form>
+</div>
+
+<!-- 懶人匯入對話框 -->
+<div class="modal" id="modalImport" role="dialog" aria-modal="true" aria-label="用證明書懶人匯入">
+  <form class="modal-card" id="importForm">
+    <h4 class="mono">QUICK IMPORT</h4>
+    <div class="m-title">懶人卡片：貼上證明書</div>
+    <p>向移民署申請「<b>入出國日期證明書</b>」（<a href="https://www.immigration.gov.tw" target="_blank" rel="noopener">immigration.gov.tw</a>）後，把上面的日期文字整段貼進來。支援西元（2024/12/20）與民國（113.12.20）格式，會自動兩兩配對成「出國→回國」並打勾 ✓ 已核驗。目的地之後點卡片再補就好。</p>
+    <textarea id="importText" rows="5" placeholder="出國日期　入國日期&#10;113/12/20　113/12/25&#10;114/02/06　114/02/10 …"></textarea>
+    <div class="import-preview mono" id="importPreview"></div>
+    <div class="m-actions">
+      <button class="btn-pill" type="button" data-close>取消</button>
+      <button class="btn-solid" type="submit">建立卡片</button>
+    </div>
+  </form>
+</div>
+
+<!-- 旅程內頁對話框 -->
+<div class="modal" id="modalDetail" role="dialog" aria-modal="true" aria-label="旅程內頁">
+  <div class="modal-card">
+    <h4 class="mono">JOURNEY</h4>
+    <div class="d-head">
+      <span class="d-flag" id="dFlag"></span>
+      <div>
+        <div class="m-title" id="dTitle"></div>
+        <p class="d-dates mono" id="dDates"></p>
+      </div>
+    </div>
+    <div class="d-badges mono" id="dBadges"></div>
+    <p class="d-note" id="dNote"></p>
+    <div class="d-journal" id="dJournal"></div>
+    <div id="dOwnerZone" hidden>
+      <label class="f-label mono" for="dJournalEdit">內頁紀錄（只有登入後看得到這個編輯框）</label>
+      <textarea id="dJournalEdit" rows="6" placeholder="寫下這趟的故事：吃了什麼、遇見誰、下次還想再去嗎…"></textarea>
+    </div>
+    <div class="m-actions">
+      <button class="btn-pill spacer" type="button" id="dEditData" hidden>編輯資料</button>
+      <button class="btn-pill" type="button" data-close>關閉</button>
+      <button class="btn-solid" type="button" id="dSaveJournal" hidden>儲存內文</button>
+    </div>
+  </div>
+</div>
+
+<!-- 核驗說明對話框 -->
+<div class="modal" id="modalVerify" role="dialog" aria-modal="true" aria-label="紀錄核驗說明">
+  <div class="modal-card">
+    <h4 class="mono">VERIFICATION</h4>
+    <div class="m-title">出入境紀錄核驗</div>
+    <p>政府目前<b>沒有開放</b>個人出入境紀錄的自動同步 API，所以核驗採「官方文件＋本人打勾」：</p>
+    <p>1. 向內政部移民署線上申請「<b>入出國日期證明書</b>」（<a href="https://www.immigration.gov.tw" target="_blank" rel="noopener">immigration.gov.tw</a>）。<br>
+       2. 有證明書 → 每張卡片打勾 ✓（登入後在「編輯資料」勾選，或用「懶人匯入」直接生成已打勾的卡片）。<br>
+       3. 沒有證明書 → 不打勾，照樣可以記錄，只是不顯示 ✓。</p>
+    <div class="m-actions">
+      <button class="btn-pill" type="button" data-close>知道了</button>
+    </div>
+  </div>
 </div>
 
 <div class="lightbox" id="lightbox" role="dialog" aria-label="放大檢視">
@@ -552,19 +707,36 @@ body.owner .owner-bar{display:flex}
    ------------------------------------------------------------
    trips 欄位說明：
    - city / country / countryCode / flag / continent：目的地資訊
-     （countryCode 同時用來在世界地圖上插旗，見下方 COUNTRY_COORDS）
+     （countryCode 用來在世界地圖插旗，見 COUNTRY_COORDS）
    - start / end：日期（YYYY-MM-DD），天數會自動計算
-   - note：這趟旅程的一句話（可留空 ""）
-   - photos：最多 3 格「卡套」。每格可放：
-       (1) 照片網址或同資料夾檔案 "images/tokyo-1.jpg"
-       (2) 影片網址（.mp4 / .webm / .mov 會自動以影片播放）
-       (3) 留空 "" → 顯示虛線佔位框，等你之後補
-   - crew：同行團員（對應下方 CONFIG.crew 的 key），會顯示成可點的 TAG
+   - note：卡片上顯示的一句話（可留空 ""）
+   - journal：卡片「內頁」的長文紀錄（點卡片可看；登入後可直接在頁面編輯）
+   - verified：true = 已比對移民署「入出國日期證明書」，卡片顯示 ✓；
+               false / 不填 = 不打勾，一樣照常記錄與統計
+   - photos：最多 3 格「卡套」，每格可放照片網址、影片網址（.mp4/.webm/.mov）
+             或同資料夾檔案 "images/xxx.jpg"；留空 "" 顯示佔位框
+   - crew：同行團員（對應 CONFIG.crew 的 key），顯示成可點的 TAG
    - ink：印章墨色 "green" | "blue" | "red"（留空自動輪流）
+   ※ 登入後也可以直接在頁面上「＋新增」「編輯」卡片，不一定要改檔案；
+     頁面上的編輯存在自己裝置，要公開請按「匯出」把 JSON 貼回這裡。
    ============================================================ */
 const CONFIG = {
-  /* 登入通行碼：請自行修改。注意：這是輕量的前端鎖，
-     編輯結果只存在自己手機/電腦（localStorage），要公開更新請用「匯出資料」貼回本檔。 */
+  /* ---------- 登入方式 ----------
+     1) Google 一鍵登入（推薦）：
+        a. 到 https://console.cloud.google.com → 建立專案 → 「API 和服務」→「憑證」
+        b. 建立「OAuth 用戶端 ID」（類型：網頁應用程式），
+           「已授權的 JavaScript 來源」填你的 GitHub Pages 網域
+           （例：https://ramezedfate.github.io）
+        c. 把產生的用戶端 ID 貼到下面 googleClientId，
+           ownerEmails 填你的 Gmail → 用該帳號登入即成為持照人
+     2) Apple 登入：需要 Apple 開發者帳號（US$99/年）+ 網域驗證，暫不啟用
+     3) Instagram 登入：Meta 已於 2024 年底關閉個人登入 API，無法串接
+     4) 通行碼：備用入口（ownerPass，請自行修改）
+     ※ 這是純前端靜態頁：登入的作用是「解鎖編輯介面」，編輯結果只存自己裝置 */
+  auth: {
+    googleClientId: "",                     // 例："123456789-xxxx.apps.googleusercontent.com"
+    ownerEmails: ["a8225012@gmail.com"]     // 允許成為持照人的 Google 帳號
+  },
   ownerPass: "2026",
 
   profile: {
@@ -591,9 +763,6 @@ const CONFIG = {
     mia: { name: "小米", url: "https://instagram.com/adam_ai_plus" }
   },
 
-  /* 官方核驗狀態（登入後也可在頁面上切換；詳見核驗視窗說明） */
-  verification: { verified: false, month: "" },
-
   /* 還想蒐集的入境章（顯示為未解鎖虛線格 + 地圖上的灰旗） */
   wishlist: [
     { flag: "🇮🇸", name: "冰島",   code: "ISL" },
@@ -603,37 +772,38 @@ const CONFIG = {
 
   trips: [
     { city:"大阪", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
-      start:"2023-09-15", end:"2023-09-19",
+      start:"2023-09-15", end:"2023-09-19", verified:true,
       note:"人生第一趟自由行，從心齋橋走到梅田，護照蓋下第一個章。",
+      journal:"出發前一晚緊張到睡不著，結果落地之後發現：原來自由行沒有想像中難。\n\n第一天迷路迷進了一條全是立吞店的小巷，用比手畫腳點了人生第一串炸串。回程在機場把零錢全部投進扭蛋機，轉出一顆章魚燒磁鐵——現在還貼在冰箱上。",
       photos:["","",""], crew:["kai"] },
 
     { city:"首爾", country:"韓國", countryCode:"KOR", flag:"🇰🇷", continent:"亞洲",
-      start:"2024-03-08", end:"2024-03-12",
+      start:"2024-03-08", end:"2024-03-12", verified:true,
       note:"初春的首爾，弘大咖啡廳一條街收進口袋名單。",
       photos:["","",""] },
 
     { city:"曼谷", country:"泰國", countryCode:"THA", flag:"🇹🇭", continent:"亞洲",
-      start:"2024-07-04", end:"2024-07-08",
+      start:"2024-07-04", end:"2024-07-08", verified:true,
       note:"恰圖恰週末市集 + 昭披耶河夜遊，熱但值得。",
       photos:["","",""], crew:["kai","mia"] },
 
     { city:"東京", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
-      start:"2024-12-20", end:"2024-12-25",
+      start:"2024-12-20", end:"2024-12-25", verified:true,
       note:"聖誕點燈季的東京，表參道的燈海名不虛傳。",
       photos:["","",""] },
 
     { city:"峴港", country:"越南", countryCode:"VNM", flag:"🇻🇳", continent:"亞洲",
-      start:"2025-04-02", end:"2025-04-06",
+      start:"2025-04-02", end:"2025-04-06", verified:true,
       note:"巴拿山黃金橋 + 美溪沙灘，CP 值超高的一趟。",
       photos:["","",""], crew:["mia"] },
 
     { city:"新加坡", country:"新加坡", countryCode:"SGP", flag:"🇸🇬", continent:"亞洲",
-      start:"2025-06-27", end:"2025-06-30",
+      start:"2025-06-27", end:"2025-06-30", verified:true,
       note:"濱海灣花園的夜間燈光秀，科技感拉滿。",
       photos:["","",""] },
 
     { city:"釜山", country:"韓國", countryCode:"KOR", flag:"🇰🇷", continent:"亞洲",
-      start:"2025-10-17", end:"2025-10-21",
+      start:"2025-10-17", end:"2025-10-21", verified:true,
       note:"甘川洞文化村的彩色屋，隨手拍都是明信片。",
       photos:["","",""] },
 
@@ -649,8 +819,7 @@ const CONFIG = {
   ]
 };
 
-/* 世界地圖插旗座標（國家代碼 → [經度, 緯度]）。
-   之後去新國家：trips 填 countryCode，如果下面沒有就補一行。 */
+/* 世界地圖插旗座標（國家代碼 → [經度, 緯度]） */
 const COUNTRY_COORDS = {
   TWN:[121.0,23.7], JPN:[138.5,36.5], KOR:[127.5,36.5], PRK:[127,40],
   CHN:[104,35], HKG:[114.2,22.3], MAC:[113.5,22.2], MNG:[104,47],
@@ -667,6 +836,38 @@ const COUNTRY_COORDS = {
   AUS:[134,-25], NZL:[172,-42], MAR:[-6,32], ZAF:[25,-29], KEN:[38,0]
 };
 
+/* 常見國家：中文名 → 國旗/代碼/洲別（頁面上新增旅程時自動帶入） */
+const COUNTRY_META = {
+  "日本":{code:"JPN",flag:"🇯🇵",continent:"亞洲"}, "韓國":{code:"KOR",flag:"🇰🇷",continent:"亞洲"},
+  "中國":{code:"CHN",flag:"🇨🇳",continent:"亞洲"}, "香港":{code:"HKG",flag:"🇭🇰",continent:"亞洲"},
+  "澳門":{code:"MAC",flag:"🇲🇴",continent:"亞洲"}, "泰國":{code:"THA",flag:"🇹🇭",continent:"亞洲"},
+  "越南":{code:"VNM",flag:"🇻🇳",continent:"亞洲"}, "新加坡":{code:"SGP",flag:"🇸🇬",continent:"亞洲"},
+  "馬來西亞":{code:"MYS",flag:"🇲🇾",continent:"亞洲"}, "印尼":{code:"IDN",flag:"🇮🇩",continent:"亞洲"},
+  "菲律賓":{code:"PHL",flag:"🇵🇭",continent:"亞洲"}, "柬埔寨":{code:"KHM",flag:"🇰🇭",continent:"亞洲"},
+  "寮國":{code:"LAO",flag:"🇱🇦",continent:"亞洲"}, "緬甸":{code:"MMR",flag:"🇲🇲",continent:"亞洲"},
+  "印度":{code:"IND",flag:"🇮🇳",continent:"亞洲"}, "斯里蘭卡":{code:"LKA",flag:"🇱🇰",continent:"亞洲"},
+  "尼泊爾":{code:"NPL",flag:"🇳🇵",continent:"亞洲"}, "蒙古":{code:"MNG",flag:"🇲🇳",continent:"亞洲"},
+  "阿聯":{code:"ARE",flag:"🇦🇪",continent:"亞洲"}, "卡達":{code:"QAT",flag:"🇶🇦",continent:"亞洲"},
+  "土耳其":{code:"TUR",flag:"🇹🇷",continent:"歐洲"}, "以色列":{code:"ISR",flag:"🇮🇱",continent:"亞洲"},
+  "埃及":{code:"EGY",flag:"🇪🇬",continent:"非洲"}, "英國":{code:"GBR",flag:"🇬🇧",continent:"歐洲"},
+  "愛爾蘭":{code:"IRL",flag:"🇮🇪",continent:"歐洲"}, "法國":{code:"FRA",flag:"🇫🇷",continent:"歐洲"},
+  "德國":{code:"DEU",flag:"🇩🇪",continent:"歐洲"}, "義大利":{code:"ITA",flag:"🇮🇹",continent:"歐洲"},
+  "西班牙":{code:"ESP",flag:"🇪🇸",continent:"歐洲"}, "葡萄牙":{code:"PRT",flag:"🇵🇹",continent:"歐洲"},
+  "瑞士":{code:"CHE",flag:"🇨🇭",continent:"歐洲"}, "奧地利":{code:"AUT",flag:"🇦🇹",continent:"歐洲"},
+  "荷蘭":{code:"NLD",flag:"🇳🇱",continent:"歐洲"}, "比利時":{code:"BEL",flag:"🇧🇪",continent:"歐洲"},
+  "捷克":{code:"CZE",flag:"🇨🇿",continent:"歐洲"}, "希臘":{code:"GRC",flag:"🇬🇷",continent:"歐洲"},
+  "冰島":{code:"ISL",flag:"🇮🇸",continent:"歐洲"}, "挪威":{code:"NOR",flag:"🇳🇴",continent:"歐洲"},
+  "瑞典":{code:"SWE",flag:"🇸🇪",continent:"歐洲"}, "芬蘭":{code:"FIN",flag:"🇫🇮",continent:"歐洲"},
+  "丹麥":{code:"DNK",flag:"🇩🇰",continent:"歐洲"}, "波蘭":{code:"POL",flag:"🇵🇱",continent:"歐洲"},
+  "匈牙利":{code:"HUN",flag:"🇭🇺",continent:"歐洲"}, "美國":{code:"USA",flag:"🇺🇸",continent:"北美洲"},
+  "加拿大":{code:"CAN",flag:"🇨🇦",continent:"北美洲"}, "墨西哥":{code:"MEX",flag:"🇲🇽",continent:"北美洲"},
+  "古巴":{code:"CUB",flag:"🇨🇺",continent:"北美洲"}, "巴西":{code:"BRA",flag:"🇧🇷",continent:"南美洲"},
+  "阿根廷":{code:"ARG",flag:"🇦🇷",continent:"南美洲"}, "秘魯":{code:"PER",flag:"🇵🇪",continent:"南美洲"},
+  "智利":{code:"CHL",flag:"🇨🇱",continent:"南美洲"}, "澳洲":{code:"AUS",flag:"🇦🇺",continent:"大洋洲"},
+  "紐西蘭":{code:"NZL",flag:"🇳🇿",continent:"大洋洲"}, "摩洛哥":{code:"MAR",flag:"🇲🇦",continent:"非洲"},
+  "南非":{code:"ZAF",flag:"🇿🇦",continent:"非洲"}, "肯亞":{code:"KEN",flag:"🇰🇪",continent:"非洲"}
+};
+
 /* ============================================================
    以下為程式區，一般情況不用動
    ============================================================ */
@@ -679,31 +880,39 @@ const COUNTRY_COORDS = {
   const isVideo = (src)=>/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(src||"");
   const esc = (s)=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 
-  /* ---------- 本機儲存（登入 / 卡套覆寫 / 核驗） ---------- */
+  /* ---------- 本機儲存（登入 / 卡套 / 新增旅程 / 欄位修改） ---------- */
   const store = {
     get owner(){ return localStorage.getItem("pp_owner")==="1"; },
     set owner(v){ v ? localStorage.setItem("pp_owner","1") : localStorage.removeItem("pp_owner"); },
     get media(){ try{ return JSON.parse(localStorage.getItem("pp_media")||"{}"); }catch(_){ return {}; } },
     set media(v){ localStorage.setItem("pp_media", JSON.stringify(v)); },
-    get verify(){ try{ return JSON.parse(localStorage.getItem("pp_verify")||"null"); }catch(_){ return null; } },
-    set verify(v){ localStorage.setItem("pp_verify", JSON.stringify(v)); }
+    get localTrips(){ try{ return JSON.parse(localStorage.getItem("pp_trips")||"[]"); }catch(_){ return []; } },
+    set localTrips(v){ localStorage.setItem("pp_trips", JSON.stringify(v)); },
+    get edits(){ try{ return JSON.parse(localStorage.getItem("pp_edits")||"{}"); }catch(_){ return {}; } },
+    set edits(v){ localStorage.setItem("pp_edits", JSON.stringify(v)); }
   };
 
-  /* ---------- 資料整理 ---------- */
-  const trips = CONFIG.trips
-    .map((t,i)=>({...t, _i:i}))
-    .sort((a,b)=> a.start < b.start ? -1 : 1);         // 由舊到新 = 蒐集順序
-  trips.forEach((t,i)=>{
-    t.no = i+1;
-    t.ink = INKS.includes(t.ink) ? t.ink : INKS[i % INKS.length];
-    t.days = Math.round((new Date(t.end)-new Date(t.start))/864e5)+1;
-  });
-  const newestFirst = [...trips].reverse();
-  const uniq = (arr)=>[...new Set(arr)];
-  const countries = uniq(trips.map(t=>t.country));
-  const cities    = uniq(trips.map(t=>t.city+t.country));
-  const totalDays = trips.reduce((s,t)=>s+t.days,0);
-  const firstYear = trips.length ? trips[0].start.slice(0,4) : String(new Date().getFullYear());
+  /* ---------- 合併資料：CONFIG 卡片 + 頁面新增卡片 + 欄位修改 ---------- */
+  let trips = [], newestFirst = [], countries = [], citiesN = 0, totalDays = 0, firstYear = "";
+  function buildTrips(){
+    const base = CONFIG.trips.map((t,i)=>({...t, id:"c"+i}));
+    const locals = store.localTrips;
+    const edits = store.edits;
+    trips = base.concat(locals)
+      .map(t=>({...t, ...(edits[t.id]||{})}))
+      .sort((a,b)=> a.start < b.start ? -1 : 1);       // 由舊到新 = 蒐集順序
+    trips.forEach((t,i)=>{
+      t.no = i+1;
+      t.ink = INKS.includes(t.ink) ? t.ink : INKS[i % INKS.length];
+      t.days = Math.max(1, Math.round((new Date(t.end)-new Date(t.start))/864e5)+1);
+    });
+    newestFirst = [...trips].reverse();
+    const uniq = (arr)=>[...new Set(arr)];
+    countries = uniq(trips.map(t=>t.country));
+    citiesN = uniq(trips.map(t=>t.city+t.country)).length;
+    totalDays = trips.reduce((s,t)=>s+t.days,0);
+    firstYear = trips.length ? trips[0].start.slice(0,4) : String(new Date().getFullYear());
+  }
 
   const fmtRange = (t)=>{
     const [y1,m1,d1] = t.start.split("-"), [y2,m2,d2] = t.end.split("-");
@@ -713,8 +922,9 @@ const COUNTRY_COORDS = {
   };
   const mediaOf = (t)=>{ // 合併本機編輯的卡套
     const ov = store.media;
-    return [0,1,2].map(i=> ov[`${t.no}:${i}`] ?? (t.photos||[])[i] ?? "");
+    return [0,1,2].map(i=> ov[`${t.id}:${i}`] ?? (t.photos||[])[i] ?? "");
   };
+  const tripById = (id)=>trips.find(t=>t.id===id);
 
   /* ---------- 提示浮條 ---------- */
   const toast = $("#toast"); let toastTimer;
@@ -722,18 +932,18 @@ const COUNTRY_COORDS = {
     toast.textContent = msg;
     toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>toast.classList.remove("show"), 2000);
+    toastTimer = setTimeout(()=>toast.classList.remove("show"), 2200);
   }
 
   /* ---------- 對話框開關 ---------- */
-  function openModal(id){ $(id).classList.add("open"); const inp=$(id).querySelector("input"); if(inp) setTimeout(()=>inp.focus(),50); }
+  function openModal(id){ $(id).classList.add("open"); const inp=$(id).querySelector("input,textarea"); if(inp) setTimeout(()=>inp.focus(),50); }
   function closeModals(){ document.querySelectorAll(".modal.open").forEach(m=>m.classList.remove("open")); }
   document.querySelectorAll(".modal").forEach(m=>{
     m.addEventListener("click",(e)=>{ if(e.target===m) closeModals(); });
     m.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click", closeModals));
   });
 
-  /* ---------- PAGE 01 持照人 ---------- */
+  /* ---------- PAGE 01 持照人（靜態，一次渲染） ---------- */
   const P = CONFIG.profile;
   document.title = `${P.name} 的護照旅行紀錄`;
   $("#pName").textContent = P.name;
@@ -749,30 +959,24 @@ const COUNTRY_COORDS = {
     d.className = "initial serif"; d.textContent = (P.name||"?").trim().charAt(0).toUpperCase();
     av.appendChild(d);
   }
-  $("#idRows").innerHTML = [
-    ["國籍 / NATIONALITY", P.nationality],
-    ["類別 / TYPE", P.passportType],
-    ["首航 / FIRST TRIP", trips.length ? trips[0].start.replaceAll("-",".") : "—"],
-    ["最近 / LATEST", trips.length ? trips[trips.length-1].start.replaceAll("-",".") : "—"]
-  ].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
   $("#pLinks").innerHTML = (P.links||[])
-    .map(l=>`<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("");
+    .map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+
+  function renderIdRows(){
+    $("#idRows").innerHTML = [
+      ["國籍 / NATIONALITY", P.nationality],
+      ["類別 / TYPE", P.passportType],
+      ["首航 / FIRST TRIP", trips.length ? trips[0].start.replaceAll("-",".") : "—"],
+      ["最近 / LATEST", trips.length ? trips[trips.length-1].start.replaceAll("-",".") : "—"]
+    ].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  }
 
   /* ---------- PAGE 02 計數 ---------- */
-  $("#sinceLine").textContent = `${firstYear} 年至今`;
-  $("#statRow").innerHTML = [
-    [countries.length,"個國家"],
-    [cities.length,"座城市"],
-    [totalDays,"天在海外"]
-  ].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
-  const byContinent = {};
-  trips.forEach(t=>{ byContinent[t.continent] = (byContinent[t.continent]||new Set()).add(t.country); });
-  $("#continentLine").innerHTML = Object.entries(byContinent)
-    .map(([c,s])=>`<em>${c} × ${s.size} 國</em>`).join("");
-
   const big = $("#bigCount");
-  const target = trips.length;
+  let counted = false;
   function countUp(){
+    counted = true;
+    const target = trips.length;
     if (reduceMotion){ big.textContent = target; return; }
     const t0 = performance.now(), dur = 1100;
     (function tick(now){
@@ -781,39 +985,35 @@ const COUNTRY_COORDS = {
       if (p < 1) requestAnimationFrame(tick);
     })(t0);
   }
+  function renderStats(){
+    $("#sinceLine").textContent = `${firstYear} 年至今`;
+    if (counted) big.textContent = trips.length;
+    $("#statRow").innerHTML = [
+      [countries.length,"個國家"],
+      [citiesN,"座城市"],
+      [totalDays,"天在海外"]
+    ].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
+    const byContinent = {};
+    trips.forEach(t=>{ byContinent[t.continent] = (byContinent[t.continent]||new Set()).add(t.country); });
+    $("#continentLine").innerHTML = Object.entries(byContinent)
+      .map(([c,s])=>`<em>${c} × ${s.size} 國</em>`).join("");
+  }
 
-  /* ---------- 核驗徽章 ---------- */
+  /* ---------- 核驗徽章（統計每張卡片的 ✓） ---------- */
   const verifyLine = $("#verifyLine");
-  function verifyState(){ return store.verify || CONFIG.verification || {verified:false, month:""}; }
   function renderVerify(){
-    const v = verifyState();
-    if (v.verified){
+    const ok = trips.filter(t=>t.verified).length;
+    if (ok > 0){
       verifyLine.className = "verify-line mono ok";
-      verifyLine.textContent = `✓ 出入境紀錄已核驗${v.month ? " · "+v.month.replace("-",".") : ""}`;
+      verifyLine.textContent = `✓ 已核驗 ${ok}/${trips.length} 趟 · 依入出國日期證明書`;
     } else {
       verifyLine.className = "verify-line mono";
-      verifyLine.textContent = "○ 紀錄未核驗 · 點我看說明";
+      verifyLine.textContent = "○ 尚未核驗 · 點我看說明";
     }
   }
-  renderVerify();
-  verifyLine.addEventListener("click", ()=>{
-    const owner = store.owner, v = verifyState();
-    $("#verifyOwnerZone").style.display = owner ? "" : "none";
-    $("#verifySave").style.display = owner ? "" : "none";
-    $("#verifyChk").checked = !!v.verified;
-    $("#verifyMonth").value = v.month || "";
-    openModal("#modalVerify");
-  });
-  $("#verifyForm").addEventListener("submit",(e)=>{
-    e.preventDefault();
-    if (!store.owner) { closeModals(); return; }
-    store.verify = { verified: $("#verifyChk").checked, month: $("#verifyMonth").value };
-    renderVerify(); closeModals();
-    showToast(store.verify.verified ? "已標記核驗（記得匯出資料同步到檔案）" : "已取消核驗標記");
-  });
+  verifyLine.addEventListener("click", ()=>openModal("#modalVerify"));
 
   /* ---------- 世界地圖（點選才展開） ---------- */
-  /* 簡化的大陸輪廓（經緯度多邊形），畫成點陣風世界地圖 */
   const LAND = [
     [[-168,66],[-160,70],[-150,70],[-140,69],[-130,69],[-120,69],[-110,68],[-100,68],[-90,66],[-80,64],[-70,62],[-65,60],[-60,55],[-55,50],[-60,47],[-66,45],[-70,43],[-76,38],[-80,32],[-81,25],[-87,30],[-90,22],[-88,21],[-86,16],[-83,14],[-78,9],[-82,9],[-85,12],[-88,17],[-90,15],[-95,16],[-97,18],[-105,22],[-110,28],[-117,33],[-124,40],[-125,48],[-130,52],[-135,57],[-145,60],[-152,60],[-158,58],[-165,60]],
     [[-45,60],[-52,63],[-55,67],[-58,72],[-55,76],[-45,80],[-35,82],[-25,80],[-20,75],[-25,70],[-32,66],[-40,62]],
@@ -834,25 +1034,25 @@ const COUNTRY_COORDS = {
     [[114,-22],[114,-30],[116,-34],[122,-34],[129,-32],[132,-32],[137,-35],[140,-38],[146,-39],[150,-37],[153,-30],[153,-25],[150,-22],[146,-18],[142,-11],[138,-16],[135,-12],[131,-12],[126,-14],[122,-17],[118,-20]],
     [[173,-35],[175,-37],[176,-39],[174,-41],[172,-44],[168,-46],[167,-45],[170,-42],[172,-40],[173,-37]]
   ];
-  const MAP = { lon0:-170, lon1:185, lat0:-55, lat1:80 }; // 顯示範圍（裁掉南極）
+  const MAP = { lon0:-170, lon1:185, lat0:-55, lat1:80 };
   const proj = (lon,lat,W,H)=>[
     (lon-MAP.lon0)/(MAP.lon1-MAP.lon0)*W,
     (MAP.lat1-lat)/(MAP.lat1-MAP.lat0)*H
   ];
-
-  const visited = new Map(); // country -> {code,flag,count,firstNo}
-  trips.forEach(t=>{
-    const v = visited.get(t.country) || {code:t.countryCode, flag:t.flag, count:0, firstNo:t.no};
-    v.count++; visited.set(t.country, v);
-  });
-
-  const mapToggle = $("#mapToggle"), mapPanel = $("#mapPanel");
-  const toggleText = (open)=>{
-    mapToggle.textContent = `🌍 世界地圖 · 已插 ${visited.size} 面旗 ${open?"▴":"▾"}`;
-    mapToggle.setAttribute("aria-expanded", open);
+  const visitedMap = ()=>{
+    const m = new Map();
+    trips.forEach(t=>{
+      const v = m.get(t.country) || {code:t.countryCode, flag:t.flag, count:0};
+      v.count++; m.set(t.country, v);
+    });
+    return m;
   };
-  toggleText(false);
-
+  const mapToggle = $("#mapToggle"), mapPanel = $("#mapPanel");
+  function toggleText(){
+    const open = !mapPanel.hidden;
+    mapToggle.textContent = `🌍 世界地圖 · 已插 ${visitedMap().size} 面旗 ${open?"▴":"▾"}`;
+    mapToggle.setAttribute("aria-expanded", open);
+  }
   let mapBuilt = false;
   function buildMap(){
     const canvas = $("#mapCanvas");
@@ -864,7 +1064,6 @@ const COUNTRY_COORDS = {
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr,dpr);
     ctx.clearRect(0,0,W,H);
-    /* 大陸點陣 */
     const path = new Path2D();
     LAND.forEach(poly=>{
       poly.forEach(([lon,lat],i)=>{
@@ -885,7 +1084,6 @@ const COUNTRY_COORDS = {
       }
     }
     ctx.globalAlpha = 1;
-    /* 插旗 */
     const pins = $("#mapPins"); pins.innerHTML = "";
     const addPin = (lon,lat,html,cls,label)=>{
       const [x,y] = proj(lon,lat,W,H);
@@ -897,7 +1095,7 @@ const COUNTRY_COORDS = {
       pins.appendChild(b);
     };
     addPin(CONFIG.home.lon, CONFIG.home.lat, "★", "home", `HOME · ${CONFIG.home.name}`);
-    visited.forEach((v,country)=>{
+    visitedMap().forEach((v,country)=>{
       const c = COUNTRY_COORDS[v.code]; if (!c) return;
       addPin(c[0], c[1], v.flag + (v.count>1?`<i>${v.count}</i>`:""), "", `${country} · ${v.count} 次`);
     });
@@ -908,10 +1106,9 @@ const COUNTRY_COORDS = {
     mapBuilt = true;
   }
   mapToggle.addEventListener("click", ()=>{
-    const open = mapPanel.hidden;
-    mapPanel.hidden = !open;
-    toggleText(open);
-    if (open && !mapBuilt) buildMap();
+    mapPanel.hidden = !mapPanel.hidden;
+    toggleText();
+    if (!mapPanel.hidden && !mapBuilt) buildMap();
   });
   let rsTimer;
   addEventListener("resize", ()=>{
@@ -921,93 +1118,96 @@ const COUNTRY_COORDS = {
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", ()=>{ if (mapBuilt && !mapPanel.hidden) buildMap(); });
 
   /* ---------- PAGE 03 成就勳章 ---------- */
-  const cityCount = {}, countryCount = {}, yearCount = {};
-  trips.forEach(t=>{
-    cityCount[t.city] = (cityCount[t.city]||0)+1;
-    countryCount[t.country] = (countryCount[t.country]||0)+1;
-    const y = t.start.slice(0,4); yearCount[y] = (yearCount[y]||0)+1;
-  });
-  const topOf = (obj)=>Object.entries(obj).sort((a,b)=>b[1]-a[1])[0] || ["—",0];
-  const [topCity, topCityN] = topOf(cityCount);
-  const [topCountry, topCountryN] = topOf(countryCount);
-  const [topYear, topYearN] = topOf(yearCount);
-  const longestTrip = trips.reduce((m,t)=>Math.max(m,t.days),0);
-  const first = trips[0];
-
-  /* tier: unique=唯一(紅) / rare=稀有(藍) / common=一般(綠) */
-  const ACH = [
-    { tier:"unique", icon:"🛫", name:"初次啟程",
-      desc: first ? `第一枚印章：${first.city} · ${first.start.replaceAll("-",".")}` : "蓋下第一個章即解鎖",
-      cur: trips.length?1:0, need:1 },
-    { tier:"unique", icon:"👑", name: topCityN>=2 ? `${topCity}常客` : "城市常客",
-      desc: topCityN>=2 ? `同一座城市去了 ${topCityN} 次——這是你的專屬紀錄` : "重訪任何一座城市即解鎖",
-      cur: Math.min(topCityN,2), need:2 },
-    { tier:"common", icon:"✈️", name:"蓋章 ×5",  desc:"護照使用次數達 5 次",  cur:trips.length, need:5 },
-    { tier:"rare",   icon:"🔥", name:"蓋章 ×10", desc:"護照使用次數達 10 次", cur:trips.length, need:10 },
-    { tier:"common", icon:"🌏", name:"五國解鎖", desc:"入境章來自 5 個不同國家", cur:countries.length, need:5 },
-    { tier:"rare",   icon:"🗺️", name:"十國旅人", desc:"入境章來自 10 個不同國家", cur:countries.length, need:10 },
-    { tier:"rare",   icon:"💚", name:"回訪之國",
-      desc: topCountryN>=3 ? `${topCountry}已累積 ${topCountryN} 個章` : "同一國家入境 3 次",
-      cur:topCountryN, need:3 },
-    { tier:"rare",   icon:"🌀", name:"一年四飛",
-      desc: `單一年度出國 4 次${topYearN?`（目前最高：${topYear} 年 ${topYearN} 次）`:""}`,
-      cur:topYearN, need:4 },
-    { tier:"common", icon:"🌙", name:"長旅七日", desc:"單趟旅程達 7 天", cur:longestTrip, need:7 },
-    { tier:"rare",   icon:"⏳", name:"海外五十天", desc:"累積海外天數達 50 天", cur:totalDays, need:50 }
-  ];
-  const TIER = {
-    unique:{ label:"唯一", color:"var(--stamp-red)" },
-    rare:  { label:"稀有", color:"var(--stamp-blue)" },
-    common:{ label:"一般", color:"var(--stamp-green)" }
-  };
-  const unlockedN = ACH.filter(a=>a.cur>=a.need).length;
-  $("#achList").innerHTML = ACH
-    .map(a=>({...a, ok:a.cur>=a.need}))
-    .sort((a,b)=> (b.ok-a.ok))
-    .map(a=>{
-      const t = TIER[a.tier];
-      const pct = Math.min(100, Math.round(a.cur/a.need*100));
-      return `<div class="ach ${a.ok?"":"locked"}" style="--tier:${t.color}">
-        <div class="ach-seal">${a.icon}</div>
-        <div class="ach-main">
-          <div class="ach-name">${a.name}</div>
-          <div class="ach-desc">${a.desc}</div>
-          ${a.ok ? "" : `<div class="bar" role="img" aria-label="進度 ${a.cur}/${a.need}"><i style="width:${pct}%"></i></div>`}
-        </div>
-        <div style="text-align:right;flex:none">
-          <span class="ach-tier mono">${t.label}</span>
-          ${a.ok ? "" : `<div class="ach-desc mono" style="margin-top:.35rem">${Math.min(a.cur,a.need)}/${a.need}</div>`}
-        </div>
-      </div>`;
-    }).join("");
-  $("#achHint").textContent = `已解鎖 ${unlockedN} / ${ACH.length} 個成就 ・ 唯一成就全站只有一枚`;
+  function renderAchievements(){
+    const cityCount = {}, countryCount = {}, yearCount = {};
+    trips.forEach(t=>{
+      cityCount[t.city] = (cityCount[t.city]||0)+1;
+      countryCount[t.country] = (countryCount[t.country]||0)+1;
+      const y = t.start.slice(0,4); yearCount[y] = (yearCount[y]||0)+1;
+    });
+    const topOf = (obj)=>Object.entries(obj).sort((a,b)=>b[1]-a[1])[0] || ["—",0];
+    const [topCity, topCityN] = topOf(cityCount);
+    const [topCountry, topCountryN] = topOf(countryCount);
+    const [topYear, topYearN] = topOf(yearCount);
+    const longestTrip = trips.reduce((m,t)=>Math.max(m,t.days),0);
+    const first = trips[0];
+    const ACH = [
+      { tier:"unique", icon:"🛫", name:"初次啟程",
+        desc: first ? `第一枚印章：${first.city} · ${first.start.replaceAll("-",".")}` : "蓋下第一個章即解鎖",
+        cur: trips.length?1:0, need:1 },
+      { tier:"unique", icon:"👑", name: topCityN>=2 ? `${topCity}常客` : "城市常客",
+        desc: topCityN>=2 ? `同一座城市去了 ${topCityN} 次——這是你的專屬紀錄` : "重訪任何一座城市即解鎖",
+        cur: Math.min(topCityN,2), need:2 },
+      { tier:"common", icon:"✈️", name:"蓋章 ×5",  desc:"護照使用次數達 5 次",  cur:trips.length, need:5 },
+      { tier:"rare",   icon:"🔥", name:"蓋章 ×10", desc:"護照使用次數達 10 次", cur:trips.length, need:10 },
+      { tier:"common", icon:"🌏", name:"五國解鎖", desc:"入境章來自 5 個不同國家", cur:countries.length, need:5 },
+      { tier:"rare",   icon:"🗺️", name:"十國旅人", desc:"入境章來自 10 個不同國家", cur:countries.length, need:10 },
+      { tier:"rare",   icon:"💚", name:"回訪之國",
+        desc: topCountryN>=3 ? `${topCountry}已累積 ${topCountryN} 個章` : "同一國家入境 3 次",
+        cur:topCountryN, need:3 },
+      { tier:"rare",   icon:"🌀", name:"一年四飛",
+        desc: `單一年度出國 4 次${topYearN?`（目前最高：${topYear} 年 ${topYearN} 次）`:""}`,
+        cur:topYearN, need:4 },
+      { tier:"common", icon:"🌙", name:"長旅七日", desc:"單趟旅程達 7 天", cur:longestTrip, need:7 },
+      { tier:"rare",   icon:"⏳", name:"海外五十天", desc:"累積海外天數達 50 天", cur:totalDays, need:50 }
+    ];
+    const TIER = {
+      unique:{ label:"唯一", color:"var(--stamp-red)" },
+      rare:  { label:"稀有", color:"var(--stamp-blue)" },
+      common:{ label:"一般", color:"var(--stamp-green)" }
+    };
+    const unlockedN = ACH.filter(a=>a.cur>=a.need).length;
+    $("#achList").innerHTML = ACH
+      .map(a=>({...a, ok:a.cur>=a.need}))
+      .sort((a,b)=> (b.ok-a.ok))
+      .map(a=>{
+        const t = TIER[a.tier];
+        const pct = Math.min(100, Math.round(a.cur/a.need*100));
+        return `<div class="ach ${a.ok?"":"locked"}" style="--tier:${t.color}">
+          <div class="ach-seal">${a.icon}</div>
+          <div class="ach-main">
+            <div class="ach-name">${a.name}</div>
+            <div class="ach-desc">${a.desc}</div>
+            ${a.ok ? "" : `<div class="bar" role="img" aria-label="進度 ${a.cur}/${a.need}"><i style="width:${pct}%"></i></div>`}
+          </div>
+          <div style="text-align:right;flex:none">
+            <span class="ach-tier mono">${t.label}</span>
+            ${a.ok ? "" : `<div class="ach-desc mono" style="margin-top:.35rem">${Math.min(a.cur,a.need)}/${a.need}</div>`}
+          </div>
+        </div>`;
+      }).join("");
+    $("#achHint").textContent = `已解鎖 ${unlockedN} / ${ACH.length} 個成就 ・ 唯一成就全站只有一枚`;
+  }
 
   /* ---------- PAGE 04 印章牆 ---------- */
   const wall = $("#stampWall");
-  const shapes = ["oval","","round"];
-  const stampHTML = trips.map((t,i)=>{
-    const rot = ((i % 5) - 2) * 2.6;
-    return `<button class="stamp ${shapes[i%3]}" type="button"
-      style="--c:${inkVar(t.ink)};--r:${rot}deg;--d:${(i*70)}ms"
-      data-target="trip-${t.no}" aria-label="${t.city} ${t.start}">
-      <span class="code">${t.countryCode}</span>
-      <span class="place">${t.flag} ${t.city}</span>
-      <span class="date">${t.start.replaceAll("-",".")}</span>
-      <span class="kind">${t.ink==="red" ? "departed ↑" : "admitted ↓"}</span>
-    </button>`;
-  }).join("");
-  const lockedHTML = (CONFIG.wishlist||[]).map((w,i)=>{
-    const rot = (((i+trips.length) % 5) - 2) * 2.2;
-    return `<div class="stamp locked" style="--c:var(--line);--r:${rot}deg;--d:${((trips.length+i)*70)}ms">
-      <span class="flagbig">${w.flag}</span>
-      <span class="place">${w.name}</span>
-      <span class="kind">未解鎖 / next</span>
-    </div>`;
-  }).join("");
-  wall.innerHTML = stampHTML + lockedHTML;
-  $("#wallHint").textContent =
-    `已蒐集 ${trips.length} 枚印章 ・ ${countries.length} 個國家${CONFIG.wishlist?.length ? ` ・ 還有 ${CONFIG.wishlist.length} 個目標待解鎖` : ""}`;
-
+  let revealed = reduceMotion;
+  function renderStamps(){
+    const shapes = ["oval","","round"];
+    const stampHTML = trips.map((t,i)=>{
+      const rot = ((i % 5) - 2) * 2.6;
+      return `<button class="stamp ${shapes[i%3]}" type="button"
+        style="--c:${inkVar(t.ink)};--r:${rot}deg;--d:${(i*70)}ms"
+        data-target="trip-${t.id}" aria-label="${esc(t.city)} ${t.start}">
+        <span class="code">${esc(t.countryCode||"???")}</span>
+        <span class="place">${t.flag} ${esc(t.city)}</span>
+        <span class="date">${t.start.replaceAll("-",".")}</span>
+        <span class="kind">${t.ink==="red" ? "departed ↑" : "admitted ↓"}</span>
+      </button>`;
+    }).join("");
+    const lockedHTML = (CONFIG.wishlist||[]).map((w,i)=>{
+      const rot = (((i+trips.length) % 5) - 2) * 2.2;
+      return `<div class="stamp locked" style="--c:var(--line);--r:${rot}deg;--d:${((trips.length+i)*70)}ms">
+        <span class="flagbig">${w.flag}</span>
+        <span class="place">${esc(w.name)}</span>
+        <span class="kind">未解鎖 / next</span>
+      </div>`;
+    }).join("");
+    wall.innerHTML = stampHTML + lockedHTML;
+    wall.classList.toggle("pending", !revealed);
+    $("#wallHint").textContent =
+      `已蒐集 ${trips.length} 枚印章 ・ ${countries.length} 個國家${CONFIG.wishlist?.length ? ` ・ 還有 ${CONFIG.wishlist.length} 個目標待解鎖` : ""}`;
+  }
   wall.addEventListener("click",(e)=>{
     const btn = e.target.closest(".stamp[data-target]");
     if (!btn) return;
@@ -1021,7 +1221,7 @@ const COUNTRY_COORDS = {
 
   /* ---------- PAGE 05 旅程卡片（新的在上） ---------- */
   const photoCell = (src, t, idx, owner)=>{
-    const edit = owner ? `<button class="edit-dot" type="button" data-edit="${t.no}:${idx}" aria-label="編輯卡套">✎</button>` : "";
+    const edit = owner ? `<button class="edit-dot" type="button" data-edit="${t.id}:${idx}" aria-label="編輯卡套">✎</button>` : "";
     let inner;
     if (src && isVideo(src)){
       inner = `<button class="shot" type="button" data-full="${esc(src)}" data-video="1">
@@ -1033,7 +1233,7 @@ const COUNTRY_COORDS = {
         <img src="${esc(src)}" alt="${esc(t.city)} 卡套 ${idx+1}" loading="lazy">
       </button>`;
     } else if (owner){
-      inner = `<button class="shot empty" type="button" data-edit="${t.no}:${idx}">
+      inner = `<button class="shot empty" type="button" data-edit="${t.id}:${idx}">
         <span class="f">${t.flag}</span><span class="t mono">＋ 照片/影片</span></button>`;
       return `<div class="cell">${inner}</div>`;   // 空格本身就是編輯入口，不再疊 ✎
     } else {
@@ -1055,24 +1255,26 @@ const COUNTRY_COORDS = {
     $("#page-trips").innerHTML = Object.keys(groups).sort((a,b)=>b-a).map(year=>{
       const list = groups[year];
       const cards = list.map(t=>{
-        /* 有幾格真的卡套就用幾格的版型；全空 → 三格虛線佔位框
-           編輯模式固定顯示 3 格（空格可點擊新增） */
         const media = mediaOf(t);
         const real = media.filter(p=>p);
         const cells = owner
           ? media.map((p,i)=>photoCell(p,t,i,true))
           : (real.length ? real : ["","",""]).map((p,i)=>photoCell(p,t,i,false));
         const cls = "n"+cells.length;
-        return `<article class="trip" id="trip-${t.no}">
+        return `<article class="trip" id="trip-${t.id}" data-id="${t.id}">
           <div class="trip-head">
             <span class="trip-flag">${t.flag}</span>
             <div>
-              <h3>${t.city}<small>${t.country}</small></h3>
+              <h3>${esc(t.city)}<small>${esc(t.country)}</small></h3>
               <p class="trip-dates mono">${fmtRange(t)}</p>
             </div>
-            <span class="trip-no mono">NO.${String(t.no).padStart(2,"0")}</span>
+            <span class="trip-side">
+              ${t.verified ? `<span class="vmark" title="已比對入出國日期證明書">✓</span>` : ""}
+              <span class="trip-no mono">NO.${String(t.no).padStart(2,"0")}</span>
+            </span>
           </div>
-          ${t.note ? `<p class="trip-note">${t.note}</p>` : ""}
+          ${t.note ? `<p class="trip-note">${esc(t.note)}</p>` : ""}
+          ${t.journal ? `<p class="trip-more mono">📖 點卡片看內頁紀錄 →</p>` : ""}
           ${crewRow(t)}
           <div class="trip-photos ${cls}">${cells.join("")}</div>
         </article>`;
@@ -1080,30 +1282,41 @@ const COUNTRY_COORDS = {
       return `<div class="year-head"><span class="y serif">${year}</span><span class="n mono">${list.length} 次出國</span></div>${cards}`;
     }).join("");
   }
-  renderTrips();
 
   /* ---------- 機讀區 ---------- */
-  const pad = (s,n)=> (s + "<".repeat(n)).slice(0,n);
-  const mrzName = (P.nameEn||"TRAVELER").toUpperCase().replace(/[^A-Z ]/g,"").replace(/ /g,"<");
-  [
-    pad(`P<TWN${mrzName}<<PASSPORT<LOG`, 40),
-    pad(`TRIPS<${String(trips.length).padStart(2,"0")}<COUNTRIES<${String(countries.length).padStart(2,"0")}<DAYS<${String(totalDays).padStart(3,"0")}`, 40)
-  ].forEach(line=>{
-    const d = document.createElement("div");
-    d.textContent = line;               // 用 textContent，避免 < 被當成 HTML 標籤
-    $("#mrz").appendChild(d);
-  });
+  function renderMRZ(){
+    const pad = (s,n)=> (s + "<".repeat(n)).slice(0,n);
+    const mrzName = (P.nameEn||"TRAVELER").toUpperCase().replace(/[^A-Z ]/g,"").replace(/ /g,"<");
+    const el = $("#mrz"); el.innerHTML = "";
+    [
+      pad(`P<TWN${mrzName}<<PASSPORT<LOG`, 40),
+      pad(`TRIPS<${String(trips.length).padStart(2,"0")}<COUNTRIES<${String(countries.length).padStart(2,"0")}<DAYS<${String(totalDays).padStart(3,"0")}`, 40)
+    ].forEach(line=>{
+      const d = document.createElement("div");
+      d.textContent = line;               // 用 textContent，避免 < 被當成 HTML 標籤
+      el.appendChild(d);
+    });
+  }
+
+  /* ---------- 全頁重繪（新增/編輯卡片後呼叫） ---------- */
+  function renderAll(){
+    buildTrips();
+    renderIdRows(); renderStats(); renderVerify();
+    renderAchievements(); renderStamps(); renderTrips(); renderMRZ();
+    toggleText();
+    if (mapBuilt){ mapPanel.hidden ? (mapBuilt=false) : buildMap(); }
+  }
+  renderAll();
 
   /* ---------- 進場動畫 ---------- */
   if (reduceMotion){
-    wall.classList.remove("pending");
-    big.textContent = target;
+    big.textContent = trips.length; counted = true;
   } else {
     const io = new IntersectionObserver((ents)=>{
       ents.forEach(en=>{
         if (!en.isIntersecting) return;
-        if (en.target.id === "page-counter") countUp();
-        if (en.target.id === "stampWall") wall.classList.remove("pending");
+        if (en.target.id === "page-counter" && !counted) countUp();
+        if (en.target.id === "stampWall" && !revealed){ revealed = true; wall.classList.remove("pending"); }
         io.unobserve(en.target);
       });
     },{threshold:.35});
@@ -1111,7 +1324,7 @@ const COUNTRY_COORDS = {
     io.observe(wall);
   }
 
-  /* ---------- 燈箱（照片 + 影片） ---------- */
+  /* ---------- 燈箱（照片 + 影片）與卡片點擊 ---------- */
   const lb = $("#lightbox"), lbImg = $("#lightboxImg"), lbVid = $("#lightboxVideo");
   function closeLightbox(){
     lb.classList.remove("open");
@@ -1132,10 +1345,51 @@ const COUNTRY_COORDS = {
       lb.classList.add("open");
       return;
     }
-    if (e.target.closest("#lightbox")) closeLightbox();
+    if (e.target.closest("#lightbox")){ closeLightbox(); return; }
+    /* 點卡片（非照片/TAG/編輯鈕）→ 開內頁 */
+    if (e.target.closest("a,.crew-chip,.edit-dot,.shot")) return;
+    const card = e.target.closest(".trip[data-id]");
+    if (card) openDetail(card.dataset.id);
   });
   document.addEventListener("keydown",(e)=>{
     if (e.key==="Escape"){ closeLightbox(); closeModals(); }
+  });
+
+  /* ---------- 旅程內頁 ---------- */
+  let detailId = null;
+  function openDetail(id){
+    const t = tripById(id); if (!t) return;
+    detailId = id;
+    const owner = store.owner;
+    $("#dFlag").textContent = t.flag;
+    $("#dTitle").innerHTML = `${esc(t.city)}<small>${esc(t.country)}</small>`;
+    $("#dDates").textContent = `${fmtRange(t)}`;
+    $("#dBadges").innerHTML =
+      `<span>NO.${String(t.no).padStart(2,"0")}</span>` +
+      (t.verified ? `<span class="ok">✓ 已核驗</span>` : `<span>○ 未核驗</span>`) +
+      `<span>${esc(t.continent||"")}</span>`;
+    $("#dNote").textContent = t.note || "";
+    const j = $("#dJournal");
+    if (t.journal){ j.className = "d-journal"; j.textContent = t.journal; }
+    else { j.className = "d-journal empty"; j.textContent = owner ? "還沒寫內頁紀錄，在下面補上吧。" : "作者還沒寫下這趟的內頁故事。"; }
+    $("#dOwnerZone").hidden = !owner;
+    $("#dEditData").hidden = !owner;
+    $("#dSaveJournal").hidden = !owner;
+    if (owner) $("#dJournalEdit").value = t.journal || "";
+    openModal("#modalDetail");
+  }
+  $("#dSaveJournal").addEventListener("click", ()=>{
+    if (!detailId || !store.owner) return;
+    const val = $("#dJournalEdit").value.trim();
+    saveEdit(detailId, { journal: val });
+    renderAll();
+    openDetail(detailId); // 重新整理內頁顯示
+    showToast("內頁已儲存（公開請按「匯出」同步）");
+  });
+  $("#dEditData").addEventListener("click", ()=>{
+    const id = detailId;
+    closeModals();
+    openTripForm(id);
   });
 
   /* ---------- 登入 / 編輯模式 ---------- */
@@ -1148,31 +1402,79 @@ const COUNTRY_COORDS = {
   }
   btnLogin.addEventListener("click", ()=>{
     if (store.owner){ showToast("已在編輯模式（下方工具列可登出）"); return; }
-    $("#loginErr").textContent = ""; $("#loginPass").value = "";
+    $("#loginErr").textContent = ""; $("#loginPass").value = ""; ssoNote("");
     openModal("#modalLogin");
   });
   $("#loginForm").addEventListener("submit",(e)=>{
     e.preventDefault();
     if ($("#loginPass").value === String(CONFIG.ownerPass)){
       store.owner = true; applyOwnerUI(); closeModals();
-      showToast("歡迎回來，持照人 🛂 點卡片上的 ✎ 可換照片/影片");
+      showToast("歡迎回來，持照人 🛂 點卡片可寫內頁，✎ 可換卡套");
     } else {
       $("#loginErr").textContent = "通行碼不正確";
     }
   });
+
+  /* ---------- 一鍵登入（Google 實接；Apple / IG 誠實說明） ---------- */
+  const AUTH = CONFIG.auth || {};
+  function ssoNote(msg){ $("#ssoNote").textContent = msg; }
+  function finishGoogle(resp){
+    try{
+      const part = resp.credential.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
+      const payload = JSON.parse(decodeURIComponent(escape(atob(part))));
+      const email = (payload.email||"").toLowerCase();
+      const allowed = (AUTH.ownerEmails||[]).map(s=>String(s).toLowerCase());
+      if (allowed.includes(email)){
+        store.owner = true; applyOwnerUI(); closeModals();
+        showToast(`歡迎回來，${payload.name||"持照人"} 🛂`);
+      } else {
+        ssoNote(`👋 ${payload.name||email}，這是 ${P.name} 的個人護照頁：訪客登入不會取得編輯權限。`);
+      }
+    }catch(_){ ssoNote("Google 回應解析失敗，請改用通行碼。"); }
+  }
+  let gisLoading = false;
+  $("#ssoGoogle").addEventListener("click", ()=>{
+    if (!AUTH.googleClientId){
+      ssoNote("尚未設定 Google 登入：請照 CONFIG.auth 的教學申請免費的用戶端 ID 填入，即可用你的 Gmail 一鍵登入。現在可先用下方通行碼。");
+      return;
+    }
+    ssoNote("正在連線 Google…");
+    const start = ()=>{
+      try{
+        google.accounts.id.initialize({ client_id: AUTH.googleClientId, callback: finishGoogle });
+        google.accounts.id.prompt((n)=>{
+          if (n && (n.isNotDisplayed?.() || n.isSkippedMoment?.()))
+            ssoNote("Google 一鍵登入視窗沒有顯示（可能被瀏覽器擋下），請改用通行碼。");
+        });
+      }catch(_){ ssoNote("Google 登入初始化失敗，請改用通行碼。"); }
+    };
+    if (window.google?.accounts?.id) return start();
+    if (gisLoading) return;
+    gisLoading = true;
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.onload = start;
+    s.onerror = ()=>{ gisLoading = false; ssoNote("無法載入 Google 登入服務（網路或此預覽環境限制），請改用通行碼。"); };
+    document.head.appendChild(s);
+  });
+  $("#ssoApple").addEventListener("click", ()=>
+    ssoNote("Apple 登入需要 Apple 開發者帳號（US$99/年）與網域驗證，免費靜態網頁先不啟用；請用 Google 或通行碼。"));
+  $("#ssoIG").addEventListener("click", ()=>
+    ssoNote("Instagram 官方已於 2024 年底關閉個人登入 API，所有網站都無法再用 IG 帳號登入；請用 Google 或通行碼。"));
   $("#btnLogout").addEventListener("click", ()=>{
     store.owner = false; applyOwnerUI(); showToast("已登出");
   });
 
-  /* 卡套編輯 */
+  /* ---------- 卡套編輯 ---------- */
   let editKey = null;
   function openMediaEditor(key){
     if (!store.owner) return;
     editKey = key;
-    const [no,idx] = key.split(":").map(Number);
-    const t = trips.find(x=>x.no===no);
-    $("#mediaTitle").textContent = `NO.${String(no).padStart(2,"0")} ${t?t.city:""} · 第 ${idx+1} 格卡套`;
-    $("#mediaUrl").value = mediaOf(t)[idx] || "";
+    const i = key.lastIndexOf(":");
+    const id = key.slice(0,i), idx = Number(key.slice(i+1));
+    const t = tripById(id);
+    $("#mediaTitle").textContent = `NO.${t?String(t.no).padStart(2,"0"):"?"} ${t?t.city:""} · 第 ${idx+1} 格卡套`;
+    $("#mediaUrl").value = t ? mediaOf(t)[idx] || "" : "";
     openModal("#modalMedia");
   }
   $("#mediaForm").addEventListener("submit",(e)=>{
@@ -1183,21 +1485,147 @@ const COUNTRY_COORDS = {
     if (v) m[editKey] = v; else delete m[editKey];
     store.media = m;
     renderTrips(); closeModals();
-    showToast(v ? "已更新卡套（僅存在這台裝置，公開請用「匯出資料」）" : "已清除卡套");
+    showToast(v ? "已更新卡套（僅存在這台裝置，公開請按「匯出」）" : "已清除卡套");
   });
 
-  /* 匯出資料：把本機編輯合併回 CONFIG 格式，複製到剪貼簿 */
+  /* ---------- 新增／編輯旅程 ---------- */
+  Object.keys(COUNTRY_META).forEach(name=>{
+    const o = document.createElement("option"); o.value = name;
+    $("#countryList").appendChild(o);
+  });
+  function saveEdit(id, patch){
+    if (id.startsWith("L")){ // 頁面新增的卡片：直接改本體
+      const list = store.localTrips;
+      const i = list.findIndex(t=>t.id===id);
+      if (i>=0){ list[i] = {...list[i], ...patch}; store.localTrips = list; }
+    } else {                 // CONFIG 卡片：記差異
+      const ed = store.edits;
+      ed[id] = {...(ed[id]||{}), ...patch};
+      store.edits = ed;
+    }
+  }
+  let formTarget = null; // null=新增；否則為編輯中的 trip id
+  let deleteArmed = false;
+  function metaFor(country){
+    return COUNTRY_META[country] || {
+      code: /^[A-Za-z]{3,}/.test(country) ? country.slice(0,3).toUpperCase() : "NEW",
+      flag: "🌐", continent: "其他"
+    };
+  }
+  function openTripForm(id){
+    formTarget = id || null;
+    deleteArmed = false;
+    const t = id ? tripById(id) : null;
+    $("#tfTitle").textContent = t ? `編輯旅程 NO.${String(t.no).padStart(2,"0")}` : "新增旅程";
+    $("#tfCity").value = t?.city || "";
+    $("#tfCountry").value = t?.country || "";
+    $("#tfStart").value = t?.start || "";
+    $("#tfEnd").value = t?.end || "";
+    $("#tfNote").value = t?.note || "";
+    $("#tfVerified").checked = !!t?.verified;
+    $("#tfErr").textContent = "";
+    const del = $("#tfDelete");
+    del.hidden = !(t && id.startsWith("L"));
+    del.textContent = "刪除這張卡";
+    openModal("#modalTrip");
+  }
+  $("#btnAddTrip").addEventListener("click", ()=>openTripForm(null));
+  $("#tfDelete").addEventListener("click", ()=>{
+    if (!formTarget || !formTarget.startsWith("L")) return;
+    if (!deleteArmed){ deleteArmed = true; $("#tfDelete").textContent = "再按一次確認刪除"; return; }
+    store.localTrips = store.localTrips.filter(t=>t.id!==formTarget);
+    const m = store.media;
+    Object.keys(m).forEach(k=>{ if (k.startsWith(formTarget+":")) delete m[k]; });
+    store.media = m;
+    renderAll(); closeModals(); showToast("已刪除");
+  });
+  $("#tripForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const city = $("#tfCity").value.trim();
+    const country = $("#tfCountry").value.trim();
+    const start = $("#tfStart").value, end = $("#tfEnd").value;
+    if (!city || !country){ $("#tfErr").textContent = "城市與國家必填"; return; }
+    if (!start || !end){ $("#tfErr").textContent = "請選出發日與回國日"; return; }
+    if (end < start){ $("#tfErr").textContent = "回國日不能早於出發日"; return; }
+    const meta = metaFor(country);
+    const patch = {
+      city, country, start, end,
+      countryCode: meta.code, flag: meta.flag, continent: meta.continent,
+      note: $("#tfNote").value.trim(),
+      verified: $("#tfVerified").checked
+    };
+    if (formTarget){
+      saveEdit(formTarget, patch);
+      showToast("已更新卡片（公開請按「匯出」）");
+    } else {
+      const list = store.localTrips;
+      list.push({ id: "L"+Date.now()+Math.floor(Math.random()*1e3), photos:["","",""], journal:"", ...patch });
+      store.localTrips = list;
+      showToast("已新增卡片 🛂（公開請按「匯出」）");
+    }
+    renderAll(); closeModals();
+  });
+
+  /* ---------- 懶人匯入：貼上入出國日期證明書 ---------- */
+  function parseCert(text){
+    const re = /(\d{2,4})[\/\.\-年](\d{1,2})[\/\.\-月](\d{1,2})/g;
+    const dates = [];
+    let m;
+    while ((m = re.exec(text))){
+      let y = Number(m[1]); const mo = Number(m[2]), d = Number(m[3]);
+      if (y < 200) y += 1911;                 // 民國年
+      if (mo<1||mo>12||d<1||d>31) continue;
+      dates.push(`${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    }
+    const pairs = [];
+    for (let i=0; i+1<dates.length; i+=2){
+      if (dates[i+1] >= dates[i]) pairs.push([dates[i], dates[i+1]]);
+    }
+    const existing = new Set(trips.map(t=>t.start+"~"+t.end));
+    return pairs.filter(([s,e])=>!existing.has(s+"~"+e));
+  }
+  $("#importText").addEventListener("input", ()=>{
+    const pairs = parseCert($("#importText").value);
+    $("#importPreview").textContent = pairs.length
+      ? `✓ 找到 ${pairs.length} 趟：` + pairs.map(([s,e])=>`${s.slice(2).replaceAll("-",".")}→${e.slice(5).replaceAll("-",".")}`).join("、")
+      : "";
+  });
+  $("#btnImport").addEventListener("click", ()=>{
+    $("#importText").value = ""; $("#importPreview").textContent = "";
+    openModal("#modalImport");
+  });
+  $("#importForm").addEventListener("submit",(e)=>{
+    e.preventDefault();
+    const pairs = parseCert($("#importText").value);
+    if (!pairs.length){ $("#importPreview").textContent = "找不到日期，請確認貼上的文字裡有日期"; return; }
+    const list = store.localTrips;
+    pairs.forEach(([s,en],i)=>{
+      list.push({
+        id: "L"+Date.now()+"_"+i,
+        city: "待補目的地", country: "未填寫", countryCode: "TBD", flag: "🛂", continent: "其他",
+        start: s, end: en, note: "", journal: "",
+        verified: true,                        // 日期來自官方證明書 → 自動打勾
+        photos: ["","",""]
+      });
+    });
+    store.localTrips = list;
+    renderAll(); closeModals();
+    showToast(`已建立 ${pairs.length} 張已核驗卡片，點卡片→編輯資料補目的地`);
+  });
+
+  /* ---------- 匯出資料：合併本機編輯，複製到剪貼簿 ---------- */
   $("#btnExport").addEventListener("click", async ()=>{
     const out = {
-      verification: verifyState(),
-      trips: CONFIG.trips.map(orig=>{
-        const t = trips.find(x=>x._i===CONFIG.trips.indexOf(orig));
-        return {...orig, photos: t ? mediaOf(t) : orig.photos};
-      })
+      trips: trips.map(t=>({
+        city:t.city, country:t.country, countryCode:t.countryCode, flag:t.flag,
+        continent:t.continent, start:t.start, end:t.end,
+        note:t.note||"", journal:t.journal||"", verified:!!t.verified,
+        photos: mediaOf(t), ...(t.crew?{crew:t.crew}:{})
+      }))
     };
     try{
       await navigator.clipboard.writeText(JSON.stringify(out, null, 2));
-      showToast("已複製 JSON，貼回 index.html 的 CONFIG 即可公開");
+      showToast("已複製 JSON，貼回 index.html 的 CONFIG.trips 即可公開");
     }catch(_){ showToast("複製失敗，請改用電腦操作"); }
   });
 
@@ -1205,7 +1633,7 @@ const COUNTRY_COORDS = {
 
   /* ---------- 分享 ---------- */
   $("#btnShare").addEventListener("click", async ()=>{
-    const data = {title: document.title, text:`${P.name} 的護照使用次數：${target} 次`, url: location.href};
+    const data = {title: document.title, text:`${P.name} 的護照使用次數：${trips.length} 次`, url: location.href};
     try{
       if (navigator.share){ await navigator.share(data); return; }
       await navigator.clipboard.writeText(location.href);
