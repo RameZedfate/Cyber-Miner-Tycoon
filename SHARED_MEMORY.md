@@ -46,6 +46,12 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-05（v4）：護照頁版面升級（同分支）：
+  - PAGE 03 勳章改「⭕⭕⭕ 更多」：上排展示自選勳章（≤3，`featuredBadges` 或登入後按「📌 展示」），其餘收「更多」展開；**勳章只計 ✓ 已核驗旅程**（未核驗照記錄但不算成就）。
+  - 勳章圖案支援 AI 繪圖替換：`CONFIG.achievementArt = { 勳章代號: "images/xxx.png" }`。
+  - PAGE 05 改兩欄卡片牆＋📌 釘選區（≤2 張，`pinned:true` 或登入後按卡片 📌）。
+  - Hero 加 IG / FB / Threads 圓形社群圖示（`profile.socials`，留空不顯示；FB 待使用者填）。
+  - 整頁背景圖：`CONFIG.backgroundImage`（半透明紙紋 `--veil` 保可讀性）；使用者之後會提供釜山膠囊列車照片。
 - 2026-07-05（v3）：護照頁再升級（同分支 `claude/passport-travel-tracker-a3tx4w`）：
   - **一鍵登入/直接註冊**（2026-07-05 更新）：依使用者指示移除 Apple 與 IG 按鈕，改為
     Google 一鍵登入（填 `CONFIG.auth.googleClientId` 即啟用，`ownerEmails` 已預填 a8225012@gmail.com）

@@ -22,6 +22,7 @@
   --stamp-blue:#35558E;   /* 簽證章 · 藍墨 */
   --stamp-red:#B0492F;    /* 出境章 · 紅墨 */
   --flash:#2F6B5422;
+  --veil:rgba(246,248,244,.87);   /* 自訂背景圖上的紙紋遮罩 */
   --shadow:0 1px 2px rgba(28,42,46,.05),0 6px 18px rgba(28,42,46,.05);
 }
 @media (prefers-color-scheme: dark){
@@ -30,6 +31,7 @@
     --line:#25312A; --guilloche:#17211B;
     --stamp-green:#63AC8E; --stamp-blue:#829BCC; --stamp-red:#D2755C;
     --flash:#63AC8E22;
+    --veil:rgba(15,22,19,.88);
     --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
   }
 }
@@ -38,6 +40,7 @@
   --line:#D9E1D5; --guilloche:#E4EAE0;
   --stamp-green:#2F6B54; --stamp-blue:#35558E; --stamp-red:#B0492F;
   --flash:#2F6B5422;
+  --veil:rgba(246,248,244,.87);   /* 自訂背景圖上的紙紋遮罩 */
   --shadow:0 1px 2px rgba(28,42,46,.05),0 6px 18px rgba(28,42,46,.05);
 }
 :root[data-theme="dark"]{
@@ -45,6 +48,7 @@
   --line:#25312A; --guilloche:#17211B;
   --stamp-green:#63AC8E; --stamp-blue:#829BCC; --stamp-red:#D2755C;
   --flash:#63AC8E22;
+  --veil:rgba(15,22,19,.88);
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
 }
 
@@ -480,6 +484,87 @@ body.owner .owner-bar{display:flex}
 }
 .d-journal.empty{color:var(--faded);font-size:.8rem}
 
+/* ---------- 自訂背景圖（CONFIG.backgroundImage） ---------- */
+body.has-bg::before{
+  background:
+    linear-gradient(var(--veil),var(--veil)),
+    var(--bg-image,none) center / cover no-repeat;
+  opacity:1;
+}
+
+/* ---------- 社群圖示列（IG / FB / Threads） ---------- */
+.social-row{display:flex;gap:.7rem;justify-content:center;margin-top:1.15rem}
+.social-row:empty{display:none}
+.social-row a{
+  width:42px;height:42px;border-radius:50%;flex:none;
+  border:1px solid var(--line);background:var(--paper-2);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;text-decoration:none;
+  transition:border-color .2s;
+}
+.social-row a:hover,.social-row a:focus-visible{border-color:var(--stamp-green)}
+.social-row a:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+.social-row svg{width:20px;height:20px}
+.social-row .glyph{font-size:1.2rem;font-weight:600;line-height:1}
+
+/* ---------- 勳章列（O O O 更多） ---------- */
+.badge-row{display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap}
+.badge{
+  appearance:none;background:none;border:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:.45rem;width:74px;padding:0;
+}
+.badge .ring{
+  width:68px;height:68px;border-radius:50%;position:relative;overflow:hidden;
+  border:2px solid var(--tier);color:var(--tier);
+  display:flex;align-items:center;justify-content:center;font-size:1.65rem;
+  background:var(--paper-2);box-shadow:var(--shadow);
+}
+.badge .ring::after{content:"";position:absolute;inset:4px;border:1px solid var(--tier);border-radius:50%;opacity:.5;pointer-events:none}
+.badge .ring img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.badge .bname{font-size:.66rem;letter-spacing:.05em;color:var(--faded);text-align:center;line-height:1.35}
+.badge.more .ring{
+  border:2px dashed var(--line);color:var(--faded);background:transparent;box-shadow:none;
+  font-size:.78rem;letter-spacing:.06em;
+}
+.badge:focus-visible{outline:2px solid var(--stamp-green);outline-offset:3px;border-radius:14px}
+#achList{margin-top:1.3rem}
+.pin-badge{
+  appearance:none;border:1px solid var(--line);background:var(--paper);cursor:pointer;
+  border-radius:999px;padding:.12rem .55rem;font-size:.66rem;margin-top:.4rem;color:var(--faded);
+}
+.pin-badge.on{border-color:var(--stamp-green);color:var(--stamp-green)}
+.pin-badge:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+
+/* ---------- 兩欄卡片牆 + 釘選 ---------- */
+.trip-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;align-items:start;margin-bottom:1.1rem}
+.trip-grid .trip{padding:.8rem .8rem .85rem;margin-bottom:0;border-radius:12px}
+.trip-grid .trip-head{gap:.5rem;flex-wrap:wrap}
+.trip-grid .trip-flag{font-size:1.2rem}
+.trip-grid .trip-head h3{font-size:.95rem}
+.trip-grid .trip-head h3 small{display:block;margin-left:0;font-size:.68rem}
+.trip-grid .trip-dates{font-size:.6rem;white-space:normal;word-break:keep-all;letter-spacing:.02em;line-height:1.5}
+.trip-grid .trip-no{font-size:.55rem;padding:.08rem .4rem;letter-spacing:.1em}
+.trip-grid .vmark{width:.95rem;height:.95rem;font-size:.55rem}
+.trip-grid .trip-note{font-size:.78rem;margin-top:.45rem;line-height:1.55}
+.trip-grid .trip-more{font-size:.58rem;margin-top:.35rem}
+.trip-grid .trip-crew{font-size:.62rem;gap:.3rem;margin-top:.45rem}
+.trip-grid .crew-chip{font-size:.62rem;padding:.04rem .45rem}
+.trip-grid .trip-photos{gap:4px;margin-top:.6rem}
+.trip-grid .trip-photos.n3 .cell{min-height:48px}
+.trip-grid .trip-photos.n3 .cell:first-child{min-height:104px}
+.trip-grid .shot.empty .f{font-size:1rem}
+.trip-grid .shot.empty .t{font-size:.5rem}
+.trip-grid .edit-dot{width:1.3rem;height:1.3rem;font-size:.6rem;top:.25rem;right:.25rem}
+.trip-grid .vbadge{font-size:.48rem;padding:.06rem .4rem}
+.pin-btn{
+  appearance:none;border:1px solid var(--line);background:var(--paper-2);cursor:pointer;
+  border-radius:50%;width:1.5rem;height:1.5rem;font-size:.7rem;line-height:1;color:var(--faded);
+  flex:none;
+}
+.pin-btn.on{color:var(--stamp-red);border-color:var(--stamp-red)}
+.pin-btn:focus-visible{outline:2px solid var(--stamp-green);outline-offset:2px}
+.trip-grid .pin-btn{width:1.25rem;height:1.25rem;font-size:.58rem}
+.pin-mark{font-size:.8rem;line-height:1}
+
 /* ---------- 提示浮條 ---------- */
 .toast{
   position:fixed;left:50%;bottom:1.6rem;z-index:80;
@@ -509,6 +594,7 @@ body.owner .owner-bar{display:flex}
     <a class="handle mono" id="pHandle" target="_blank" rel="noopener"></a>
     <p class="bio" id="pBio"></p>
     <dl class="id-rows mono" id="idRows"></dl>
+    <nav class="social-row" id="pSocial" aria-label="社群帳號"></nav>
     <nav class="hero-links" id="pLinks" aria-label="連結"></nav>
   </section>
 
@@ -532,10 +618,11 @@ body.owner .owner-bar{display:flex}
     <div class="continent-line" id="continentLine"></div>
   </section>
 
-  <!-- PAGE 03 · 成就勳章 -->
+  <!-- PAGE 03 · 成就勳章（O O O 更多；只計已核驗旅程） -->
   <h2 class="page-tag mono">PAGE 03 · 成就勳章 / ACHIEVEMENTS</h2>
   <section id="page-achievements">
-    <div id="achList"></div>
+    <div class="badge-row" id="badgeRow"></div>
+    <div id="achList" hidden></div>
     <p class="wall-hint" id="achHint"></p>
   </section>
 
@@ -761,11 +848,30 @@ const CONFIG = {
     passportType: "P（普通護照）",
     bio: "AI 挑戰 100 天進行中。用一頁護照，蒐集我走過的世界。",
     avatar: "",                     // 大頭貼網址或 "images/me.jpg"；留空顯示姓名首字
+    /* 社群圓形圖示（一鍵跳到個人檔案）：留空 "" 就不顯示該顆 */
+    socials: {
+      instagram: "https://instagram.com/adam_ai_plus",
+      facebook:  "",                // 例："https://facebook.com/你的帳號"
+      threads:   "https://threads.net/@adam_ai_plus"
+    },
     links: [
-      { label: "Instagram", url: "https://instagram.com/adam_ai_plus" },
       { label: "便宜機票雷達 ✈", url: "../cheap-flights/" }
     ]
   },
+
+  /* 整頁背景圖：填照片網址或 "images/bg.jpg"（例：釜山膠囊列車）。
+     會自動蓋一層半透明紙紋（--veil）維持文字可讀；留空 = 原本的安全紋底。 */
+  backgroundImage: "",
+
+  /* PAGE 03 勳章列：要「展示」在最上排的勳章（最多 3 枚，其餘收進「更多」）。
+     只有已解鎖的會顯示；登入後也可以在「更多」清單裡按「展示」直接改。
+     可用代號：first-trip / top-city / stamp-5 / stamp-10 / five-countries /
+               ten-countries / repeat-country / four-flights-year / seven-days / fifty-days */
+  featuredBadges: ["first-trip", "stamp-5", "five-countries"],
+
+  /* 勳章圖案：想用 AI 繪圖取代 emoji 時，把圖檔放 images/ 再填進來，例：
+     achievementArt: { "first-trip": "images/badge-first.png", "stamp-5": "images/badge-5.png" } */
+  achievementArt: {},
 
   /* 出發地（地圖上的 ★HOME） */
   home: { name: "台北", lon: 121.0, lat: 23.7 },
@@ -785,7 +891,7 @@ const CONFIG = {
 
   trips: [
     { city:"大阪", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
-      start:"2023-09-15", end:"2023-09-19", verified:true,
+      start:"2023-09-15", end:"2023-09-19", verified:true, pinned:true,
       note:"人生第一趟自由行，從心齋橋走到梅田，護照蓋下第一個章。",
       journal:"出發前一晚緊張到睡不著，結果落地之後發現：原來自由行沒有想像中難。\n\n第一天迷路迷進了一條全是立吞店的小巷，用比手畫腳點了人生第一串炸串。回程在機場把零錢全部投進扭蛋機，轉出一顆章魚燒磁鐵——現在還貼在冰箱上。",
       photos:["","",""], crew:["kai"] },
@@ -825,8 +931,9 @@ const CONFIG = {
       note:"古城慢步調，夜市烤物一路吃回飯店。",
       photos:["","",""] },
 
+    /* pinned:true = 釘選到 PAGE 05 最上層（最多 2 張；登入後可用卡片上的 📌 直接改） */
     { city:"東京", country:"日本", countryCode:"JPN", flag:"🇯🇵", continent:"亞洲",
-      start:"2026-04-03", end:"2026-04-09",
+      start:"2026-04-03", end:"2026-04-09", pinned:true,
       note:"櫻花滿開的目黑川，這輩子一定要看一次。",
       photos:["","",""], crew:["kai"] }
   ]
@@ -902,7 +1009,11 @@ const COUNTRY_META = {
     get localTrips(){ try{ return JSON.parse(localStorage.getItem("pp_trips")||"[]"); }catch(_){ return []; } },
     set localTrips(v){ localStorage.setItem("pp_trips", JSON.stringify(v)); },
     get edits(){ try{ return JSON.parse(localStorage.getItem("pp_edits")||"{}"); }catch(_){ return {}; } },
-    set edits(v){ localStorage.setItem("pp_edits", JSON.stringify(v)); }
+    set edits(v){ localStorage.setItem("pp_edits", JSON.stringify(v)); },
+    get pins(){ try{ return JSON.parse(localStorage.getItem("pp_pins")||"null"); }catch(_){ return null; } },
+    set pins(v){ localStorage.setItem("pp_pins", JSON.stringify(v)); },
+    get badges(){ try{ return JSON.parse(localStorage.getItem("pp_badges")||"null"); }catch(_){ return null; } },
+    set badges(v){ localStorage.setItem("pp_badges", JSON.stringify(v)); }
   };
 
   /* ---------- 合併資料：CONFIG 卡片 + 頁面新增卡片 + 欄位修改 ---------- */
@@ -974,6 +1085,25 @@ const COUNTRY_META = {
   }
   $("#pLinks").innerHTML = (P.links||[])
     .map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+
+  /* 社群圖示（IG / FB / Threads，一鍵到個人檔案） */
+  const SOCIAL_ICONS = {
+    instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+    facebook: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21.5v-7.2h2.4l.4-2.9h-2.8V9.5c0-.9.3-1.5 1.6-1.5h1.3V5.4c-.6-.1-1.4-.2-2.3-.2-2.3 0-3.8 1.4-3.8 3.9v2.3H8v2.9h2.3v7.2h3.2z"/></svg>`,
+    threads: `<span class="glyph serif" aria-hidden="true">@</span>`
+  };
+  const S = P.socials || {};
+  $("#pSocial").innerHTML = [
+    ["instagram","Instagram"], ["facebook","Facebook"], ["threads","Threads"]
+  ].filter(([k])=>S[k])
+   .map(([k,label])=>`<a href="${esc(S[k])}" target="_blank" rel="noopener" aria-label="${label}" title="${label}">${SOCIAL_ICONS[k]}</a>`)
+   .join("");
+
+  /* 自訂整頁背景圖 */
+  if (CONFIG.backgroundImage){
+    document.body.classList.add("has-bg");
+    document.body.style.setProperty("--bg-image", `url("${CONFIG.backgroundImage}")`);
+  }
 
   function renderIdRows(){
     $("#idRows").innerHTML = [
@@ -1130,10 +1260,19 @@ const COUNTRY_META = {
   });
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", ()=>{ if (mapBuilt && !mapPanel.hidden) buildMap(); });
 
-  /* ---------- PAGE 03 成就勳章 ---------- */
-  function renderAchievements(){
+  /* ---------- PAGE 03 成就勳章（只計 ✓ 已核驗旅程；O O O 更多） ---------- */
+  const TIER = {
+    unique:{ label:"唯一", color:"var(--stamp-red)" },
+    rare:  { label:"稀有", color:"var(--stamp-blue)" },
+    common:{ label:"一般", color:"var(--stamp-green)" }
+  };
+  let ACH_LIST = [];
+  function computeAch(){
+    const vTrips = trips.filter(t=>t.verified);      // 勳章只有核驗過的旅程才算
+    const vCountries = [...new Set(vTrips.map(t=>t.country))];
+    const vDays = vTrips.reduce((s,t)=>s+t.days,0);
     const cityCount = {}, countryCount = {}, yearCount = {};
-    trips.forEach(t=>{
+    vTrips.forEach(t=>{
       cityCount[t.city] = (cityCount[t.city]||0)+1;
       countryCount[t.country] = (countryCount[t.country]||0)+1;
       const y = t.start.slice(0,4); yearCount[y] = (yearCount[y]||0)+1;
@@ -1142,42 +1281,50 @@ const COUNTRY_META = {
     const [topCity, topCityN] = topOf(cityCount);
     const [topCountry, topCountryN] = topOf(countryCount);
     const [topYear, topYearN] = topOf(yearCount);
-    const longestTrip = trips.reduce((m,t)=>Math.max(m,t.days),0);
-    const first = trips[0];
-    const ACH = [
-      { tier:"unique", icon:"🛫", name:"初次啟程",
-        desc: first ? `第一枚印章：${first.city} · ${first.start.replaceAll("-",".")}` : "蓋下第一個章即解鎖",
-        cur: trips.length?1:0, need:1 },
-      { tier:"unique", icon:"👑", name: topCityN>=2 ? `${topCity}常客` : "城市常客",
-        desc: topCityN>=2 ? `同一座城市去了 ${topCityN} 次——這是你的專屬紀錄` : "重訪任何一座城市即解鎖",
+    const longestTrip = vTrips.reduce((m,t)=>Math.max(m,t.days),0);
+    const first = vTrips[0];
+    ACH_LIST = [
+      { key:"first-trip", tier:"unique", icon:"🛫", name:"初次啟程",
+        desc: first ? `第一枚核驗印章：${first.city} · ${first.start.replaceAll("-",".")}` : "第一趟核驗旅程即解鎖",
+        cur: vTrips.length?1:0, need:1 },
+      { key:"top-city", tier:"unique", icon:"👑", name: topCityN>=2 ? `${topCity}常客` : "城市常客",
+        desc: topCityN>=2 ? `同一座城市去了 ${topCityN} 次——這是你的專屬紀錄` : "重訪同一座城市（核驗）即解鎖",
         cur: Math.min(topCityN,2), need:2 },
-      { tier:"common", icon:"✈️", name:"蓋章 ×5",  desc:"護照使用次數達 5 次",  cur:trips.length, need:5 },
-      { tier:"rare",   icon:"🔥", name:"蓋章 ×10", desc:"護照使用次數達 10 次", cur:trips.length, need:10 },
-      { tier:"common", icon:"🌏", name:"五國解鎖", desc:"入境章來自 5 個不同國家", cur:countries.length, need:5 },
-      { tier:"rare",   icon:"🗺️", name:"十國旅人", desc:"入境章來自 10 個不同國家", cur:countries.length, need:10 },
-      { tier:"rare",   icon:"💚", name:"回訪之國",
-        desc: topCountryN>=3 ? `${topCountry}已累積 ${topCountryN} 個章` : "同一國家入境 3 次",
+      { key:"stamp-5", tier:"common", icon:"✈️", name:"蓋章 ×5",  desc:"核驗旅程達 5 次",  cur:vTrips.length, need:5 },
+      { key:"stamp-10", tier:"rare", icon:"🔥", name:"蓋章 ×10", desc:"核驗旅程達 10 次", cur:vTrips.length, need:10 },
+      { key:"five-countries", tier:"common", icon:"🌏", name:"五國解鎖", desc:"核驗印章來自 5 個不同國家", cur:vCountries.length, need:5 },
+      { key:"ten-countries", tier:"rare", icon:"🗺️", name:"十國旅人", desc:"核驗印章來自 10 個不同國家", cur:vCountries.length, need:10 },
+      { key:"repeat-country", tier:"rare", icon:"💚", name:"回訪之國",
+        desc: topCountryN>=3 ? `${topCountry}已累積 ${topCountryN} 個核驗章` : "同一國家核驗入境 3 次",
         cur:topCountryN, need:3 },
-      { tier:"rare",   icon:"🌀", name:"一年四飛",
-        desc: `單一年度出國 4 次${topYearN?`（目前最高：${topYear} 年 ${topYearN} 次）`:""}`,
+      { key:"four-flights-year", tier:"rare", icon:"🌀", name:"一年四飛",
+        desc: `單一年度核驗出國 4 次${topYearN?`（目前最高：${topYear} 年 ${topYearN} 次）`:""}`,
         cur:topYearN, need:4 },
-      { tier:"common", icon:"🌙", name:"長旅七日", desc:"單趟旅程達 7 天", cur:longestTrip, need:7 },
-      { tier:"rare",   icon:"⏳", name:"海外五十天", desc:"累積海外天數達 50 天", cur:totalDays, need:50 }
-    ];
-    const TIER = {
-      unique:{ label:"唯一", color:"var(--stamp-red)" },
-      rare:  { label:"稀有", color:"var(--stamp-blue)" },
-      common:{ label:"一般", color:"var(--stamp-green)" }
-    };
-    const unlockedN = ACH.filter(a=>a.cur>=a.need).length;
-    $("#achList").innerHTML = ACH
-      .map(a=>({...a, ok:a.cur>=a.need}))
+      { key:"seven-days", tier:"common", icon:"🌙", name:"長旅七日", desc:"單趟核驗旅程達 7 天", cur:longestTrip, need:7 },
+      { key:"fifty-days", tier:"rare", icon:"⏳", name:"海外五十天", desc:"核驗旅程累積 50 天", cur:vDays, need:50 }
+    ].map(a=>({...a, ok:a.cur>=a.need}));
+  }
+  const artFor = (key)=>{
+    const src = (CONFIG.achievementArt||{})[key];
+    return src ? `<img src="${esc(src)}" alt="">` : null;
+  };
+  function featuredKeys(){
+    const base = store.badges ?? CONFIG.featuredBadges ?? [];
+    const unlocked = new Set(ACH_LIST.filter(a=>a.ok).map(a=>a.key));
+    return base.filter(k=>unlocked.has(k)).slice(0,3);
+  }
+  let achOpen = false;
+  function renderAchList(){
+    const owner = store.owner;
+    const feats = featuredKeys();
+    $("#achList").innerHTML = [...ACH_LIST]
       .sort((a,b)=> (b.ok-a.ok))
       .map(a=>{
         const t = TIER[a.tier];
         const pct = Math.min(100, Math.round(a.cur/a.need*100));
+        const isFeat = feats.includes(a.key);
         return `<div class="ach ${a.ok?"":"locked"}" style="--tier:${t.color}">
-          <div class="ach-seal">${a.icon}</div>
+          <div class="ach-seal">${artFor(a.key)||a.icon}</div>
           <div class="ach-main">
             <div class="ach-name">${a.name}</div>
             <div class="ach-desc">${a.desc}</div>
@@ -1186,11 +1333,51 @@ const COUNTRY_META = {
           <div style="text-align:right;flex:none">
             <span class="ach-tier mono">${t.label}</span>
             ${a.ok ? "" : `<div class="ach-desc mono" style="margin-top:.35rem">${Math.min(a.cur,a.need)}/${a.need}</div>`}
+            ${owner && a.ok ? `<br><button class="pin-badge ${isFeat?"on":""}" type="button" data-badge="${a.key}">📌 ${isFeat?"展示中":"展示"}</button>` : ""}
           </div>
         </div>`;
       }).join("");
-    $("#achHint").textContent = `已解鎖 ${unlockedN} / ${ACH.length} 個成就 ・ 唯一成就全站只有一枚`;
   }
+  function renderBadges(){
+    computeAch();
+    const feats = featuredKeys().map(k=>ACH_LIST.find(a=>a.key===k)).filter(Boolean);
+    const restN = ACH_LIST.length - feats.length;
+    $("#badgeRow").innerHTML = feats.map(a=>{
+      const t = TIER[a.tier];
+      return `<button class="badge" type="button" style="--tier:${t.color}" data-badge-info="${a.key}">
+        <span class="ring">${artFor(a.key)||a.icon}</span>
+        <span class="bname">${a.name}</span>
+      </button>`;
+    }).join("") + `<button class="badge more" type="button" id="achMore" aria-expanded="${achOpen}">
+        <span class="ring mono">${achOpen ? "收合" : "+"+restN}</span>
+        <span class="bname">${achOpen ? "收起清單" : "更多"}</span>
+      </button>`;
+    renderAchList();
+    $("#achList").hidden = !achOpen;
+    const unlockedN = ACH_LIST.filter(a=>a.ok).length;
+    $("#achHint").textContent = `勳章只計 ✓ 已核驗的旅程 ・ 已解鎖 ${unlockedN} / ${ACH_LIST.length}`;
+  }
+  $("#page-achievements").addEventListener("click",(e)=>{
+    const more = e.target.closest("#achMore");
+    if (more){ achOpen = !achOpen; renderBadges(); return; }
+    const info = e.target.closest("[data-badge-info]");
+    if (info){
+      const a = ACH_LIST.find(x=>x.key===info.dataset.badgeInfo);
+      if (a) showToast(`${a.name} · ${a.desc}`);
+      return;
+    }
+    const pin = e.target.closest("[data-badge]");
+    if (pin && store.owner){
+      const key = pin.dataset.badge;
+      let cur = (store.badges ?? CONFIG.featuredBadges ?? []).slice();
+      if (cur.includes(key)) cur = cur.filter(k=>k!==key);
+      else if (featuredKeys().length >= 3){ showToast("最上排最多展示 3 枚，先取消一枚"); return; }
+      else cur.push(key);
+      store.badges = cur;
+      renderBadges();
+      showToast(cur.includes(key) ? "已放到展示列（公開請按「匯出」）" : "已收回展示列");
+    }
+  });
 
   /* ---------- PAGE 04 印章牆 ---------- */
   const wall = $("#stampWall");
@@ -1261,39 +1448,70 @@ const COUNTRY_META = {
       ${members.map(c=>`<a class="crew-chip" href="${esc(c.url)}" target="_blank" rel="noopener">@${esc(c.name)}</a>`).join("")}
     </div>`;
   };
+  /* 釘選：頁面設定（pp_pins）優先，否則用 CONFIG trips 的 pinned:true，最多 2 張 */
+  function effectivePins(){
+    const stored = store.pins;
+    const base = stored ?? trips.filter(t=>t.pinned).map(t=>t.id);
+    return base.filter(id=>tripById(id)).slice(0,2);
+  }
+  function togglePin(id){
+    if (!store.owner) return;
+    let pins = effectivePins();
+    if (pins.includes(id)){ pins = pins.filter(p=>p!==id); }
+    else if (pins.length >= 2){ showToast("最多釘選 2 張，先取消一張"); return; }
+    else pins.push(id);
+    store.pins = pins;
+    renderTrips();
+    showToast(pins.includes(id) ? "已釘選到最上層（公開請按「匯出」）" : "已取消釘選");
+  }
+  function tripCard(t, owner, pins){
+    const media = mediaOf(t);
+    const real = media.filter(p=>p);
+    const cells = owner
+      ? media.map((p,i)=>photoCell(p,t,i,true))
+      : (real.length ? real : ["","",""]).map((p,i)=>photoCell(p,t,i,false));
+    const cls = "n"+cells.length;
+    const isPinned = pins.includes(t.id);
+    const pinCtl = owner
+      ? `<button class="pin-btn ${isPinned?"on":""}" type="button" data-pin="${t.id}" aria-label="釘選">📌</button>`
+      : (isPinned ? `<span class="pin-mark" title="釘選">📌</span>` : "");
+    return `<article class="trip" id="trip-${t.id}" data-id="${t.id}">
+      <div class="trip-head">
+        <span class="trip-flag">${t.flag}</span>
+        <div>
+          <h3>${esc(t.city)}<small>${esc(t.country)}</small></h3>
+          <p class="trip-dates mono">${fmtRange(t)}</p>
+        </div>
+        <span class="trip-side">
+          ${t.verified ? `<span class="vmark" title="已比對入出國日期證明書">✓</span>` : ""}
+          ${pinCtl}
+          <span class="trip-no mono">NO.${String(t.no).padStart(2,"0")}</span>
+        </span>
+      </div>
+      ${t.note ? `<p class="trip-note">${esc(t.note)}</p>` : ""}
+      ${t.journal ? `<p class="trip-more mono">📖 點卡片看內頁 →</p>` : ""}
+      ${crewRow(t)}
+      <div class="trip-photos ${cls}">${cells.join("")}</div>
+    </article>`;
+  }
   function renderTrips(){
     const owner = store.owner;
+    const pins = effectivePins();
+    const pinned = pins.map(tripById);
+    let html = "";
+    if (pinned.length){
+      html += `<div class="year-head"><span class="y serif">📌 釘選</span><span class="n mono">PINNED</span></div>
+        <div class="trip-grid">${pinned.map(t=>tripCard(t, owner, pins)).join("")}</div>`;
+    }
     const groups = {};
-    newestFirst.forEach(t=>{ (groups[t.start.slice(0,4)] ||= []).push(t); });
-    $("#page-trips").innerHTML = Object.keys(groups).sort((a,b)=>b-a).map(year=>{
+    newestFirst.filter(t=>!pins.includes(t.id))
+      .forEach(t=>{ (groups[t.start.slice(0,4)] ||= []).push(t); });
+    html += Object.keys(groups).sort((a,b)=>b-a).map(year=>{
       const list = groups[year];
-      const cards = list.map(t=>{
-        const media = mediaOf(t);
-        const real = media.filter(p=>p);
-        const cells = owner
-          ? media.map((p,i)=>photoCell(p,t,i,true))
-          : (real.length ? real : ["","",""]).map((p,i)=>photoCell(p,t,i,false));
-        const cls = "n"+cells.length;
-        return `<article class="trip" id="trip-${t.id}" data-id="${t.id}">
-          <div class="trip-head">
-            <span class="trip-flag">${t.flag}</span>
-            <div>
-              <h3>${esc(t.city)}<small>${esc(t.country)}</small></h3>
-              <p class="trip-dates mono">${fmtRange(t)}</p>
-            </div>
-            <span class="trip-side">
-              ${t.verified ? `<span class="vmark" title="已比對入出國日期證明書">✓</span>` : ""}
-              <span class="trip-no mono">NO.${String(t.no).padStart(2,"0")}</span>
-            </span>
-          </div>
-          ${t.note ? `<p class="trip-note">${esc(t.note)}</p>` : ""}
-          ${t.journal ? `<p class="trip-more mono">📖 點卡片看內頁紀錄 →</p>` : ""}
-          ${crewRow(t)}
-          <div class="trip-photos ${cls}">${cells.join("")}</div>
-        </article>`;
-      }).join("");
-      return `<div class="year-head"><span class="y serif">${year}</span><span class="n mono">${list.length} 次出國</span></div>${cards}`;
+      return `<div class="year-head"><span class="y serif">${year}</span><span class="n mono">${list.length} 次出國</span></div>
+        <div class="trip-grid">${list.map(t=>tripCard(t, owner, pins)).join("")}</div>`;
     }).join("");
+    $("#page-trips").innerHTML = html;
   }
 
   /* ---------- 機讀區 ---------- */
@@ -1315,7 +1533,7 @@ const COUNTRY_META = {
   function renderAll(){
     buildTrips();
     renderIdRows(); renderStats(); renderVerify();
-    renderAchievements(); renderStamps(); renderTrips(); renderMRZ();
+    renderBadges(); renderStamps(); renderTrips(); renderMRZ();
     toggleText();
     if (mapBuilt){ mapPanel.hidden ? (mapBuilt=false) : buildMap(); }
   }
@@ -1346,6 +1564,8 @@ const COUNTRY_META = {
   document.addEventListener("click",(e)=>{
     const editBtn = e.target.closest("[data-edit]");
     if (editBtn){ openMediaEditor(editBtn.dataset.edit); return; }
+    const pinBtn = e.target.closest("[data-pin]");
+    if (pinBtn){ togglePin(pinBtn.dataset.pin); return; }
     const shot = e.target.closest(".shot[data-full]");
     if (shot){
       if (shot.dataset.video){
@@ -1359,8 +1579,8 @@ const COUNTRY_META = {
       return;
     }
     if (e.target.closest("#lightbox")){ closeLightbox(); return; }
-    /* 點卡片（非照片/TAG/編輯鈕）→ 開內頁 */
-    if (e.target.closest("a,.crew-chip,.edit-dot,.shot")) return;
+    /* 點卡片（非照片/TAG/編輯鈕/釘選鈕）→ 開內頁 */
+    if (e.target.closest("a,.crew-chip,.edit-dot,.shot,.pin-btn")) return;
     const card = e.target.closest(".trip[data-id]");
     if (card) openDetail(card.dataset.id);
   });
@@ -1411,7 +1631,7 @@ const COUNTRY_META = {
     const owner = store.owner;
     document.body.classList.toggle("owner", owner);
     btnLogin.textContent = owner ? "已登入" : "登入";
-    renderTrips();
+    renderTrips(); renderBadges();
   }
   /* 本機帳號（直接註冊）：{name, pass}，存在自己裝置 */
   const account = {
@@ -1652,11 +1872,14 @@ const COUNTRY_META = {
 
   /* ---------- 匯出資料：合併本機編輯，複製到剪貼簿 ---------- */
   $("#btnExport").addEventListener("click", async ()=>{
+    const pins = effectivePins();
     const out = {
+      featuredBadges: featuredKeys(),
       trips: trips.map(t=>({
         city:t.city, country:t.country, countryCode:t.countryCode, flag:t.flag,
         continent:t.continent, start:t.start, end:t.end,
         note:t.note||"", journal:t.journal||"", verified:!!t.verified,
+        ...(pins.includes(t.id)?{pinned:true}:{}),
         photos: mediaOf(t), ...(t.crew?{crew:t.crew}:{})
       }))
     };
