@@ -47,9 +47,10 @@
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
 - 2026-07-05（v3）：護照頁再升級（同分支 `claude/passport-travel-tracker-a3tx4w`）：
-  - **一鍵登入/註冊**：登入視窗改為 Google / Apple / IG 三顆 SSO 按鈕＋通行碼備用。
-    Google 可真接（使用者要自己到 Google Cloud 免費申請 OAuth Client ID 填入 `CONFIG.auth.googleClientId`，`ownerEmails` 已預填 a8225012@gmail.com）；
-    Apple 需開發者帳號（US$99/年）暫不啟用；IG 官方 2024 底已關閉個人登入 API 無法接。
+  - **一鍵登入/直接註冊**（2026-07-05 更新）：依使用者指示移除 Apple 與 IG 按鈕，改為
+    Google 一鍵登入（填 `CONFIG.auth.googleClientId` 即啟用，`ownerEmails` 已預填 a8225012@gmail.com）
+    ＋「直接註冊」（設暱稱＋通行碼≥4碼，存本機 `pp_account`，之後用它登入）＋ CONFIG 通行碼備用。
+    背景：Apple 登入需付費開發者帳號；IG 個人登入 API 已被 Meta 關閉（2024 底）。
   - **頁面直接新增卡片**（＋新增）：選國家自動帶國旗/座標/洲別，統計/印章/地圖/成就即時重算。
   - **每張卡片獨立 ✓ 核驗**：有證明書就打勾、沒有也照樣記錄；計數徽章顯示「已核驗 X/N 趟」。
   - **懶人匯入**：貼上移民署「入出國日期證明書」文字 → 自動配對出國/回國日期（支援民國年）生成已打勾卡片，目的地後補。
