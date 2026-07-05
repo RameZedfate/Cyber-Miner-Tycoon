@@ -46,6 +46,11 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-05（搬家）：**護照頁已搬到獨立公開 repo `RameZedfate/passport`**（網址將是 ramezedfate.github.io/passport/），本 repo 的 passport/ 已移除。
+  - 新 repo 版已移除個人 Email（Google 登入白名單留空，啟用時再填）。
+  - 「便宜機票雷達」也要搬到獨立 repo `cheap-flights`（賺錢工具、要繼續用；搬完後本 repo 才轉私人）。
+  - 待使用者完成：新 repo 開 GitHub Pages、cheap-flights repo 建立、本 repo 轉 Private。
+
 - 2026-07-05（決策）：護照頁**先免費**自用＋公開；等使用者變多再評估付費方案（屆時需後端帳號+金流，現行匯出 JSON 格式可直接沿用為資料庫格式）。
   - ⚠️ 提醒：本 repo 為**公開**，這份共享記憶任何人都看得到——只記可公開的重點，敏感內容不要寫這裡。
   - 待辦（下次處理）：OG 分享預覽標籤、換真實旅程資料、使用者提供背景照片與 AI 勳章圖後套用。
