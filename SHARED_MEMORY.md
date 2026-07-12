@@ -46,6 +46,11 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-12：完成「策畫會報破冰影片《下半場，開賽！》」（世足×下半年衝刺，16:9，約1分45秒）。
+  - 專案資料夾：`worldcup-kickoff-video/`（分鏡腳本、素材 Job ID、字卡 PNG、本機重製腳本）。
+  - 製作方式：Higgsfield MCP → Seedance 2.0 生成 7 段 15 秒片段（720p std，含 epic 原生配樂音效）＋ seed_audio Sterling 男聲中文旁白 7 段 → `explainer_video` 伺服器端拼接。
+  - 成本：約 475 點（影片 67.5 點/段 ×7＋旁白 0.3 點/段 ×7）；1080p 版每段 135 點，預算內可再議。
+  - ⚠️ 雲端 Claude 沙箱網路擋 Higgsfield CDN（cloudfront），無法本機下載素材→改用伺服器端拼接；本機 Claude/Codex 不受此限，可跑 `assets/assemble.py` 做進階版（交叉淡化＋字卡燒錄＋ducking）。
 - 2026-06-15：新增「便宜機票雷達」單檔網頁 `cheap-flights/index.html`（+ `README.md`）。
   - 用途：放 IG / HOWTRAVLE 分享便宜機票，讀者自選、按鈕一鍵導到 **Trip.com 聯盟連結**（使用者目前只有 Trip.com 聯盟）。
   - 規格：從台灣全部機場出發、近三個月、低於市場均價；含/不含託運、傳統/廉航都列。
