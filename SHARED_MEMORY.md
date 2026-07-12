@@ -47,6 +47,7 @@
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
 - 2026-07-12：完成「策畫會報破冰影片《下半場，開賽！》」（世足×下半年衝刺，16:9，約1分45秒）。
+  - ✅ 成品連結見 `worldcup-kickoff-video/README.md`（Higgsfield job `6892926a-273b-446d-942a-64471da2bf16`）。
   - 專案資料夾：`worldcup-kickoff-video/`（分鏡腳本、素材 Job ID、字卡 PNG、本機重製腳本）。
   - 製作方式：Higgsfield MCP → Seedance 2.0 生成 7 段 15 秒片段（720p std，含 epic 原生配樂音效）＋ seed_audio Sterling 男聲中文旁白 7 段 → `explainer_video` 伺服器端拼接。
   - 成本：約 475 點（影片 67.5 點/段 ×7＋旁白 0.3 點/段 ×7）；1080p 版每段 135 點，預算內可再議。
