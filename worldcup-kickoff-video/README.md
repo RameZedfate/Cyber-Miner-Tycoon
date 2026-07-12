@@ -2,13 +2,24 @@
 
 世足 × 下半年衝刺主題的激勵影片，用於策畫會報開場破冰。
 
-## 🎬 成品
+## 🎬 成品（兩個版本）
 
-**下載連結（用瀏覽器開啟即可下載/播放）：**
+**⭐ 英文旁白版（Gideon 男聲）＋中文 SRT 字幕：**
+
+https://d8j0ntlcm91z4.cloudfront.net/user_3F0371617AbVpG8O8mmmg9fqWu9/hf_20260712_185139_cba53b7b-e117-4ee5-a76b-a570550c1101.mp4
+
+- Higgsfield job：`cba53b7b-e117-4ee5-a76b-a570550c1101`
+- 中文字幕檔：`中文字幕-英文旁白版.srt`（時間軸已對齊旁白）
+- 上字幕方法：剪映 → 匯入影片 → 文本 → 匯入字幕（選 SRT）→ 匯出；
+  或用 PotPlayer/VLC 播放時把 SRT 與影片放同資料夾自動掛載
+
+**中文旁白版（Sterling 男聲，第一版）：**
 
 https://d8j0ntlcm91z4.cloudfront.net/user_3F0371617AbVpG8O8mmmg9fqWu9/hf_20260712_183230_6892926a-273b-446d-942a-64471da2bf16.mp4
 
-也可以在 Higgsfield 帳號的 My Creations 找到（job `6892926a-273b-446d-942a-64471da2bf16`）。
+- Higgsfield job：`6892926a-273b-446d-942a-64471da2bf16`
+
+兩版都可在 Higgsfield 帳號的 My Creations 找到。
 
 | 規格 | 值 |
 | --- | --- |
