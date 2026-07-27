@@ -1,9 +1,13 @@
 # fang__0914 — 內容行事曆
 
-**期間：** Day 1–14（每日一支 Reels）
-**平台：** Instagram Reels 主力 → Threads 同步改寫（不是複製）
+**期間：** Day 1–14（**每天一則**，不是每天一支 Reels）
+**平台：** Instagram 主力 → Threads 同步改寫（不是複製）
 **本期目標：** Growth — 建立「每天一個實用 AI 用法」的連載辨識度
-**格式：** 全部依 `context/brand-style.md` 的〈Signature Content Format〉五段公式
+
+**形式規則：**
+- **實測、示範類 → Reels**（要看到畫面上發生什麼），依 `brand-style.md` 的五段公式
+- **觀念、回顧類 → 圖文輪播**（沿用你現有的模板 A／B，製作快很多）
+- 一天只發一則。Day 7、Day 14 這種回顧型用輪播，剛好讓你喘口氣
 
 ---
 
