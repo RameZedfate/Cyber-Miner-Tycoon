@@ -38,7 +38,7 @@ git add .claude/skills && git commit -m "更新 social-ai-team 技能包" && git
 ## 工作流程（建議順序）
 
 ```
-/brand-onboarding      ← 只做一次，先讓 AI 認識 adam_ai_plus 的調性
+/brand-onboarding      ← 只做一次，先讓 AI 認識 fang__0914 的調性
         ↓  產出 context/brand-style.md
 /content-calendar      ← 每月一次，排出這個月要發什麼
         ↓  產出 context/content-calendar.md
