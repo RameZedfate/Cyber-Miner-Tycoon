@@ -46,6 +46,15 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-27：加入社群技能包 `.claude/skills/`（來源 `stevenflanagan1/social-ai-team`，commit `3d140a1`，10 個 skill）。
+  - **決定：技能裝在 repo 的 `.claude/skills/`，不是 `~/.claude/skills/`。**
+    理由：雲端 Claude 的容器是暫時的，裝在家目錄下次就沒了；放進 repo 才能三邊（Codex／本機 Claude／雲端 Claude）共用。
+  - 可直接用：`/social-media-manager`（入口）、`/brand-onboarding`、`/content-calendar`、
+    `/caption-writer`、`/threads-writer`、`/x-writer`、`/linkedin-writer`、`/social-performance-review`。
+  - ⚠️ 不可用（缺 MCP）：`/social-creative-designer`（需 Nano Banana）、`/publisher`（需 Blotato）。
+  - 下一步建議：先跑一次 `/brand-onboarding` 建立 `context/brand-style.md`，讓 AI 記住 `adam_ai_plus` 的調性，
+    之後每月跑 `/content-calendar` 排選題。
+  - 細節與更新方式見 `.claude/skills/README.md`。
 - 2026-06-15：新增「便宜機票雷達」單檔網頁 `cheap-flights/index.html`（+ `README.md`）。
   - 用途：放 IG / HOWTRAVLE 分享便宜機票，讀者自選、按鈕一鍵導到 **Trip.com 聯盟連結**（使用者目前只有 Trip.com 聯盟）。
   - 規格：從台灣全部機場出發、近三個月、低於市場均價；含/不含託運、傳統/廉航都列。
