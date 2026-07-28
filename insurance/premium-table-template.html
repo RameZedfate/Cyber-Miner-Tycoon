@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>保單保費總表（範本）</title>
+<style>
+/* ===========================================================
+   保單保費總表 — 單檔 HTML（不需網路、不需安裝，點兩下就能看）
+   要改資料 → 拉到最下面「▼▼▼ 保費資料 ▼▼▼」那一塊
+   =========================================================== */
+:root{
+  color-scheme: light;
+  --surface:#fcfcfb;          /* 卡片底 */
+  --plane:#f4f4f1;            /* 頁面底 */
+  --ink:#0b0b0b;              /* 主要文字 */
+  --ink-2:#52514e;            /* 次要文字 */
+  --ink-3:#898781;            /* 淡文字 */
+  --line:#e1e0d9;             /* 細分隔線 */
+  --rule:#c3c2b7;             /* 基準線 */
+  --ring:rgba(11,11,11,.10);
+  --track:#ececE6;            /* 佔比條底槽 */
+  --blue:#2a78d6;             /* 序列色（單一色階：金額多寡） */
+  --p1:#2a78d6; --p2:#eb6834; --p3:#1baf7a; --p4:#eda100;  /* 4 位被保險人固定配色 */
+  --radius:16px;
+  --shadow:0 1px 2px rgba(11,11,11,.04), 0 8px 24px rgba(11,11,11,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --surface:#1a1a19; --plane:#0d0d0d; --ink:#fff; --ink-2:#c3c2b7; --ink-3:#898781;
+    --line:#2c2c2a; --rule:#383835; --ring:rgba(255,255,255,.10); --track:#2c2c2a;
+    --blue:#3987e5; --p1:#3987e5; --p2:#d95926; --p3:#199e70; --p4:#c98500;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--plane); color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+.wrap{max-width:1000px; margin:0 auto; padding:28px 18px 64px}
+
+/* ---------- 頁首 ---------- */
+.head{
+  background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:26px 26px 22px; margin-bottom:16px;
+}
+.eyebrow{font-size:13px; letter-spacing:.14em; color:var(--ink-3); margin:0 0 6px}
+h1{font-size:26px; margin:0 0 4px; letter-spacing:.02em}
+.sub{color:var(--ink-2); font-size:14px; margin:0}
+.hero{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:18px 0 2px}
+.hero .num{font-size:clamp(40px,8vw,54px); font-weight:700; letter-spacing:-.02em; line-height:1.05}
+.hero .unit{font-size:15px; color:var(--ink-2)}
+
+/* ---------- 數字磚 ---------- */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px}
+.kpi{background:var(--plane); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.kpi .k{font-size:12px; color:var(--ink-3); margin-bottom:2px}
+.kpi .v{font-size:19px; font-weight:650; letter-spacing:-.01em}
+.kpi .v small{font-size:12px; font-weight:400; color:var(--ink-2); margin-left:3px}
+.kpi .s{font-size:11.5px; color:var(--ink-3); margin-top:1px}
+
+/* ---------- 工具列 ---------- */
+.tools{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:18px; padding-top:16px; border-top:1px solid var(--line)}
+.tools label{font-size:13px; color:var(--ink-2)}
+.tools input{
+  width:88px; padding:6px 9px; font:inherit; font-size:14px; text-align:right;
+  border:1px solid var(--rule); border-radius:9px; background:var(--surface); color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.btn{
+  margin-left:auto; padding:8px 15px; font:inherit; font-size:14px; cursor:pointer;
+  border:1px solid var(--rule); border-radius:10px; background:var(--surface); color:var(--ink);
+}
+.btn:hover{border-color:var(--ink-3)}
+.hint{font-size:12.5px; color:var(--ink-3); flex-basis:100%; margin:0}
+
+/* ---------- 被保險人卡片 ---------- */
+.card{
+  background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius);
+  box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden;
+}
+.card-top{display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; padding:20px 22px 16px; border-bottom:1px solid var(--line)}
+.who{display:flex; align-items:center; gap:10px}
+.dot{width:11px; height:11px; border-radius:50%; flex:none}
+.who h2{font-size:21px; margin:0; letter-spacing:.03em}
+.chip{
+  font-size:12px; color:var(--ink-2); background:var(--plane);
+  border:1px solid var(--line); border-radius:999px; padding:2px 10px;
+}
+.card-total{margin-left:auto; text-align:right; line-height:1.25}
+.card-total .n{font-size:27px; font-weight:700; letter-spacing:-.01em}
+.card-total .l{font-size:12px; color:var(--ink-3)}
+
+/* ---------- 明細表 ---------- */
+table{width:100%; border-collapse:collapse; font-size:14.5px}
+thead th{
+  font-size:12px; font-weight:600; color:var(--ink-3); text-align:left;
+  padding:10px 12px; border-bottom:1px solid var(--rule); white-space:nowrap;
+}
+tbody td{padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--plane)}
+.c-no{width:34px; color:var(--ink-3); font-size:12.5px; text-align:center; padding-left:16px !important}
+.c-amt{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums}
+.c-share{width:150px; padding-right:16px !important}
+.prod{font-weight:600}
+.prod .co{color:var(--ink-2); font-weight:400}
+.meta{font-size:12px; color:var(--ink-3); margin-top:2px}
+.tag{
+  display:inline-block; font-size:11px; line-height:1.5; padding:1px 7px; margin-left:6px;
+  border:1px solid var(--line); border-radius:6px; color:var(--ink-2); background:var(--plane);
+  vertical-align:1px;
+}
+.amt{font-weight:650; font-size:15px}
+.amt-sub{font-size:12px; color:var(--ink-3); margin-top:1px}
+.self{color:var(--ink-3); font-size:13px}
+.payer{display:inline-flex; align-items:center; gap:6px; font-size:13.5px; white-space:nowrap}
+.payer .dot{width:8px; height:8px}
+.bar-row{display:flex; align-items:center; gap:9px}
+.track{flex:1; height:8px; background:var(--track); border-radius:4px; overflow:hidden}
+.fill{height:100%; border-radius:0 4px 4px 0}
+.pct{font-size:12px; color:var(--ink-3); width:38px; text-align:right; font-variant-numeric:tabular-nums}
+tfoot td{padding:12px; font-size:13.5px; color:var(--ink-2); background:var(--plane)}
+tfoot .c-amt{font-weight:650; color:var(--ink); font-size:14.5px}
+
+/* ---------- 圖表區 ---------- */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.panel{background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px 22px}
+.panel h3{font-size:16px; margin:0 0 3px}
+.panel .desc{font-size:12.5px; color:var(--ink-3); margin:0 0 16px}
+.brow{margin-bottom:13px}
+.blabel{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:13.5px; margin-bottom:5px}
+.blabel .nm{display:inline-flex; align-items:center; gap:7px}
+.blabel .vv{font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:13px}
+.blabel .vv b{color:var(--ink); font-weight:650}
+.btrack{height:10px; background:var(--track); border-radius:5px; overflow:hidden}
+.bfill{height:100%; border-radius:0 5px 5px 0; transition:width .25s ease}
+.bnote{font-size:12px; color:var(--ink-3); margin-top:5px}
+#by-payer .brow{padding-bottom:13px; border-bottom:1px solid var(--line)}
+#by-payer .brow:last-child{border-bottom:none; padding-bottom:0; margin-bottom:0}
+
+.callout{
+  margin-top:18px; padding:12px 14px; background:var(--plane);
+  border:1px solid var(--line); border-radius:12px;
+  font-size:13px; color:var(--ink-2); line-height:1.7;
+}
+.callout b{color:var(--ink)}
+
+/* ---------- 註解 ---------- */
+.notes{background:var(--surface); border:1px solid var(--ring); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; margin-top:16px}
+.notes h3{font-size:15px; margin:0 0 10px}
+.notes ul{margin:0; padding-left:19px; color:var(--ink-2); font-size:13.5px}
+.notes li{margin-bottom:6px}
+.notes b{color:var(--ink)}
+
+/* ---------- 提示框 ---------- */
+#tip{
+  position:fixed; z-index:50; pointer-events:none; opacity:0; transition:opacity .12s;
+  background:var(--ink); color:var(--surface); font-size:12.5px; line-height:1.55;
+  padding:8px 11px; border-radius:9px; max-width:280px; box-shadow:0 8px 26px rgba(0,0,0,.24);
+}
+#tip b{color:var(--surface)}
+
+/* ---------- 手機 ---------- */
+@media (max-width:760px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+  table, thead, tbody, tr, td{display:block; width:100%}
+  thead{display:none}
+  tbody tr{border-bottom:1px solid var(--line); padding:12px 16px; position:relative}
+  tbody tr:last-child{border-bottom:none}
+  tbody td{border:none; padding:3px 0; display:flex; justify-content:space-between; align-items:center; gap:14px}
+  tbody td::before{content:attr(data-l); font-size:12px; color:var(--ink-3); flex:none}
+  tbody td:nth-child(2){display:block; padding:0 0 6px}
+  tbody td:nth-child(2)::before{display:none}
+  .c-no{display:none !important}
+  .card-top{padding:18px 16px 14px}
+  .card-total{margin-left:0; text-align:left; flex-basis:100%}
+  .c-amt{text-align:right}
+  .c-share{width:auto; padding-right:0 !important}
+  .bar-row{flex:1}
+  tfoot td{display:flex; justify-content:space-between}
+  tfoot .c-share{display:none}
+}
+
+/* ---------- 列印／存 PDF ---------- */
+@media print{
+  :root{--surface:#fff; --plane:#fff; --ink:#000; --ink-2:#333; --ink-3:#666; --shadow:none}
+  body{background:#fff}
+  .wrap{max-width:none; padding:0}
+  .tools, #tip{display:none !important}
+  .card, .panel, .head, .notes{break-inside:avoid; box-shadow:none; border:1px solid #ccc}
+  tbody tr:hover{background:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <p class="eyebrow">年 度 保 費 總 覽　·　範 例 資 料</p>
+    <h1>保單保費總表<span style="font-size:15px;font-weight:400;color:var(--ink-3);margin-left:8px">範　本</span></h1>
+    <p class="sub" id="subtitle"></p>
+
+    <div class="hero">
+      <span class="num" id="grand"></span>
+      <span class="unit">／年　·　全戶年繳保費合計</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="k">平均每月</div><div class="v" id="k-month"></div></div>
+      <div class="kpi"><div class="k">被保險人</div><div class="v" id="k-people"></div></div>
+      <div class="kpi"><div class="k">保單張數</div><div class="v" id="k-policies"></div></div>
+      <div class="kpi"><div class="k">外幣保單</div><div class="v" id="k-usd"></div><div class="s" id="k-usd-sub"></div></div>
+    </div>
+
+    <div class="tools">
+      <label for="rate">美元匯率　1 USD =</label>
+      <input id="rate" type="number" step="0.01" min="1" value="32.34" />
+      <span style="font-size:13px;color:var(--ink-2)">TWD</span>
+      <button class="btn" onclick="window.print()">🖨️ 列印 / 存成 PDF</button>
+      <p class="hint">改匯率，全表即時重算。下面是<b>假資料範例</b>，請換成實際保單內容。</p>
+    </div>
+  </header>
+
+  <div id="people"></div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h3>誰在繳保費（依要保人）</h3>
+      <p class="desc">同一張保單的錢，算在「要保人」頭上</p>
+      <div id="by-payer"></div>
+      <div class="callout" id="payer-callout"></div>
+    </section>
+    <section class="panel">
+      <h3>保費分佈（依保險公司）</h3>
+      <p class="desc">全戶 30 張保單，年繳金額由高至低</p>
+      <div id="by-company"></div>
+    </section>
+  </div>
+
+  <section class="notes">
+    <h3>看表說明</h3>
+    <ul id="note-list"></ul>
+  </section>
+
+</div>
+<div id="tip"></div>
+
+<script>
+/* ============================================================
+   ▼▼▼ 保 費 資 料 ▼▼▼   要新增或修改保單，只改這一塊就好
+   幣別填 "TWD" 或 "USD"；要保人就是「誰繳錢／誰能動這張保單」
+   生效日、類型可以留空白 ""
+   ============================================================ */
+const 匯率預設 = 32.5;
+
+const 保費資料 = [
+  { 被保險人:"王大明", 你提供的總額:0, 保單:[
+    { 公司:"Ａ人壽", 商品:"終身醫療",   保費:24000, 幣別:"TWD", 要保人:"王大明", 生效日:"",          類型:"醫療" },
+    { 公司:"Ｂ人壽", 商品:"失能扶助",   保費:31000, 幣別:"TWD", 要保人:"王大明", 生效日:"",          類型:"失能" },
+    { 公司:"Ｃ人壽", 商品:"重大傷病",   保費:9800,  幣別:"TWD", 要保人:"王大明", 生效日:"",          類型:"重大傷病" },
+    { 公司:"Ｄ人壽", 商品:"美元利變壽險", 保費:3000,  幣別:"USD", 要保人:"王大明", 生效日:"112/05/10", 類型:"" }
+  ]},
+
+  { 被保險人:"王美惠", 你提供的總額:0, 保單:[
+    { 公司:"Ａ人壽", 商品:"終身醫療",   保費:26500, 幣別:"TWD", 要保人:"王大明", 生效日:"",          類型:"醫療" },
+    { 公司:"Ｅ人壽", 商品:"還本終身",   保費:41200, 幣別:"TWD", 要保人:"王美惠", 生效日:"",          類型:"" },
+    { 公司:"Ｂ人壽", 商品:"失能扶助",   保費:18600, 幣別:"TWD", 要保人:"王大明", 生效日:"",          類型:"失能" }
+  ]},
+
+  { 被保險人:"王小安", 你提供的總額:0, 保單:[
+    { 公司:"Ｃ人壽", 商品:"住院醫療",   保費:12300, 幣別:"TWD", 要保人:"王美惠", 生效日:"",          類型:"醫療" },
+    { 公司:"Ｄ人壽", 商品:"美元增額壽險", 保費:1500,  幣別:"USD", 要保人:"王大明", 生效日:"113/09/01", 類型:"" }
+  ]}
+];
+/* ▲▲▲ 資料到這裡結束 ▲▲▲ */
+
+
+/* ============ 以下是畫面程式，平常不用動 ============ */
+const 色 = ["var(--p1)","var(--p2)","var(--p3)","var(--p4)"];
+const 人色 = {};
+保費資料.forEach((p,i)=> 人色[p.被保險人] = 色[i % 色.length]);
+
+const nt  = n => "NT$" + Math.round(n).toLocaleString("en-US");
+const usd = n => "US$" + n.toLocaleString("en-US");
+const 西元 = roc => {
+  const m = /^(\d+)\/(\d+)\/(\d+)$/.exec(roc||"");
+  return m ? `${+m[1]+1911}/${m[2]}/${m[3]}` : "";
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function 台幣(p, rate){ return p.幣別 === "USD" ? p.保費 * rate : p.保費; }
+
+function render(){
+  const rate = parseFloat(document.getElementById("rate").value) || 匯率預設;
+
+  /* ---- 總計 ---- */
+  let 總額 = 0, 張數 = 0, 美元張數 = 0;
+  const 依要保人 = {}, 依公司 = {}, 公司明細 = {}, 要保人張數 = {};
+  保費資料.forEach(p => p.保單.forEach(x => {
+    const v = 台幣(x, rate);
+    總額 += v; 張數++; if (x.幣別 === "USD") 美元張數++;
+    依要保人[x.要保人] = (依要保人[x.要保人] || 0) + v;
+    依公司[x.公司]   = (依公司[x.公司]   || 0) + v;
+    (公司明細[x.公司] = 公司明細[x.公司] || []).push(`${p.被保險人}・${x.商品}`);
+    const t = 要保人張數[x.要保人] = 要保人張數[x.要保人] || { 自己:0, 代繳:{} };
+    if (x.要保人 === p.被保險人) t.自己++;
+    else t.代繳[p.被保險人] = (t.代繳[p.被保險人] || 0) + 1;
+  }));
+
+  document.getElementById("subtitle").textContent =
+    `${保費資料.map(p=>p.被保險人).join("、")}　共 ${保費資料.length} 位被保險人・${張數} 張保單`;
+  document.getElementById("grand").textContent   = nt(總額);
+  document.getElementById("k-month").textContent = nt(總額/12);
+  document.getElementById("k-people").innerHTML  = 保費資料.length + " <small>位</small>";
+  document.getElementById("k-policies").innerHTML= 張數 + " <small>張</small>";
+  const 美元總額 = 保費資料.reduce((s,p) => s + p.保單.filter(x=>x.幣別==="USD").reduce((a,x)=>a+台幣(x,rate),0), 0);
+  document.getElementById("k-usd").innerHTML     = 美元張數 + " <small>張</small>";
+  document.getElementById("k-usd-sub").textContent = `約 ${nt(美元總額)}　佔 ${(美元總額/總額*100).toFixed(0)}%`;
+
+  /* ---- 每位被保險人的明細卡 ---- */
+  document.getElementById("people").innerHTML = 保費資料.map(p => {
+    const 小計 = p.保單.reduce((s,x) => s + 台幣(x, rate), 0);
+    const 台幣張 = p.保單.filter(x=>x.幣別==="TWD").length;
+    const 美元張 = p.保單.length - 台幣張;
+    const c = 人色[p.被保險人];
+
+    const rows = p.保單.map((x,i) => {
+      const v = 台幣(x, rate);
+      const pct = 小計 ? v/小計*100 : 0;
+      const 自己 = x.要保人 === p.被保險人;
+      const 日期 = x.生效日 ? `生效日 ${x.生效日}（${西元(x.生效日)}）` : "";
+      return `<tr>
+        <td class="c-no">${i+1}</td>
+        <td data-l="保單">
+          <div class="prod"><span class="co">${esc(x.公司)}</span>　${esc(x.商品)}${x.類型?`<span class="tag">${esc(x.類型)}</span>`:""}</div>
+          ${日期 ? `<div class="meta">${日期}</div>` : ""}
+        </td>
+        <td data-l="要保人">${ 自己
+          ? `<span class="self">本人</span>`
+          : `<span class="payer"><i class="dot" style="background:${人色[x.要保人]||"var(--ink-3)"}"></i>${esc(x.要保人)}</span>` }</td>
+        <td class="c-amt" data-l="年繳保費">
+          <div class="amt">${x.幣別==="USD" ? usd(x.保費) : nt(x.保費)}</div>
+          ${x.幣別==="USD" ? `<div class="amt-sub">≈ ${nt(v)}</div>` : ""}
+        </td>
+        <td class="c-share" data-l="佔比">
+          <div class="bar-row">
+            <div class="track"><div class="fill" style="width:${pct.toFixed(1)}%;background:${c}"></div></div>
+            <span class="pct">${pct.toFixed(1)}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+
+    return `<section class="card">
+      <div class="card-top">
+        <div class="who"><i class="dot" style="background:${c}"></i><h2>${esc(p.被保險人)}</h2></div>
+        <span class="chip">${p.保單.length} 張保單</span>
+        <div class="card-total">
+          <div class="n">${nt(小計)}</div>
+          <div class="l">年繳合計　·　每月約 ${nt(小計/12)}</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th class="c-no">#</th><th>保險公司・商品</th><th>要保人</th>
+          <th class="c-amt">年繳保費</th><th class="c-share">佔本人比重</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>
+          <td colspan="3">合計　台幣保單 ${台幣張} 張${美元張?`　+　美元保單 ${美元張} 張`:""}</td>
+          <td class="c-amt">${nt(小計)}</td><td class="c-share"></td>
+        </tr></tfoot>
+      </table>
+    </section>`;
+  }).join("");
+
+  /* ---- 橫條圖：依要保人（顏色跟著人走）---- */
+  const payers = Object.entries(依要保人).sort((a,b) => b[1]-a[1]);
+  const pMax = payers[0] ? payers[0][1] : 1;
+  document.getElementById("by-payer").innerHTML = payers.map(([name,v]) => {
+    const t = 要保人張數[name] || { 自己:0, 代繳:{} };
+    const 代 = Object.entries(t.代繳).map(([k,n]) => `${k} ${n} 張`).join("、");
+    return `<div class="brow" data-tip="${esc(name)} 每年實際支出 ${nt(v)}，平均每月 ${nt(v/12)}">
+      <div class="blabel">
+        <span class="nm"><i class="dot" style="background:${人色[name]||"var(--blue)"}"></i>${esc(name)}</span>
+        <span class="vv"><b>${nt(v)}</b>　${(v/總額*100).toFixed(1)}%</span>
+      </div>
+      <div class="btrack"><div class="bfill" style="width:${v/pMax*100}%;background:${人色[name]||"var(--blue)"}"></div></div>
+      <div class="bnote">自己的保單 ${t.自己} 張${代 ? `　·　替 ${esc(代)}` : ""}　·　每月約 ${nt(v/12)}</div>
+    </div>`;
+  }).join("");
+
+  const 跨要保人 = 保費資料.reduce((s,p) => s + p.保單.filter(x => x.要保人 !== p.被保險人).length, 0);
+  const 跨金額  = 保費資料.reduce((s,p) => s + p.保單.filter(x => x.要保人 !== p.被保險人).reduce((a,x)=>a+台幣(x,rate),0), 0);
+  document.getElementById("payer-callout").innerHTML =
+    `全戶 ${張數} 張保單裡，有 <b>${跨要保人} 張的要保人不是被保險人本人</b>（年繳 ${nt(跨金額)}，佔 ${(跨金額/總額*100).toFixed(0)}%）。<br>
+     這些保單的解約、變更受益人、保單借款都要<b>要保人</b>出面，做保單健診或規劃時要一起確認。`;
+
+  /* ---- 橫條圖：依保險公司（單一色階＝金額多寡）---- */
+  const cos = Object.entries(依公司).sort((a,b) => b[1]-a[1]);
+  const cMax = cos[0] ? cos[0][1] : 1;
+  document.getElementById("by-company").innerHTML = cos.map(([name,v]) => `
+    <div class="brow" data-tip="<b>${esc(name)}　${nt(v)}／年</b><br>${公司明細[name].map(esc).join("<br>")}">
+      <div class="blabel">
+        <span class="nm">${esc(name)}</span>
+        <span class="vv"><b>${nt(v)}</b>　${(v/總額*100).toFixed(1)}%</span>
+      </div>
+      <div class="btrack"><div class="bfill" style="width:${v/cMax*100}%;background:var(--blue)"></div></div>
+    </div>`).join("");
+
+  /* ---- 說明 ---- */
+  const 代繳者 = Object.entries(要保人張數).filter(([,t]) => Object.keys(t.代繳).length).map(([k]) => k);
+  const 有對帳 = 保費資料.some(p => p.你提供的總額);
+  const 對帳 = 保費資料.map(p => {
+    const s = p.保單.reduce((a,x) => a + 台幣(x, rate), 0);
+    if (!p.你提供的總額) return `${p.被保險人} ${nt(s)}`;
+    const d = Math.round(s) - p.你提供的總額;
+    return `${p.被保險人} ${nt(s)}${Math.abs(d) <= 1 ? "" : `（你給的是 ${nt(p.你提供的總額)}，差 ${d>0?"+":""}${d.toLocaleString("en-US")}）`}`;
+  }).join("；");
+
+  document.getElementById("note-list").innerHTML = `
+    <li><b>美元保單怎麼換算：</b>目前用 <b>1 USD = ${rate}</b> TWD。表上先寫原幣（US$），下面那行 ≈ 的才是換算後台幣。實際扣款金額依保險公司當期匯率為準。</li>
+    <li><b>${有對帳 ? "和你給的總額對過了：" : "各人年繳合計："}</b>${對帳}。${有對帳 ? "（美元換算會有 1 元以內的四捨五入尾差，屬正常）" : ""}</li>
+    <li><b>要保人：</b>「本人」＝被保險人自己就是要保人。${代繳者.length ? `出現名字的（${代繳者.map(n=>`<b>${esc(n)}</b>`).join("、")}）` : "出現別人名字的"}代表那張保單是<b>別人當要保人</b>在繳，<b>解約金、保單借款、變更受益人都要要保人出面</b>，上面〈誰在繳保費〉那張圖就是在看這件事。</li>
+    <li><b>險種標籤：</b>只標了名稱看得出來的（失能／醫療／重大傷病）。其餘商品沒有自行猜測，可自行在檔案的 <code>類型</code> 欄位補上。</li>
+    <li><b>要改資料：</b>用記事本打開這個檔案，找到「▼▼▼ 保費資料 ▼▼▼」那一塊，改完存檔、重新整理即可。</li>`;
+
+  /* ---- 提示框 ---- */
+  document.querySelectorAll("[data-tip]").forEach(el => {
+    el.onmouseenter = e => {
+      const t = document.getElementById("tip");
+      t.innerHTML = el.dataset.tip; t.style.opacity = 1;
+    };
+    el.onmousemove = e => {
+      const t = document.getElementById("tip");
+      t.style.left = Math.min(e.clientX + 14, innerWidth - t.offsetWidth - 12) + "px";
+      t.style.top  = Math.min(e.clientY + 16, innerHeight - t.offsetHeight - 12) + "px";
+    };
+    el.onmouseleave = () => document.getElementById("tip").style.opacity = 0;
+  });
+}
+
+document.getElementById("rate").addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
