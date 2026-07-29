@@ -10,7 +10,7 @@
 
 使用者同時經營兩件事：
 
-1. **內容創作**：IG 帳號 `adam_ai_plus`，主題是「AI 挑戰100天」
+1. **內容創作**：IG 帳號 `fang__0914`，主題是「AI 挑戰100天」
 2. **保險工作**：永達保險經紀人，個人銷售能力強，主要時間花在「文書處理」
 
 ### 痛點與優先順序
@@ -22,7 +22,7 @@
 - ✅ 可行方向：AI 協助把案件描述「草擬」成理賠申請書需要的文字段落
   （事故說明/理賠原因等），使用者再自行複製貼上到表單或系統中
 
-**第二：IG 內容團隊（`adam_ai_plus`）**
+**第二：IG 內容團隊（`fang__0914`）**
 - 痛點：想不到主題、寫腳本/文案花時間、做圖排版花時間、發布排程混亂
 - 對應子代理：`content-planner`（選題）、`script-writer`（腳本）、
   `brand-visual-designer`（視覺）、`project-manager`（排程）
@@ -56,6 +56,18 @@
 - 排程、行事曆、任務追蹤 → `project-manager`
 - 新工具研究、MCP 整合、自動化 → `ai-tool-rd`
 - 任務跨多個部門時，依流程順序依次委派（例如：企劃 → 文案 → 視覺設計）
+
+## 技能包（Skills）
+
+`.claude/skills/` 底下裝了一套社群經營流程技能（來源：`stevenflanagan1/social-ai-team`），
+完整說明見 `.claude/skills/README.md`。
+
+- 使用者說「這個月要發什麼」「幫我寫 IG 貼文」「Threads 要發什麼」這類**社群內容流程**需求時，
+  優先用這些 skills（有固定產出檔案格式），而不是自己臨時發揮。
+- 入口是 `/social-media-manager`；第一次使用要先跑 `/brand-onboarding` 建立 `context/brand-style.md`。
+- ⚠️ `/social-creative-designer`（需 Nano Banana MCP）與 `/publisher`（需 Blotato MCP）目前**未安裝對應 MCP，不可用**，
+  遇到時改交給 `brand-visual-designer` 子代理或直接告知使用者。
+- 技能不涵蓋的兩件事（**保險理賠申請書草擬**、**招募夥伴 SOP**）仍由創意總監自己處理。
 
 ## 使用方式
 
