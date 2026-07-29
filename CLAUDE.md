@@ -69,6 +69,16 @@
   遇到時改交給 `brand-visual-designer` 子代理或直接告知使用者。
 - 技能不涵蓋的兩件事（**保險理賠申請書草擬**、**招募夥伴 SOP**）仍由創意總監自己處理。
 
+### `insurance-drive-filing`（保險文件歸檔，來源：`RameZedfate/insurance-drive-filing-skill`）
+
+Codex 寫的技能，已同步進來。做的是**理賠文件「歸檔」**——OCR 讀照片 → 分類（理賠／保全／新契約／個人文件）
+→ 比對客戶資料夾 → 產出 CSV 建議表 → 使用者核准後才搬檔。**不是**填寫理賠申請書。
+
+- ⚠️ 靠 Windows 內建 OCR（`Windows.Media.Ocr`，zh-Hant-TW），**只能在本機 Windows 跑，雲端 Claude 執行不了**。
+  雲端這邊能做的是讀邏輯、改規則、討論分類問題。
+- ⚠️ 第一次分類**絕對不搬檔**，一定先出 CSV 給使用者看；只搬 `ApproveMove=Y` 的列。沉默不等於同意。
+- 上游 repo 是獨立的，改動要記得兩邊同步。
+
 ## 使用方式
 
 - 直接描述需求，創意總監會自動判斷並委派給對應子代理

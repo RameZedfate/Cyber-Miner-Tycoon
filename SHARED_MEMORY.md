@@ -46,6 +46,21 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-29：**同步 Codex 寫的 `insurance-drive-filing` 技能進 `.claude/skills/`。**
+  - 上游：`RameZedfate/insurance-drive-filing-skill`（public，MIT 未標示，2 commits）。
+  - ❗ **正名：這是「理賠文件歸檔」，不是「理賠申請書填寫」。** repo 裡**完全沒有**
+    全球人壽／台灣人壽或任何保險公司的表單邏輯（已全文搜尋確認）。
+    它做的是：OCR 讀照片 → 分類 → 找出是哪位客戶 → 出 CSV → 核准後搬檔到 Google Drive。
+  - **仍然缺的（最高優先）：把案情描述轉成申請書制式段落**（事故經過／理賠原因）。這個要另外做。
+  - ⚠️ **兩個已知風險（用之前一定要知道）：**
+    1. `Get-DestinationGuess` 找不到完全相符的名字時，會退而用**姓名最後兩個字**比對
+       （`drive-filing-assistant.ps1` 約 300-309 行）。「陳志明／林志明」這種會**配到錯的客戶**，
+       等於 A 客戶的診斷書被歸進 B 客戶資料夾 —— **這是個資外洩**。
+       ➜ 所以 CSV 一定要逐列看過，不可以整欄填 `Y`。特別注意 `Confidence` 是 `low` / `review` 的列。
+    2. `Normalize-Text` 裡有一行寫死的 OCR 錯字修正 `"鵔" → "駿"`，這其實**已經洩漏了某位客戶名字的用字**，
+       違反該 skill 自己寫的 privacy boundary。建議移到本機設定、不要留在公開 repo。
+  - ⚠️ 用 Windows 內建 OCR（離線、不上傳，隱私設計正確），但**只能在本機 Windows 跑**，雲端 Claude 執行不了。
+
 - 2026-07-29：**把技能包與 IG 內容方向合併進 `main`（重要修正）。**
   - 問題：`.claude/skills/` 和 `context/`、`outputs/scripts/` 之前只 push 到分支
     `claude/add-skill-system-o2c553`，**從來沒合併到 `main`、也沒開 PR**。
