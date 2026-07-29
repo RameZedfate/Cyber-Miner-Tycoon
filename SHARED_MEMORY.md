@@ -46,6 +46,17 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-07-29：**把技能包與 IG 內容方向合併進 `main`（重要修正）。**
+  - 問題：`.claude/skills/` 和 `context/`、`outputs/scripts/` 之前只 push 到分支
+    `claude/add-skill-system-o2c553`，**從來沒合併到 `main`、也沒開 PR**。
+    雲端 Claude 每個新 session 都是從 `main` 開分支，所以 skills 永遠載入不到 ——
+    使用者問「我的技能樹有什麼」時，那 10 個 skill 完全不會出現。
+  - ✅ **規矩（以後照做）：任何要讓三邊長期共用的東西，一定要合併回 `main`，
+    留在功能分支上等於沒做。**
+  - 已整條合併（commit `b2c8eaf`），`main` 現在含：10 個 skill、`context/brand-style.md`、
+    `context/content-calendar.md`、Day 1-9 腳本、第一週批次拍攝總表，以及帳號更正 `fang__0914`。
+  - ⚠️ skill 是**對話開場時載入**的，合併後要**開新對話**才吃得到，當下那個 session 不會生效。
+
 - 2026-07-27：**確立 IG 內容方向 —— 每日 Reels 連載「AI 挑戰100天」，不出鏡、螢幕錄影為主。**
   - **核心原則（最重要）：痛點是主題，工具是答案。** 標題／前 3 秒**絕不出現工具名**。
     ❌「今天介紹 XX skill」 ✅「我每天早上花 40 分鐘想今天發什麼」
