@@ -109,7 +109,7 @@ Keep the narrative inside the accident/cause box. Adjust font size and line brea
 | 全球人壽 | Check the option meaning the policyholder/insured address is the same as the policy address; leave the alternate-address line blank. | Page 1 only |
 | 台灣人壽 | Check the first policy-address mailing option; do not check alternate mailing address; leave the address line blank. | Page 1 only |
 | 三商美邦 | 勾選「聯絡地址 ■同『收費地址』」，郵遞區號與地址欄全部留空。 | Page 1 only |
-| 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | Page 1 only |
+| 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | **本文 303002 + 附件 303004 共 2 頁** |
 
 Fill only insurers named in the current case.
 
@@ -131,6 +131,14 @@ Fill only insurers named in the current case.
 - 理賠類別依案件勾選（一般醫療為「醫療(E)」）；「申請專案補助」限重大手術，非重大手術不勾。
 - 同意書區的「受益人與被保險人關係」要勾（醫療保險金受益人為被保險人本人時勾「本人」），
   但立書人與法定代理人的**簽名欄仍留空**。
+- **交付兩頁**：本文（303002）與附件（303004）。附件要重填姓名、身分證字號、
+  領取方式勾選與第一組帳戶資料（戶名／身分證字號／金融機構(分行)／帳號），第二三組帳戶留空。
+  驗證時用 `--expected-pages 2`。
+- 身分證字號欄位是**逐格方格**，必須一格一字元，不可當成一般文字寫入
+  （本文基本資料列、本文保險金領取方式列、附件基本資料列、附件帳戶資料列，共四處）。
+- 附件背面附有「各項理賠申請所需文件一覽表」。申請**醫療保險金**時需檢附：
+  理賠申請書、醫療診斷書及醫療費用收據、關係證明、受益人身分證明文件、**學籍資料**
+  （學籍資料由學校於申請書上加蓋關防或學校章證明）。交付時一併提醒使用者。
 
 ## PDF acceptance checks
 
@@ -138,7 +146,8 @@ Before delivery:
 
 1. Confirm the official blank-form edition and expected geometry.
 2. Confirm every selected insurer has exactly one PDF.
-3. Confirm every final PDF has exactly one page.
+3. Confirm every final PDF has exactly the approved page count for that insurer
+   （預設 1 頁；國泰學團險為 2 頁，見 insurer matrix）。
 4. Render page 1 and inspect every filled field and checkbox.
 5. Confirm the narrative remains inside its box.
 6. Confirm bank digits, identity number, date, and phone are legible and not truncated.

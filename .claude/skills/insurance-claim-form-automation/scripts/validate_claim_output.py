@@ -24,11 +24,21 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help="Expected number of insurer PDF files.",
     )
+    parser.add_argument(
+        "--expected-pages",
+        type=int,
+        default=1,
+        help=(
+            "Exact page count required in every PDF. Defaults to 1. "
+            "Raise it only for a form whose approved deliverable is more than one "
+            "page (國泰學團險 = 本文 + 附件 = 2)."
+        ),
+    )
     parser.add_argument("pdfs", nargs="+", type=Path)
     return parser.parse_args()
 
 
-def validate_pdf(path: Path, index: int) -> dict[str, object]:
+def validate_pdf(path: Path, index: int, expected_pages: int = 1) -> dict[str, object]:
     result: dict[str, object] = {"index": index, "ok": False}
 
     if not path.is_file():
@@ -56,7 +66,7 @@ def validate_pdf(path: Path, index: int) -> dict[str, object]:
         result["error"] = "unreadable_pdf"
         return result
 
-    if result["pages"] != 1:
+    if result["pages"] != expected_pages:
         result["error"] = "not_first_page_only"
         return result
 
@@ -67,7 +77,7 @@ def validate_pdf(path: Path, index: int) -> dict[str, object]:
 def main() -> int:
     args = parse_args()
     results = [
-        validate_pdf(path, index)
+        validate_pdf(path, index, args.expected_pages)
         for index, path in enumerate(args.pdfs, start=1)
     ]
 
