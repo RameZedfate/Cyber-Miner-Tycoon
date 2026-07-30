@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# 名單真實身分對照表 —— 只存在本機，絕對不可推上 public repo
+context/private/
