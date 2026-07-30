@@ -1,11 +1,21 @@
 ---
 name: insurance-claim-form-automation
-description: Use when the user asks to prepare, revise, validate, or deliver unsigned Global Life or Taiwan Life medical claim application PDFs from current-case details and a diagnosis document.
+description: 產生未簽名的理賠申請書草稿（全球人壽／三商美邦／國泰人壽學團險／台灣人壽）。當使用者提供案件資料與診斷證明書，要求填寫、修改、驗證或交付醫療或意外理賠申請書時使用。Use when the user asks to prepare, revise, validate, or deliver unsigned medical claim application PDFs from current-case details and a diagnosis document.
 ---
 
 # Insurance Claim Form Automation
 
 Prepare private, unsigned claim-form drafts for 全球人壽 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
+
+已驗證版面（`scripts/claim_forms.py`，2026-07-30 實案跑過）：**全球人壽 2026.03 版**、
+**三商美邦 CL106C**、**國泰人壽 303002 學團險專用 114.12 版**。填表指令：
+
+```bash
+python "<skill-dir>/scripts/claim_forms.py" --form <空白表單.pdf> --case <案件.json> --outdir <輸出資料夾>
+```
+
+⚠️ 案件 JSON 含個資，**只放在忽略追蹤的本機目錄，絕不進 git**；`claim_forms.py` 本身不含任何客戶資料。
+⚠️ 未列於上表的保險公司或改版表單，**先停下來**，依 development mode 重新解析版面後才可填。
 
 ## Choose the operating mode
 
