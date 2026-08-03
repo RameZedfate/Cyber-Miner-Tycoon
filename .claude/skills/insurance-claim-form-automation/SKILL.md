@@ -14,6 +14,8 @@ Prepare private, unsigned claim-form drafts for 全球人壽 and 台灣人壽. T
 python "<skill-dir>/scripts/claim_forms.py" --form <空白表單.pdf> --case <案件.json> --outdir <輸出資料夾>
 ```
 
+相依套件：填表需 `pymupdf`，輸出驗證需 `pypdf`（`pip install pymupdf pypdf`）。
+
 ⚠️ 案件 JSON 含個資，**只放在忽略追蹤的本機目錄，絕不進 git**；`claim_forms.py` 本身不含任何客戶資料。
 ⚠️ 未列於上表的保險公司或改版表單，**先停下來**，依 development mode 重新解析版面後才可填。
 
