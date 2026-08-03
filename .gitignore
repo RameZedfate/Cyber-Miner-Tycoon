@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# 數字人素材與成品：這個 repo 是公開的，本人臉部素材與影片不進版控
+assets/presenter-*.png
+outputs/videos/
+.frame_tmp.jpg
