@@ -1,5 +1,12 @@
 # fang__0914 — Brand Style Guide
 
+> 🔴 **2026-08-03 更新：「AI 挑戰100天」已停做。**
+> 本檔中所有「Day X／100」「五段公式」「螢幕錄影不出鏡」的內容**已失效**，
+> 改成數字人 podcast 短影音，規格見 **`context/podcast-series.md`**。
+>
+> 以下**仍然有效**、繼續沿用：品牌定位、目標受眾、配色（模板 A／B）、
+> 字型與排版習慣、內容支柱的比例概念、Do／Don't。
+
 > 依 2026-07-27 的實際 IG 帳號截圖建立。所有社群技能（`/content-calendar`、
 > `/caption-writer`、`/threads-writer`、`/x-writer`）都會讀這份檔案，改這裡等於改全部產出。
 
