@@ -1,7 +1,6 @@
 {
   "_comment": "Gemini Spark 8 張字卡。腳本見 outputs/scripts/gemini-spark.md。",
-  "_photo_note": "卡 01 與 08 要帶本人照：把去背 PNG 放進這個資料夾叫 adam.png，然後把下面兩個 photo 欄位取消註解（改成 \"photo\": \"adam.png\"）。",
-  "day": "Day X／100",
+  "day": "Day 10／100",
   "fonts_dir": "../../../tools/reels-cards/fonts",
   "cards": [
     {
@@ -9,9 +8,9 @@
       "type": "hook",
       "text": "扣了一年多\n才發現",
       "accent": "一年多",
-      "_photo": "adam.png",
       "duration": 4.0,
-      "motion": "push"
+      "motion": "push",
+      "photo": "adam.png"
     },
     {
       "id": "02",
@@ -62,11 +61,11 @@
     {
       "id": "08",
       "type": "closing",
-      "text": "台灣還用不到",
+      "text": "台灣\n還用不到",
       "sub": "只有美國、月費 100 美金的方案才有",
-      "_photo": "adam.png",
       "duration": 4.0,
-      "motion": "still"
+      "motion": "still",
+      "photo": "adam.png"
     }
   ]
 }

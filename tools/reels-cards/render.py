@@ -296,7 +296,9 @@ def build_html(card: dict, day_label: str | None, fonts_dir: Path | None, base: 
             f'<div class="headline" style="font-size:{size}px">{headline_html(text, accent)}</div>'
         )
     if sub:
-        layers.append(f'<div class="sub">{html.escape(sub)}</div>')
+        # closing 卡的下半部是人像，副標放底下會壓在身上，改放標題正下方
+        cls = "sub sub-under-headline" if ctype == "closing" else "sub"
+        layers.append(f'<div class="{cls}">{html.escape(sub)}</div>')
 
     layers.append('<div class="safe"></div>')
 
@@ -331,6 +333,8 @@ body{{background:{NAVY};font-family:'Noto Sans TC','WenQuanYi Zen Hei',sans-seri
 .sub{{position:absolute;left:80px;right:80px;top:auto;
   bottom:{int(H*SAFE_BOTTOM_PCT/100)+70}px;
   font-weight:700;font-size:46px;line-height:1.5;color:rgba(255,255,255,.82)}}
+.sub-under-headline{{top:760px;bottom:auto;
+  text-shadow:0 4px 18px rgba(14,42,71,.85)}}
 .safe{{position:absolute;left:0;right:0;bottom:0;height:{SAFE_BOTTOM_PCT}%}}
 </style></head><body>{''.join(layers)}</body></html>"""
 
