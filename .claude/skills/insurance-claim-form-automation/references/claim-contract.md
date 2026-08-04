@@ -171,6 +171,26 @@ Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not
 
 Render every completed first page at **144 DPI** or higher. Inspect the reported fields at enlarged scale, not only the whole-page thumbnail. Draw checkmarks as vector strokes so they do not disappear when the selected font lacks a check glyph.
 
+### 寫入方式
+
+用 `scripts/claim_overlay_fill.py` 讀上表座標並寫入，不要自行換算位置。它保證值留在方框內
+（字級自動縮小、必要時斷行），並回報每欄用的字級、行數、逐格欄位寫了幾格。
+
+**收到警告就停下來，不要當成已完成。** 警告包含：
+
+- 表單頁面尺寸與版面宣告不符 → 座標可能整體偏移，多半是拿到不同版次的表單
+- 逐格欄位的值超過格數而被截斷
+- 縮到最小字級仍放不下
+- 富邦的縣市／鄉鎮區未填全名，或門牌號欄位混入非數字
+
+`report["layout_overlaps"]` 列出該版面互相重疊的欄位方框。重疊時兩欄的值會壓在一起，
+但各自檢查都「在框內」，所以一定要看這一項。**目前已知：宏泰有兩組重疊
+（accident_year／accident_month、bank／beneficiary_identity），新光有兩組（申請人區三列上下各壓 4pt）。**
+這幾欄輸出後務必放大確認。
+
+⚠️ 上表七家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
+144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
+
 ## Drive delivery
 
 - Use only the approved claim-form parent folder.

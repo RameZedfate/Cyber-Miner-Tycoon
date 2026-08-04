@@ -7,12 +7,27 @@ description: 產生、校正與驗證未簽名的理賠申請書草稿，含新�
 
 Prepare private, unsigned claim-form drafts for the verified insurers listed in the contract, including 新光、元大、遠雄、富邦、凱基、宏泰、保誠、全球、三商美邦、國泰學團險 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
 
-已驗證版面（`scripts/claim_forms.py`，2026-07-30 實案跑過）：**全球人壽 2026.03 版**、
-**三商美邦 CL106C**、**國泰人壽 303002 學團險專用 114.12 版**。填表指令：
+## 兩個填表引擎，依保險公司選用
+
+| 引擎 | 適用 | 座標形式 | 狀態 |
+|---|---|---|---|
+| `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，可跨頁 | 2026-07-30 實案驗證 |
+| `scripts/claim_overlay_fill.py` | 新光、元大、遠雄、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
 
 ```bash
+# 全球／三商／國泰
 python "<skill-dir>/scripts/claim_forms.py" --form <空白表單.pdf> --case <案件.json> --outdir <輸出資料夾>
+
+# 其餘七家（一次一家）
+python "<skill-dir>/scripts/claim_overlay_fill.py" --form <空白表單.pdf> --insurer <layout鍵值> --case <案件.json> --out <輸出.pdf>
 ```
+
+`claim_overlay_fill.py` 會把值放進方框並**自動縮字級到放得下為止**，輸出 JSON 報告：
+每欄用了幾級字、幾行、是否溢出、逐格欄位寫了幾格、頁面尺寸是否與版面宣告相符、
+以及該版面有無方框互相重疊。**有任何警告就以離開碼 1 結束**，不要當成填好了。
+
+⚠️ 那七家的座標尚未經真實表單驗證。第一次用某一家時，**務必以 144 DPI 以上渲染逐欄目視確認**，
+確認無誤後再把該家改註記為已驗證。
 
 相依套件：填表需 `pymupdf`，輸出驗證需 `pypdf`（`pip install pymupdf pypdf`）。
 
