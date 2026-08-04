@@ -78,18 +78,22 @@
 
 ---
 
-## 成本估算
+## 成本與產出方式
 
-| 項目 | 數量 | 單價 | 小計 |
-|---|---|---|---|
-| `nano_banana_pro` 畫面卡 | 8 | 2 | 16 |
-| `kling3_0_turbo` 5 秒動態 | 4 | 7.5 | 30 |
-| **合計** | | | **46 credits** |
+**這支不花 credits。** 字卡與影片都用 repo 內建的免費管線做：
 
-> 餘額 105.77 → 做完這支剩約 60，還夠做第二支。
-> ⚠️ 若改走 AI 說話頭（`seedance_2_0`）：**135 credits／15 秒**，這支要 4 段 = 540，**做不起**。
+```bash
+python3 tools/reels-cards/render.py outputs/cards/gemini-spark/cards.json \
+        -o outputs/cards/gemini-spark          # 8 張 1080x1920 PNG，約 20 秒
+python3 tools/reels-cards/stitch.py outputs/cards/gemini-spark/cards.json \
+        -o outputs/cards/gemini-spark/gemini-spark-45s.mp4   # 45 秒 MP4，約 80 秒
+```
 
----
+產出：`outputs/cards/gemini-spark/`（`card-01..08.png` ＋ `gemini-spark-45s.mp4`）
+
+> 為什麼不用 AI 生圖／生片：每天發一支的話，AI 生圖字卡 ＋ AI 動態要 **1380 credits／月**，
+> 超過 Plus 方案的 1000；AI 說話頭（`seedance_2_0`）更是 **16,200 credits／月**。
+> 完整比較見 `context/video-format-photo-explainer.md`。
 
 ## 剪輯註記
 

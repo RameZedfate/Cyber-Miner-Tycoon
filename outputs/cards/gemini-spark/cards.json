@@ -1,0 +1,72 @@
+{
+  "_comment": "Gemini Spark 8 張字卡。腳本見 outputs/scripts/gemini-spark.md。",
+  "_photo_note": "卡 01 與 08 要帶本人照：把去背 PNG 放進這個資料夾叫 adam.png，然後把下面兩個 photo 欄位取消註解（改成 \"photo\": \"adam.png\"）。",
+  "day": "Day X／100",
+  "fonts_dir": "../../../tools/reels-cards/fonts",
+  "cards": [
+    {
+      "id": "01",
+      "type": "hook",
+      "text": "扣了一年多\n才發現",
+      "accent": "一年多",
+      "_photo": "adam.png",
+      "duration": 4.0,
+      "motion": "push"
+    },
+    {
+      "id": "02",
+      "type": "statement",
+      "motif": "rows",
+      "duration": 4.0,
+      "motion": "left"
+    },
+    {
+      "id": "03",
+      "type": "statement",
+      "text": "Gemini Spark",
+      "motif": "core",
+      "duration": 6.0,
+      "motion": "pull"
+    },
+    {
+      "id": "04",
+      "type": "statement",
+      "text": "它有\n自己的電腦",
+      "motif": "racks",
+      "duration": 9.0,
+      "motion": "push"
+    },
+    {
+      "id": "05",
+      "type": "statement",
+      "text": "你睡覺，\n它在做事",
+      "motif": "phone-locked",
+      "duration": 7.0,
+      "motion": "push"
+    },
+    {
+      "id": "06",
+      "type": "statement",
+      "motif": "rows-circled",
+      "duration": 6.0,
+      "motion": "right"
+    },
+    {
+      "id": "07",
+      "type": "statement",
+      "text": "寄信給它，\n它就去辦",
+      "motif": "envelope-core",
+      "duration": 5.0,
+      "motion": "push"
+    },
+    {
+      "id": "08",
+      "type": "closing",
+      "text": "台灣還用不到",
+      "sub": "只有美國、月費 100 美金的方案才有",
+      "_photo": "adam.png",
+      "duration": 4.0,
+      "motion": "still"
+    }
+  ]
+}

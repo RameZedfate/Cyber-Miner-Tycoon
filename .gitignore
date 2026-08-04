@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# Reels 字卡工具：字型約 21MB，用 tools/reels-cards/fetch-fonts.sh 重抓
+tools/reels-cards/fonts/
