@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# build-zips.sh 的產出，跑一次就重建，不進版控
+exports/gemini-spark/dist/

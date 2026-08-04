@@ -46,6 +46,26 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-08-04：**把個人背景與整棵技能樹匯出成 Gemini Spark 版**（`exports/gemini-spark/`）。
+  - 🔑 **關鍵發現：Spark 的技能格式跟 Claude Code 幾乎一樣** —— 都是 `SKILL.md`
+    （frontmatter 放 `name` + `description`），可上傳 Markdown 或 ZIP（ZIP 可含 `scripts/`，
+    上限 100MB，名稱要全小寫連字號，不可夾帶 `.pyc` / `.DS_Store`）。所以是格式轉換，不是重寫。
+  - 產出：`01-個人化脈絡.md`（貼進 Gemini 設定的短版）、`02-完整背景檔.md`（長版）、
+    `03-技能樹地圖.md`（遷移判定 + 能力比較）、`skills/` 13 個技能、`build-zips.sh`（打包）。
+  - 新寫的兩個技能：`adam-brand-context`（品牌真相來源，其他技能都引用它）、
+    `daily-reels-ops`（**Spark 專屬**：排程追連載進度、每日提醒、週日批次、斷更補救）。
+  - `@script-writer` 子代理轉成技能 `reels-script-writer`；`@project-manager` 併進 `daily-reels-ops`
+    （Spark 原生連 Google 日曆，比原本那些未驗證的 MCP 工具名可靠）。
+  - ❌ **Spark 明確做不到的三件事**（不要被它唬過去）：
+    1. **理賠申請書產不出 PDF** —— 沒有空白表單、沒有填表引擎，只能給逐欄對照表讓人自己抄。
+       規則（不填事故時間地點／地址先問／簽名日期留空／交付即完整版）已完整移植。要真的產 PDF 回本機。
+    2. **自動發文** —— 沒有 IG／Threads 連接器（原本靠 Blotato MCP）。
+    3. **品牌視覺生圖** —— Gemini 內建生圖套不上模板 A／B 的色票，硬用會傷辨識度。
+  - ⚠️ **隱私取捨**：`insurance-drive-filing` 原版用 Windows 離線 OCR，資料不出本機；
+    Spark 版會讓客戶文件進 Google 雲端。方便換隱私，這個決定要使用者自己拿。
+  - ⚠️ **技能會有兩份且不會自動同步。** 規則的真相來源仍是這個 repo：
+    先改 `.claude/skills/`，再跑 `build-zips.sh` 重新上傳。
+
 - 2026-07-30：**理賠申請書填表功能真的做出來了**（第一次實案驗證成功）。
   - 新增填表引擎 `.claude/skills/insurance-claim-form-automation/scripts/claim_forms.py`，
     已驗證版面三家：**全球人壽 2026.03 版**、**三商美邦 CL106C**、**國泰人壽 303002 學團險專用 114.12 版**。

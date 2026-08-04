@@ -91,6 +91,15 @@ Codex 後來補的第二個技能，**這個才是「填申請書」**。支援 
 - ⚠️ **目前還不能真的產出 PDF**：repo 裡沒有空白表單、也沒有填表引擎，只有規則與一支結構驗證器。
   遇到實際案件要照 SKILL.md 第 15 行的規定——**明確告知使用者這個限制，不要假裝填得出來**。
 
+### `exports/gemini-spark/`（技能樹的 Gemini Spark 版）
+
+2026-08-04 匯出，把使用者背景 + 整棵技能樹轉成 Gemini Spark 吃得下的格式（Spark 的技能格式
+跟 Claude Code 幾乎一樣，都是 `SKILL.md`）。詳見 `exports/gemini-spark/README.md`。
+
+- ⚠️ **這是匯出品，不是真相來源。** 規則要改先改 `.claude/skills/`，
+  再跑 `build-zips.sh` 重新上傳到 Spark —— 兩邊不會自動同步。
+- ❌ Spark 做不到：理賠申請書產 PDF、自動發文、品牌視覺生圖。
+
 ## 使用方式
 
 - 直接描述需求，創意總監會自動判斷並委派給對應子代理
