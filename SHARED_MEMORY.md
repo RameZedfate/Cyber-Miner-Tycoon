@@ -46,6 +46,33 @@
 
 ## 📝 工作進度 / 重要決定（最新在最上面）
 
+- 2026-08-04：**新增第二種 Reels 格式「本人照解說片」，並確立影片製作一律走本地免費管線。**
+  - 用途：**沒有畫面可錄**的題目（國外未開放的工具、新功能發表、觀念說明）。
+    原本的「螢幕錄影不出鏡」公式前提是那個工具你打得開，像 Gemini Spark 只在美國開放就錄不到。
+  - ⭐ **使用者提出的關鍵質疑（已據此改架構）：「一天一個影片，成本很高欸」——他是對的。**
+    原本規劃用 Higgsfield 生圖生片，一支 46 credits，**每天一支 = 1380 credits／月**，
+    超過 Plus 方案的 1000，等於每月要再課 $49。已全部改掉。
+  - ✅ **長期規則：字卡、圖形、動態、串接一律用 repo 內的本地管線，零成本。**
+    Higgsfield 只留給「真的只有 AI 生得出來」的東西，而且**事前一定先 `get_cost: true` 問價**。
+  - 實測價（2026-08-04）：`nano_banana_pro` 9:16 = 2／張；`kling3_0_turbo` 5 秒 = 7.5／段；
+    `seedance_2_0` 15 秒 1080p = **135／段**（AI 說話頭一支 45 秒要 540，等於一個月 16,200，完全不可行）。
+  - 新工具（都在 `tools/reels-cards/`）：
+    - `render.py` — HTML/CSS ＋ 內建 Chromium 截圖產 1080×1920 字卡，8 張約 20 秒
+    - `stitch.py` — PIL 逐格算 Ken Burns 推鏡再餵 ffmpeg，45 秒片約 80 秒
+    - `fetch-fonts.sh` — 抓 Noto Sans TC（字型不進版控）
+  - ⚠️ **兩個踩過的坑，別再踩：**
+    1. `/opt/pw-browsers/ffmpeg-*/ffmpeg-linux` 是 Playwright 錄螢幕用的**精簡版**——
+       只有 VP8、沒有 libx264、沒有 zoompan、連 PNG 都讀不進去。要用 `pip install imageio-ffmpeg`。
+    2. **ffmpeg 的 `zoompan` 慢到不能用**（單張卡 5 分鐘以上，因為它每一格都重算一次縮放）。
+       改成 PIL 逐格裁切＋管線餵 raw frame 給 ffmpeg，快兩個數量級。
+  - ⚠️ **雲端容器抓不到 Higgsfield 的圖**：`d8j0ntlcm91z4.cloudfront.net` 被 proxy 政策擋（403），
+    生成的圖只能從 Higgsfield 網站自己下載。這也是本地管線更實際的原因之一。
+  - 首支成品：`outputs/cards/gemini-spark/`（8 張 PNG ＋ 45 秒 9:16 無聲 MP4），
+    腳本 `outputs/scripts/gemini-spark.md`，格式規格 `context/video-format-photo-explainer.md`。
+    ❗ **卡 1／卡 8 還缺本人照**，使用者要提供去背 PNG 才算完成。
+  - 📌 這個格式把「本人的臉」放回 Reels，順便解掉 `brand-style.md` 第 147-153 行
+    「不出鏡之後視覺錨點沒人接手」那個懸而未決的問題（臉只放開場與結尾）。
+
 - 2026-07-30：**理賠申請書填表功能真的做出來了**（第一次實案驗證成功）。
   - 新增填表引擎 `.claude/skills/insurance-claim-form-automation/scripts/claim_forms.py`，
     已驗證版面三家：**全球人壽 2026.03 版**、**三商美邦 CL106C**、**國泰人壽 303002 學團險專用 114.12 版**。
