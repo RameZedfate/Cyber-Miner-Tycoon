@@ -155,6 +155,22 @@ Before delivery:
 7. Confirm all prohibited signature, consent, sender, policy-number, and application-date fields remain blank.
 8. Run `scripts/validate_claim_output.py`.
 
+## Seven-insurer verified layout rules
+
+Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not position text by guessing from nearby labels. These rules are reusable and contain no customer data.
+
+| Insurer | Persistent writing rule |
+|---|---|
+| 新光 | Write identity and account one character per printed cell. Keep the mid-page accident date in its three date blanks. In the lower applicant block, fill identity, birth/nationality, mobile, and address on their own rows; keep the signature blank. |
+| 元大 | Check 個人險. Center the accident date as `民國年年/月/月/日/日` text inside the complete accident-date cell. |
+| 遠雄 | Keep name clear of its label. Write identity and account one character per printed cell. Check 同公司最新地址 and align work content and accident date to their own cells. |
+| 富邦 | Use the official 114.11 form. Write county/city and district as full names, then put road, lane, and house-number values before the form's printed units. |
+| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. |
+| 宏泰 | Start the identity value after the 身分證字號 label. Keep occupation and work content in separate lower cells. |
+| 保誠 | Center the top-left name inside its value cell. Put the accident-cause check inside the box immediately before 其他. |
+
+Render every completed first page at **144 DPI** or higher. Inspect the reported fields at enlarged scale, not only the whole-page thumbnail. Draw checkmarks as vector strokes so they do not disappear when the selected font lacks a check glyph.
+
 ## Drive delivery
 
 - Use only the approved claim-form parent folder.

@@ -1,4 +1,4 @@
 interface:
   display_name: "理賠申請書自動化"
-  short_description: "建立並驗證全球人壽與台灣人壽第一頁醫療理賠申請書草稿"
+  short_description: "建立、校正並驗證多家人壽第一頁理賠申請書草稿"
   default_prompt: "Use $insurance-claim-form-automation to prepare verified first-page-only claim drafts from the current case."

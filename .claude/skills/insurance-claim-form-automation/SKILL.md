@@ -1,11 +1,11 @@
 ---
 name: insurance-claim-form-automation
-description: 產生未簽名的理賠申請書草稿（全球人壽／三商美邦／國泰人壽學團險／台灣人壽）。當使用者提供案件資料與診斷證明書，要求填寫、修改、驗證或交付醫療或意外理賠申請書時使用。Use when the user asks to prepare, revise, validate, or deliver unsigned medical claim application PDFs from current-case details and a diagnosis document.
+description: 產生、校正與驗證未簽名的理賠申請書草稿，含新光、元大、遠雄、富邦、凱基、宏泰、保誠及既有支援表單。當使用者提供案件資料與診斷證明書，要求填寫、修改、驗證或交付醫療或意外理賠申請書時使用。Use when the user asks to prepare, revise, validate, or deliver unsigned medical claim application PDFs from current-case details and a diagnosis document.
 ---
 
 # Insurance Claim Form Automation
 
-Prepare private, unsigned claim-form drafts for 全球人壽 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
+Prepare private, unsigned claim-form drafts for the verified insurers listed in the contract, including 新光、元大、遠雄、富邦、凱基、宏泰、保誠、全球、三商美邦、國泰學團險 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
 
 已驗證版面（`scripts/claim_forms.py`，2026-07-30 實案跑過）：**全球人壽 2026.03 版**、
 **三商美邦 CL106C**、**國泰人壽 303002 學團險專用 114.12 版**。填表指令：
@@ -30,6 +30,8 @@ Do not describe a routine run as development work. If the required form version 
 
 Read [references/claim-contract.md](references/claim-contract.md) before filling or revising a form. Its intake rules, insurer matrix, blank-field rules, privacy limits, and delivery checks are mandatory.
 
+For 新光、元大、遠雄、富邦、凱基、宏泰、保誠, reuse the bundled tested layout adapter at `scripts/claim_overlay_layout.py`. Never reconstruct these coordinates from label positions. If an official form edition changes, enter development mode and replace the affected rectangles only after render-based verification.
+
 ## Routine workflow
 
 1. Accept only the current case's data. Normalize full-width characters and ROC dates, but preserve identity, phone, and account values as strings.
@@ -44,7 +46,7 @@ Read [references/claim-contract.md](references/claim-contract.md) before filling
    python "<skill-dir>\scripts\validate_claim_output.py" --expected-count <insurer-count> <pdf-files>
    ```
 
-8. Render page 1 to an image and visually confirm legibility, line wrapping, checkbox placement, bank digits, and that nothing crosses a form boundary.
+8. Render page 1 at 144 DPI or higher and visually confirm legibility, line wrapping, checkbox placement, bank digits, and that nothing crosses a form boundary.
 9. If Drive delivery is requested, create or use the approved customer folder, upload new page-1 PDFs only, download them again, and verify byte size plus SHA-256 before returning the customer-folder link.
 
 ## Non-negotiable form rules
