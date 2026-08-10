@@ -214,32 +214,47 @@ LAYOUTS: dict[str, dict] = {
         },
         "boxes": {"事故經過": (80.5, 157.0, 565.0, 181.0, CJK, 10.0)},
     },
+    # 國泰個險是兩頁一組：本文 300002 + 附件 300003（保險金給付方式）。
+    # 帳戶欄位全在附件上，本文頁沒有，只交本文等於沒填到領取方式。
+    # source_pages 是清單 → 座標第一個元素是「slot」（這組表單的第幾頁），
+    # 實際頁索引由 source_pages[slot] 決定，兩張空白表單可以是不同檔案。
     "國泰人壽個險": {
-        "edition": "300002 個險暨國壽在職福團專用 115.08 版",
-        "source_page": 2,
+        "edition": "300002 本文 + 300003 附件，個險暨國壽在職福團專用 115.08 版",
+        "source_pages": [2, 3],
         "checkboxes": {
-            "日間易晤_同居住地址": (125.1, 199.4, 136.1, 210.2),
-            "申請種類_非意外疾病": (122.6, 389.5, 133.0, 400.0),
-            "理賠類別_醫療實支F": (122.6, 409.9, 133.0, 420.4),
-            "理賠類別_醫療日額E": (246.0, 409.9, 256.4, 420.4),
+            "日間易晤_同居住地址": (0, 125.1, 199.4, 136.1, 210.2),
+            "申請種類_非意外疾病": (0, 122.6, 389.5, 133.0, 400.0),
+            "理賠類別_醫療實支F": (0, 122.6, 409.9, 133.0, 420.4),
+            "理賠類別_醫療日額E": (0, 246.0, 409.9, 256.4, 420.4),
+            "附件_領取方式_匯款": (1, 136.5, 90.0, 145.4, 98.9),
+            "附件_帳戶1_受益人本人帳戶": (1, 60.1, 111.6, 69.0, 120.5),
         },
-        "grids": {"身分證": (380.6, 566.4, 10, 112.0, 12)},
+        "grids": {
+            "身分證": (0, 380.6, 566.4, 10, 112.0, 12),
+            "附件_身分證": (1, 396.2, 563.5, 10, 153.8, 11),
+        },
         # 郵遞區號格是 12pt 的 □，字級超過 9 會壓到印刷框線
-        "cells": {"郵遞區號": ([124.6, 136.6, 148.6, 160.6], 174.5, 9)},
+        "cells": {"郵遞區號": (0, [124.6, 136.6, 148.6, 160.6], 174.5, 9)},
         "texts": {
-            "姓名": (130, 112.0, CJK, 12),
-            "事故日_年": (140, 142.0, ASC, 11),
-            "事故日_月": (196, 142.0, ASC, 11),
-            "事故日_日": (248, 142.0, ASC, 11),
-            "生日_年": (398, 142.0, ASC, 11),
-            "生日_月": (455, 142.0, ASC, 11),
-            "生日_日": (510, 142.0, ASC, 11),
-            "縣市": (165, 174.0, CJK, 11),
-            "鄉鎮區": (240, 174.0, CJK, 11),
-            "街道地址": (325, 174.0, CJK, 11),
-            "行動電話": (360, 279.0, ASC, 11),
+            "姓名": (0, 130, 112.0, CJK, 12),
+            "事故日_年": (0, 140, 142.0, ASC, 11),
+            "事故日_月": (0, 196, 142.0, ASC, 11),
+            "事故日_日": (0, 248, 142.0, ASC, 11),
+            "生日_年": (0, 398, 142.0, ASC, 11),
+            "生日_月": (0, 455, 142.0, ASC, 11),
+            "生日_日": (0, 510, 142.0, ASC, 11),
+            "縣市": (0, 165, 174.0, CJK, 11),
+            "鄉鎮區": (0, 240, 174.0, CJK, 11),
+            "街道地址": (0, 325, 174.0, CJK, 11),
+            "行動電話": (0, 360, 279.0, ASC, 11),
+            "附件_戶名": (1, 141, 153.8, CJK, 11),
+            "附件_帳號": (1, 402, 170.7, ASC, 11),
         },
-        "boxes": {"事故原因": (333.0, 356.5, 565.0, 381.5, CJK, 8.0)},
+        "boxes": {
+            "事故原因": (0, 333.0, 356.5, 565.0, 381.5, CJK, 8.0),
+            # 金融機構/分行欄只有約 57pt 寬，「○○銀行○○分行」八個字放不下 10 級，靠自動縮級
+            "附件_金融機構分行": (1, 136.5, 159.5, 192.5, 174.0, CJK, 10.0),
+        },
     },
 }
 
@@ -300,23 +315,49 @@ def put_wrapped(page: fitz.Page, spec, value: str) -> dict:
     return {"size": round(size, 1), "lines": len(lines), "overflow": overflow}
 
 
-def fill(src: Path, insurer: str, data: dict, out: Path, page: int | None = None) -> dict:
+def open_forms(forms) -> fitz.Document:
+    """把一份或多份空白表單串成單一文件，頁索引依傳入順序累加。
+
+    同一組表單的本文與附件常常是分開的兩個檔案（使用者分兩次掃），
+    串起來之後版面就能用同一套頁索引描述。
+    """
+    if isinstance(forms, (str, Path)):
+        forms = [forms]
+    doc = fitz.open()
+    for form in forms:
+        with fitz.open(form) as part:
+            doc.insert_pdf(part)
+    return doc
+
+
+def fill(src, insurer: str, data: dict, out: Path, pages=None) -> dict:
     """填寫並輸出單一保險公司的草稿，回傳逐欄處理結果供交付前核對。
 
-    版面有 source_page 時，座標不含頁索引（頁由 source_page 或 page 決定）；
-    舊版面座標第一個元素仍是頁索引，兩種格式都支援。
+    src 可以是單一檔案或檔案清單（多份空白表單會依序串接）。
+    版面有三種座標格式，都支援：
+      source_pages 清單 → 座標第一個元素是 slot，實際頁 = source_pages[slot]
+      source_page 單頁   → 座標不含頁索引
+      兩者皆無（舊版面） → 座標第一個元素就是頁索引
     """
     layout = LAYOUTS[insurer]
-    doc = fitz.open(src)
+    doc = open_forms(src)
+    slots = layout.get("source_pages")
     base = layout.get("source_page")
-    if base is not None and page is not None:
-        base = page
+    if pages is not None:
+        if slots is not None:
+            slots = list(pages)
+        elif base is not None:
+            base = pages if isinstance(pages, int) else pages[0]
     report: dict = {"insurer": insurer, "edition": layout.get("edition"),
                     "checks": [], "cells": {}, "boxes": {}, "warnings": []}
 
     def resolve(spec):
-        """回傳 (頁, 其餘座標)，吸收兩種版面格式的差異。"""
-        return (base, list(spec)) if base is not None else (spec[0], list(spec[1:]))
+        """回傳 (頁, 其餘座標)，吸收三種版面格式的差異。"""
+        if slots is not None:
+            return slots[spec[0]], list(spec[1:])
+        if base is not None:
+            return base, list(spec)
+        return spec[0], list(spec[1:])
 
     for name in data.get("checkboxes", []):
         page_no, box = resolve(layout["checkboxes"][name])
@@ -345,7 +386,7 @@ def fill(src: Path, insurer: str, data: dict, out: Path, page: int | None = None
             if result["overflow"]:
                 report["warnings"].append(f"{name}：縮到最小字級仍超出方框，請人工確認")
 
-    out_pages = layout.get("output_pages") or [base]
+    out_pages = slots if slots is not None else (layout.get("output_pages") or [base])
     result_doc = fitz.open()
     for page_no in out_pages:
         result_doc.insert_pdf(doc, from_page=page_no, to_page=page_no)
@@ -359,7 +400,8 @@ def fill(src: Path, insurer: str, data: dict, out: Path, page: int | None = None
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--form", required=True, type=Path)
+    ap.add_argument("--form", required=True, type=Path, action="append",
+                    help="空白表單 PDF，可重複指定；多份會依順序串接成同一組頁索引")
     ap.add_argument("--case", required=True, type=Path)
     ap.add_argument("--outdir", required=True, type=Path)
     args = ap.parse_args()
@@ -369,7 +411,7 @@ def main() -> None:
     warned = False
     for insurer, data in case["insurers"].items():
         out = args.outdir / f"{insurer}_理賠申請書_草稿.pdf"
-        report = fill(args.form, insurer, data, out, data.get("page"))
+        report = fill(args.form, insurer, data, out, data.get("pages", data.get("page")))
         print(json.dumps(report, ensure_ascii=False, indent=2))
         warned = warned or bool(report["warnings"])
     if warned:

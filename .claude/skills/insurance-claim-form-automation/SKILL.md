@@ -12,7 +12,7 @@ Prepare private, unsigned claim-form drafts for the verified insurers listed in 
 | 引擎 | 適用 | 座標形式 | 狀態 |
 |---|---|---|---|
 | `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，含頁索引 | 2026-07-30 實案驗證 |
-| `scripts/claim_forms.py` | 遠雄 11501、台灣人壽 CA03 2025.02、國泰人壽 300002 個險 115.08 | 單點座標 + `source_page` | 2026-08-10 實案驗證 |
+| `scripts/claim_forms.py` | 遠雄 11501、台灣人壽 CA03 2025.02、國泰人壽個險 300002+300003 115.08（2 頁） | 單點座標 + `source_page` / `source_pages` | 2026-08-10 實案驗證 |
 | `scripts/claim_overlay_fill.py` | 新光、元大、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
 
 ```bash
@@ -24,7 +24,17 @@ python "<skill-dir>/scripts/claim_overlay_fill.py" --form <空白表單.pdf> --i
 ```
 
 `claim_forms.py` 也會輸出逐欄報告（勾了哪些格、逐格欄位寫了幾格、敘述用了幾級字幾行），
-**有 warning 就以離開碼 1 結束**。案件 JSON 每家可加 `"page": N` 覆寫 `source_page`，
+**有 warning 就以離開碼 1 結束**。
+
+`--form` 可以重複指定，多份空白表單會依順序串成同一組頁索引，
+所以「本文與附件分成兩個檔案掃進來」不必先自己合併：
+
+```bash
+python "<skill-dir>/scripts/claim_forms.py" \
+  --form 本文.pdf --form 附件.pdf --case 案件.json --outdir 輸出
+```
+
+案件 JSON 每家可加 `"page": N`（單頁版面）或 `"pages": [N, M]`（多頁版面）覆寫預設頁索引，
 所以同一份版面在「單張表單 PDF」與「多張表單合併成一份的 PDF」都能用。
 
 ⚠️ `claim_overlay_layout.py` 的 `farglory` 版面經實測**對不上遠雄 11501 版**
