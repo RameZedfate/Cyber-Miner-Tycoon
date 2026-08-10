@@ -147,6 +147,100 @@ LAYOUTS: dict[str, dict] = {
             "附件_帳號": (3, 422, 169, ASC, 10),
         },
     },
+    # 以下三家為 2026-08-10 實案驗證，改用 source_page 格式：
+    # 座標不含頁索引，頁索引由 source_page 指定，可用 --page 覆寫，
+    # 因此同一份版面在「單張表單 PDF」與「多張合併 PDF」都能用。
+    "遠雄人壽": {
+        "edition": "CLA003 保險金申請書 11501 版",
+        "source_page": 0,
+        "checkboxes": {
+            "申請項目_醫療": (48.8, 133.7, 57.4, 142.3),
+            "事故種類_疾病": (119.4, 199.2, 128.0, 207.8),
+            "匯款至受益人帳戶": (154.5, 309.0, 163.1, 317.6),
+            "聯絡地址_同保單地址": (59.4, 670.0, 67.4, 677.9),
+        },
+        "grids": {"身分證": (351.9, 580.5, 10, 87.0, 11)},
+        # 遠雄帳號格是 14 格，但印刷本身不等寬（第 10、11 格一寬一窄），
+        # 所以用實測邊界逐格定位，不可改成等分。
+        "cells": {
+            "帳號": ([324.9, 343.0, 361.3, 379.5, 398.0, 416.2, 434.5, 452.7,
+                     470.9, 489.7, 512.6, 526.1, 544.4, 562.6, 580.5], 346.0, 10),
+        },
+        "texts": {
+            "姓名": (116, 94.5, CJK, 11),
+            "生日_年": (400, 101.5, ASC, 10),
+            "生日_月": (470, 101.5, ASC, 10),
+            "生日_日": (536, 101.5, ASC, 10),
+            "事故日_年": (114, 223.0, ASC, 10),
+            "事故日_月": (147, 223.0, ASC, 10),
+            "事故日_日": (175, 223.0, ASC, 10),
+            "戶名": (48, 346.0, CJK, 10),
+            "金融機構名稱": (145, 346.0, CJK, 10),
+            "分行名稱": (230, 346.0, CJK, 10),
+            "行動電話": (64, 653.0, ASC, 10),
+        },
+        # 事故原因欄只有一行高度（紅色說明字下方到框線），字級須壓在 9 以下
+        "boxes": {"事故經過": (47.0, 258.5, 578.0, 270.5, CJK, 9.0)},
+    },
+    "台灣人壽": {
+        "edition": "CA03 保險金申請書 2025.02 版",
+        "source_page": 1,
+        "checkboxes": {
+            "險別_個人險": (81.0, 42.8, 90.9, 52.3),
+            "申請項目_醫療": (81.0, 55.1, 90.9, 64.7),
+            "事故種類_非意外": (81.0, 111.0, 90.9, 120.5),
+            "關係_本人": (335.3, 282.0, 345.2, 291.5),
+            "通知書_保單地址寄送": (121.7, 463.0, 131.6, 472.6),
+        },
+        "grids": {},
+        # 銀行代號 3 格 ─ 分行代號 4 格 ─ 帳號 14 格，三段各自獨立
+        "cells": {
+            "銀行代號": ([49.7, 68.6, 87.6, 106.6], 399.5, 12),
+            "分行代號": ([125.5, 144.5, 163.6, 182.6, 201.6], 399.5, 12),
+            "帳號": ([220.6, 239.5, 258.7, 277.6, 296.6, 315.6, 334.5, 353.5,
+                     372.6, 391.6, 410.7, 429.7, 448.7, 467.6, 486.6], 399.5, 12),
+        },
+        "texts": {
+            "被保險人姓名": (81, 314.0, CJK, 11),
+            "身分證統一編號": (224, 314.0, ASC, 11),
+            "生日_年": (365, 314.0, ASC, 10),
+            "生日_月": (396, 314.0, ASC, 10),
+            "生日_日": (420, 314.0, ASC, 10),
+            "行動電話": (497, 314.0, ASC, 10),
+            "戶名": (87, 369.5, CJK, 11),
+            "受款人身分證": (167, 382.0, ASC, 11),
+            "金融機構名稱": (308, 382.0, CJK, 11),
+            "金融機構分行": (442, 382.0, CJK, 11),
+        },
+        "boxes": {"事故經過": (80.5, 157.0, 565.0, 181.0, CJK, 10.0)},
+    },
+    "國泰人壽個險": {
+        "edition": "300002 個險暨國壽在職福團專用 115.08 版",
+        "source_page": 2,
+        "checkboxes": {
+            "日間易晤_同居住地址": (125.1, 199.4, 136.1, 210.2),
+            "申請種類_非意外疾病": (122.6, 389.5, 133.0, 400.0),
+            "理賠類別_醫療實支F": (122.6, 409.9, 133.0, 420.4),
+            "理賠類別_醫療日額E": (246.0, 409.9, 256.4, 420.4),
+        },
+        "grids": {"身分證": (380.6, 566.4, 10, 112.0, 12)},
+        # 郵遞區號格是 12pt 的 □，字級超過 9 會壓到印刷框線
+        "cells": {"郵遞區號": ([124.6, 136.6, 148.6, 160.6], 174.5, 9)},
+        "texts": {
+            "姓名": (130, 112.0, CJK, 12),
+            "事故日_年": (140, 142.0, ASC, 11),
+            "事故日_月": (196, 142.0, ASC, 11),
+            "事故日_日": (248, 142.0, ASC, 11),
+            "生日_年": (398, 142.0, ASC, 11),
+            "生日_月": (455, 142.0, ASC, 11),
+            "生日_日": (510, 142.0, ASC, 11),
+            "縣市": (165, 174.0, CJK, 11),
+            "鄉鎮區": (240, 174.0, CJK, 11),
+            "街道地址": (325, 174.0, CJK, 11),
+            "行動電話": (360, 279.0, ASC, 11),
+        },
+        "boxes": {"事故原因": (333.0, 356.5, 565.0, 381.5, CJK, 8.0)},
+    },
 }
 
 
@@ -166,28 +260,101 @@ def put_grid(page: fitz.Page, x0, x1, n, y, size, value: str) -> None:
                          ch, fontname=ASC, fontsize=size, color=INK)
 
 
-def fill(src: Path, insurer: str, data: dict, out: Path) -> None:
+def put_cells(page: fitz.Page, edges, y, size, value: str) -> dict:
+    """逐格填寫，但格寬由實測邊界決定（印刷格線不一定等寬）。
+
+    edges 長度 = 格數 + 1。回傳寫了幾格，供交付前核對。
+    """
+    n = len(edges) - 1
+    for i, ch in enumerate(value[:n]):
+        cx = (edges[i] + edges[i + 1]) / 2
+        page.insert_text((cx - fitz.get_text_length(ch, ASC, size) / 2, y),
+                         ch, fontname=ASC, fontsize=size, color=INK)
+    return {"cells": n, "written": min(len(value), n), "truncated": len(value) > n}
+
+
+def put_wrapped(page: fitz.Page, spec, value: str) -> dict:
+    """把敘述放進方框：逐字斷行，放不下就降字級，仍放不下才回報溢出。
+
+    中文沒有空白可斷行，只能按字寬切；字級一律不高於版面宣告值。
+    """
+    x0, y0, x1, y1, font, size = spec
+    box_w, box_h = x1 - x0, y1 - y0
+    while size >= 5.5:
+        lines, cur = [], ""
+        for ch in value:
+            if fitz.get_text_length(cur + ch, font, size) > box_w and cur:
+                lines.append(cur)
+                cur = ch
+            else:
+                cur += ch
+        lines.append(cur)
+        if len(lines) * size * 1.18 <= box_h:
+            break
+        size -= 0.5
+    top = y0 + (box_h - len(lines) * size * 1.18) / 2 + size * 0.82
+    for i, line in enumerate(lines):
+        page.insert_text((x0, top + i * size * 1.18),
+                         line, fontname=font, fontsize=size, color=INK)
+    overflow = len(lines) * size * 1.18 > box_h + 0.5
+    return {"size": round(size, 1), "lines": len(lines), "overflow": overflow}
+
+
+def fill(src: Path, insurer: str, data: dict, out: Path, page: int | None = None) -> dict:
+    """填寫並輸出單一保險公司的草稿，回傳逐欄處理結果供交付前核對。
+
+    版面有 source_page 時，座標不含頁索引（頁由 source_page 或 page 決定）；
+    舊版面座標第一個元素仍是頁索引，兩種格式都支援。
+    """
     layout = LAYOUTS[insurer]
     doc = fitz.open(src)
+    base = layout.get("source_page")
+    if base is not None and page is not None:
+        base = page
+    report: dict = {"insurer": insurer, "edition": layout.get("edition"),
+                    "checks": [], "cells": {}, "boxes": {}, "warnings": []}
+
+    def resolve(spec):
+        """回傳 (頁, 其餘座標)，吸收兩種版面格式的差異。"""
+        return (base, list(spec)) if base is not None else (spec[0], list(spec[1:]))
 
     for name in data.get("checkboxes", []):
-        page_no, *box = layout["checkboxes"][name]
+        page_no, box = resolve(layout["checkboxes"][name])
         tick(doc[page_no], box)
+        report["checks"].append(name)
     for name, value in data.get("grids", {}).items():
         if value:
-            page_no, *spec = layout["grids"][name]
+            page_no, spec = resolve(layout["grids"][name])
             put_grid(doc[page_no], *spec, value)
+    for name, value in data.get("cells", {}).items():
+        if value:
+            page_no, spec = resolve(layout["cells"][name])
+            result = put_cells(doc[page_no], *spec, str(value))
+            report["cells"][name] = result
+            if result["truncated"]:
+                report["warnings"].append(f"{name}：值超過 {result['cells']} 格，已截斷")
     for name, value in data.get("texts", {}).items():
         if value:
-            page_no, x, y, font, size = layout["texts"][name]
+            page_no, (x, y, font, size) = resolve(layout["texts"][name])
             doc[page_no].insert_text((x, y), value, fontname=font, fontsize=size, color=INK)
+    for name, value in data.get("boxes", {}).items():
+        if value:
+            page_no, spec = resolve(layout["boxes"][name])
+            result = put_wrapped(doc[page_no], spec, value)
+            report["boxes"][name] = result
+            if result["overflow"]:
+                report["warnings"].append(f"{name}：縮到最小字級仍超出方框，請人工確認")
 
-    result = fitz.open()
-    for page_no in layout["output_pages"]:
-        result.insert_pdf(doc, from_page=page_no, to_page=page_no)
-    result.save(out, garbage=4, deflate=True)
-    result.close()
+    out_pages = layout.get("output_pages") or [base]
+    result_doc = fitz.open()
+    for page_no in out_pages:
+        result_doc.insert_pdf(doc, from_page=page_no, to_page=page_no)
+    result_doc.save(out, garbage=4, deflate=True)
+    result_doc.close()
     doc.close()
+    report["output"] = str(out)
+    report["pages"] = len(out_pages)
+    return report
 
 
 def main() -> None:
@@ -199,11 +366,14 @@ def main() -> None:
 
     case = json.loads(args.case.read_text(encoding="utf-8"))
     args.outdir.mkdir(parents=True, exist_ok=True)
+    warned = False
     for insurer, data in case["insurers"].items():
         out = args.outdir / f"{insurer}_理賠申請書_草稿.pdf"
-        fill(args.form, insurer, data, out)
-        pages = len(LAYOUTS[insurer]["output_pages"])
-        print(f"written: {out}  ({pages} 頁)")
+        report = fill(args.form, insurer, data, out, data.get("page"))
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        warned = warned or bool(report["warnings"])
+    if warned:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

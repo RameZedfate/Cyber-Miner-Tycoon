@@ -19,6 +19,18 @@ Added after a verified live run (2026-07-30), with layouts in `scripts/claim_for
 - 三商美邦人壽 保險金申請書 CL106C — 版面已驗證
 - 國泰人壽 理賠申請書 303002 學團險專用 114.12 版 — 版面已驗證
 
+Added after a second verified live run (2026-08-10), layouts also in `scripts/claim_forms.py`
+（新格式：座標不含頁索引，改由 `source_page` 指定，可用 `--page` 覆寫）：
+
+- 遠雄人壽 保險金申請書 CLA003 11501 版 — 版面已驗證
+- 台灣人壽 保險金申請書 CA03 2025.02 版 — 版面已驗證
+- 國泰人壽 理賠申請書 300002 個險暨國壽在職福團專用 115.08 版 — 版面已驗證
+
+⚠️ `scripts/claim_overlay_layout.py` 裡的 `farglory` 版面**不是 11501 版**，實測對不上
+（身分證逐格區起點差約 12pt，等於整排錯一格）。遠雄一律走 `claim_forms.py` 的
+「遠雄人壽」版面，不要用 overlay 的 `farglory`。這也再次證明 overlay 那七家在
+沒有真實表單驗證前都不能當成可用。
+
 Stop instead of guessing for death, disability, critical-illness lump sum, travel insurance, group insurance, OIU, a changed form edition, or any unsupported benefit.
 
 ## Standing user rules
@@ -86,13 +98,35 @@ Do not ask for a policy number or address.
 
 ## Disease narrative
 
+### 住院手術（原有句型）
+
 Use this sentence only when every fact is present and confirmed:
 
 ```text
 因{病名}，於{入院日}入院，於{手術日}行{手術名稱}，於{出院日}出院
 ```
 
-If one of those elements is missing, stop and request the missing fact. Do not create a different disease narrative unless the user explicitly teaches and approves it.
+### 門診手術（使用者於 2026-08-10 核可）
+
+住院型句型缺「入院日／出院日」時**不要硬套**。門診手術改用：
+
+```text
+因{病名}，於{手術日}至{科別}門診行{手術名稱}，於{回診日}回診拆線
+```
+
+沒有回診／拆線這一段時，只留前半句：
+
+```text
+因{病名}，於{手術日}至{科別}門診行{手術名稱}
+```
+
+日期一律用民國年（診斷證明書多為西元，要換算）。
+
+### 共同規則
+
+If one of those elements is missing, stop and request the missing fact. Do not create a
+different disease narrative unless the user explicitly teaches and approves it.
+純住院無手術、慢性病回診仍無句型，遇到要停下來問。
 
 Keep the narrative inside the accident/cause box. Adjust font size and line breaks without changing the facts.
 
@@ -113,8 +147,46 @@ Keep the narrative inside the accident/cause box. Adjust font size and line brea
 | 台灣人壽 | Check the first policy-address mailing option; do not check alternate mailing address; leave the address line blank. | Page 1 only |
 | 三商美邦 | 勾選「聯絡地址 ■同『收費地址』」，郵遞區號與地址欄全部留空。 | Page 1 only |
 | 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | **本文 303002 + 附件 303004 共 2 頁** |
+| 遠雄人壽 | 勾選「聯絡地址 ■同『事故人留存公司最新之地址(住所)』」，下方縣市／路街／號樓等格全部留空。 | Page 1 only |
+| 國泰人壽（個險 300002） | 居住地址標為 (＊) 必填且**無同保單地址選項**，須向使用者索取；日間易晤地址勾「同居住地址」，第二組郵遞區號與地址留空。 | Page 1 only |
 
 Fill only insurers named in the current case.
+
+### 遠雄人壽（11501 版）specifics
+
+- 申請項目勾「醫療」；事故種類勾「疾病」或「意外」。
+- 「工作內容」「就診身分（健保／自費）」屬意外續填區，**疾病案件留空**。
+- 事故日期只填年月日，**時、分留空**；報案日期、事故地點、處理單位、處理員警、連絡電話一律留空。
+- 給付方式勾「匯款至受益人帳戶」，戶名／金融機構名稱／分行名稱照填。
+- 帳號是 14 格，但**印刷格寬不等距**（第 10 格特寬、第 11 格特窄），
+  必須用 `cells` 的實測邊界逐格定位，改成等分會整排偏掉。
+- 事故經過欄只有約 12pt 高（紅色說明字下方到框線），字級壓在 9 以下才不會壓線。
+- 要保單位、團險件、E-mail、申請日期、簽名與所有用印區留空。
+
+### 台灣人壽（CA03 2025.02 版）specifics
+
+- 險別勾「個人險」、申請項目勾「醫療」、事故種類勾「非意外」。
+- 「被保險人與要保人關係」勾「本人」（除非使用者另外指明）。
+- 事故經過寫在「請詳述保險事故發生地點、原因、經過情形、事故時職業及工作內容」下方空白區；
+  疾病案件**不寫職業與工作內容**。報案日、處理單位、承辦警員、電話留空。
+- 領取方式四欄（戶名／受款人身分證統一編號／金融機構名稱／金融機構分行）都要填。
+- 帳號列是「銀行代號 3 格－分行代號 4 格－帳號 14 格」三段。
+  **銀行代號與分行代號未取得就整段留空**（長期規則 5），只填帳號那 14 格。
+- 通知書區勾第一個「以您留存本公司之保單地址郵寄紙本理賠給付通知書」，
+  不勾「郵寄其它地址」，下方縣市／路街地址列全部留空。
+- 保單號碼、團體保險、申請聲明、禁背支票整區、簽名、申請日期、送件人區留空。
+
+### 國泰人壽（個險 300002 115.08 版）specifics
+
+- ⚠️ 這張是**個險暨國壽在職福團專用**，和已驗證的 303002「學團險專用」是**不同表單**，
+  兩者不可互換。學團險那張的投保學校證明欄規定不適用於這張。
+- 申請種類勾「非意外事故(疾病)」或「意外事故」（僅可勾一項）。
+- 理賠類別依實際險種勾選；門診手術／實支實付案件勾「醫療實支(F)」，
+  無住院天數時**不要順手勾「醫療日額(E)」**。
+- ⚠️ **這張的第 1 頁沒有領取方式／帳戶欄位**，銀行帳號填不上去。
+  帳戶資料在另一份附件（表單編號 00016），使用者沒提供就據實說明，不要假裝填了。
+- 「事故經過」整區（事故地點／工作內容／相關經過／報案）標明僅意外案件填寫，疾病案件留空。
+- 申請日期雖標 (＊) 必填，仍依長期規則留空。無記名式保單區留空。
 
 ### 三商美邦 specifics
 

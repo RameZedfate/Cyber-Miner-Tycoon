@@ -11,16 +11,25 @@ Prepare private, unsigned claim-form drafts for the verified insurers listed in 
 
 | 引擎 | 適用 | 座標形式 | 狀態 |
 |---|---|---|---|
-| `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，可跨頁 | 2026-07-30 實案驗證 |
-| `scripts/claim_overlay_fill.py` | 新光、元大、遠雄、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
+| `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，含頁索引 | 2026-07-30 實案驗證 |
+| `scripts/claim_forms.py` | 遠雄 11501、台灣人壽 CA03 2025.02、國泰人壽 300002 個險 115.08 | 單點座標 + `source_page` | 2026-08-10 實案驗證 |
+| `scripts/claim_overlay_fill.py` | 新光、元大、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
 
 ```bash
-# 全球／三商／國泰
+# claim_forms.py 收錄的六家（一次可跑多家，讀同一份 case JSON）
 python "<skill-dir>/scripts/claim_forms.py" --form <空白表單.pdf> --case <案件.json> --outdir <輸出資料夾>
 
-# 其餘七家（一次一家）
+# overlay 那幾家（一次一家）
 python "<skill-dir>/scripts/claim_overlay_fill.py" --form <空白表單.pdf> --insurer <layout鍵值> --case <案件.json> --out <輸出.pdf>
 ```
+
+`claim_forms.py` 也會輸出逐欄報告（勾了哪些格、逐格欄位寫了幾格、敘述用了幾級字幾行），
+**有 warning 就以離開碼 1 結束**。案件 JSON 每家可加 `"page": N` 覆寫 `source_page`，
+所以同一份版面在「單張表單 PDF」與「多張表單合併成一份的 PDF」都能用。
+
+⚠️ `claim_overlay_layout.py` 的 `farglory` 版面經實測**對不上遠雄 11501 版**
+（身分證逐格區整排錯約一格）。遠雄請走 `claim_forms.py` 的「遠雄人壽」，
+不要用 overlay 的 `farglory`。
 
 `claim_overlay_fill.py` 會把值放進方框並**自動縮字級到放得下為止**，輸出 JSON 報告：
 每欄用了幾級字、幾行、是否溢出、逐格欄位寫了幾格、頁面尺寸是否與版面宣告相符、
