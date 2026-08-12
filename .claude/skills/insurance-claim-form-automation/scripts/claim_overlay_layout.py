@@ -134,7 +134,7 @@ LAYOUTS = {
         },
     },
     "kgi": {
-        "page": (540, 780),
+        "page": (595.32, 842.04),
         "fields": {
             "name": (61, 73, 170, 99),
             "identity": (225, 73, 335, 99),
@@ -218,6 +218,34 @@ LAYOUTS = {
             "sms_notification": (45, 357, 58, 370),
         },
         "segments": {},
+    },
+    "nanshan": {
+        "page": (595.32, 841.92),
+        "fields": {
+            "name": (120, 78, 210, 98),
+            "identity": (295, 78, 395, 98),
+            "birth_year": (430, 78, 470, 98),
+            "birth_month": (475, 78, 510, 98),
+            "birth_day": (515, 78, 550, 98),
+            "accident_year": (115, 217, 150, 237),
+            "accident_month": (155, 217, 185, 237),
+            "accident_day": (190, 217, 225, 237),
+            "occupation": (265, 217, 350, 237),
+            "narrative": (100, 276, 560, 315),
+            "account_holder": (165, 327, 320, 347),
+            "bank": (80, 387, 160, 407),
+            "branch": (200, 387, 300, 407),
+            "account": (230, 388, 545, 408),
+            "mobile": (275, 430, 400, 450),
+            "address": (60, 645, 560, 665),
+        },
+        "checks": {
+            "accident": (90, 217, 102, 230),
+            "bank_transfer": (90, 290, 102, 303),
+        },
+        "segments": {
+            "account": {"rect": (230, 388, 520, 408), "count": 16},
+        },
     },
 }
 
