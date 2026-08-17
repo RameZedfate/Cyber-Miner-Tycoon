@@ -12,7 +12,8 @@ Prepare private, unsigned claim-form drafts for the verified insurers listed in 
 | 引擎 | 適用 | 座標形式 | 狀態 |
 |---|---|---|---|
 | `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，可跨頁 | 2026-07-30 實案驗證 |
-| `scripts/claim_overlay_fill.py` | 新光、元大、遠雄、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
+| `scripts/claim_overlay_fill.py` | 南山 115/04/01、台灣人壽 CA03、元大 202506、遠雄 11501 | 讀 `claim_overlay_layout.py` 的矩形方框 | 2026-08-17 實案對版驗證 |
+| `scripts/claim_overlay_fill.py` | 新光、元大（舊版鍵值 `yuanta`）、遠雄（舊版鍵值 `farglory`）、富邦 114.11、凱基、宏泰、保誠 | 同上 | 座標由上游提供，**尚未用真實表單驗證** |
 
 ```bash
 # 全球／三商／國泰

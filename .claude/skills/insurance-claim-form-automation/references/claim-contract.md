@@ -19,6 +19,17 @@ Added after a verified live run (2026-07-30), with layouts in `scripts/claim_for
 - 三商美邦人壽 保險金申請書 CL106C — 版面已驗證
 - 國泰人壽 理賠申請書 303002 學團險專用 114.12 版 — 版面已驗證
 
+Added after a verified live run (2026-08-17), with rectangles in `scripts/claim_overlay_layout.py`
+（座標取自空白表單的向量格線與字元框，並以 200 DPI 逐欄目視確認）：
+
+- 南山人壽 保險金申請書 115/04/01 版 → `nanshan_115_04`
+- 台灣人壽 理賠申請書 CA03 → `taiwanlife_ca03`
+- 元大人壽 保險金申請書 202506 版 → `yuanta_202506`
+- 遠雄人壽 保險金申請書 11501 版 → `farglory_11501`
+
+⚠️ 這四組與舊有的 `yuanta`／`farglory` **不是同一版次**，座標差很多（舊版的
+`farglory` 出生日期、工作內容欄位落在別的格子裡）。依表單版次選鍵值，不要混用。
+
 Stop instead of guessing for death, disability, critical-illness lump sum, travel insurance, group insurance, OIU, a changed form edition, or any unsupported benefit.
 
 ## Standing user rules
@@ -96,6 +107,20 @@ If one of those elements is missing, stop and request the missing fact. Do not c
 
 Keep the narrative inside the accident/cause box. Adjust font size and line breaks without changing the facts.
 
+### 疾病敘述要寫進哪一欄（依表單而定）
+
+不是每張表單都有通用的經過欄。寫之前先看該欄的標示：
+
+| Insurer | 疾病案件的敘述 |
+|---|---|
+| 全球人壽 | 寫入「事故發生經過情形及全部就醫院所」。⚠️ 該欄實際可寫區只有 **x 21–276 × y 368–391**（右半是另一欄的印刷文字），約**兩行**。65 字的制式敘述在 size 8 單行會壓到右欄，必須自動縮字級斷行（實測 size 7.5、兩行剛好）。不要沿用固定單點座標單行寫入。 |
+| 遠雄人壽 | 寫入「事故原因及經過情形，請詳述於下」，整列可用，一行放得下。 |
+| 元大人壽 | 沒有通用經過欄。欄位是「診斷病名/事故經過」＋獨立的「手術名稱」，**疾病案件分開填**：診斷病名填病名，手術名稱填術式。該格寬僅 174pt，塞不下整句制式敘述。 |
+| 南山人壽 | 經過欄屬於「意外事故內容（申請意外理賠時填寫）」區塊，**疾病案件留空**，以免被誤判為意外件。 |
+| 台灣人壽 | 經過欄標示「（勾選意外者，請填寫）」，**疾病案件留空**。 |
+
+留空的兩家要在交付時說明是依表單標示留空，讓使用者自行決定要不要補寫。
+
 ## Accident narrative
 
 - Use the user's confirmed accident date.
@@ -109,12 +134,25 @@ Keep the narrative inside the accident/cause box. Adjust font size and line brea
 
 | Insurer | Address handling | Final output |
 |---|---|---|
+| 南山人壽 | **沒有「同保單地址」選項**，聯絡地址須向使用者索取後填寫（縣市／鄉鎮市區／村里／路街／段／巷／弄／號／樓，值寫在各印刷單位之前）。郵遞區號 3+3 格未取得就留空。 | Page 1 only |
+| 台灣人壽 | 勾「簡訊未發送成功：■以您留存本公司之保單地址郵寄紙本理賠給付通知書」，不勾「郵寄其它地址」，地址列留空。 | Page 1 only |
+| 元大人壽 | 「受益人住址」無同保單地址選項，須向使用者索取後以整串文字填入。 | Page 1 only |
+| 遠雄人壽 | 勾「聯絡地址：■同『事故人留存公司最新之地址(住所)』」，地址列留空。 | Page 1 only |
 | 全球人壽 | Check the option meaning the policyholder/insured address is the same as the policy address; leave the alternate-address line blank. | Page 1 only |
 | 台灣人壽 | Check the first policy-address mailing option; do not check alternate mailing address; leave the address line blank. | Page 1 only |
 | 三商美邦 | 勾選「聯絡地址 ■同『收費地址』」，郵遞區號與地址欄全部留空。 | Page 1 only |
 | 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | **本文 303002 + 附件 303004 共 2 頁** |
 
 Fill only insurers named in the current case.
+
+### 帳號格數限制
+
+南山（`account` 14 格）、台灣人壽（14 格）、遠雄（14 格）的帳號是逐格方框，**超過 14 碼就放不下**。
+全球與元大的帳號是底線自由文字欄，長度不限。
+
+若使用者提供的帳號超過該表單的格數：**不要截斷、不要硬塞**，把該欄留空並向使用者確認正確碼數，
+同一個帳號在自由文字欄可以照填。逐格欄的銀行代號（3 格）與分行代號（4 格）未取得就整組留空，
+不要只填銀行代號。
 
 ### 三商美邦 specifics
 
