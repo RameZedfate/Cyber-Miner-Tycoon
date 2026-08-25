@@ -72,7 +72,8 @@ For 新光、元大、遠雄、富邦、凱基、南山、宏泰、保誠, reuse
 - Disease: leave accident date, time, and location blank. Use only supported diagnosis, admission, surgery, and discharge facts. Never invent a missing fact.
 - Accident: use the user-confirmed accident date. If the user asks to derive it from the diagnosis document, use the earliest confirmed encounter related to that accident. Leave time and location blank.
 - For an accident, require occupation and the user's 事故經過. Preserve the facts exactly; only adjust punctuation and line wrapping. Do not append a diagnosis or inferred cause.
-- Keep signatures, stamps, medical-consent signatures, sender fields, and application date blank.
+- Keep signatures, stamps, medical-consent signatures, and sender fields blank.
+- Fill 申請日期／填寫日期 with today's date in the ROC calendar (standing user rule since 2026-08-25) whenever the layout has coordinates for it; otherwise leave it blank and say so in the delivery note.
 - 不自動簽名、蓋章或送件。
 
 ## Privacy boundary

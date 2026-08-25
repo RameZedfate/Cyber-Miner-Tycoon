@@ -42,6 +42,11 @@ These override the generic defaults and apply to every future run until the user
 6. **交付＝填好的申請書草稿本身，就是完整版。** 不要附「應附文件清單」、送件流程提醒、
    用印提醒或其他待辦事項。使用者是保險實務工作者，**業界怎麼送件由他決定**，
    AI 不是流程指導者。除非使用者主動問，否則只交付檔案並說明填了什麼、依規則留空了什麼。
+7. **申請日期／填寫日期一律填當天日期（民國年），不留空**（2026-08-25 起，使用者明確要求）。
+   換算方式：西元年減 1911 為民國年。此欄與簽名／蓋章／同意書不同，**不算簽署行為**，
+   所以不受「簽章區留空」規則限制。全球人壽、凱基人壽、南山人壽已加上此欄座標並驗證；
+   其餘保司若尚未有座標，先留空並在交付說明中提到缺這一項，不要用其他座標硬塞，
+   等實際處理該保司時再依 development mode 補上並驗證。
 
 ## Minimum intake
 
@@ -86,7 +91,7 @@ Do not ask for a policy number or address.
 - Signatures and stamps blank
 - Medical-consent signature blank
 - Sender and agent fields blank
-- Application date blank
+- Application date filled with the current date in the ROC calendar (see Standing user rule 7); left blank only when the layout has no coordinates for it yet
 - Final deliverable contains page 1 only
 
 ## Disease narrative

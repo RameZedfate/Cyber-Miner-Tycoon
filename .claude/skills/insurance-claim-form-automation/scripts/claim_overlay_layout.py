@@ -151,6 +151,9 @@ LAYOUTS = {
             "legal_rep_identity": (461, 670, 536, 679),
             "address": (290, 696, 537, 718),
             "mobile": (398, 722, 537, 731),
+            "application_year": (265, 760, 330, 769),
+            "application_month": (344, 760, 407, 769),
+            "application_day": (421, 760, 484, 769),
         },
         "checks": {
             "personal_insurance": (103.8, 88.8, 111.8, 96.8),
@@ -211,6 +214,9 @@ LAYOUTS = {
             "account_holder": (86, 230, 175, 242),
             "bank": (406, 232, 452, 243),
             "narrative": (110, 492, 571, 503.5),
+            "application_year": (235.7, 768.0, 275.6, 778.7),
+            "application_month": (283.7, 768.0, 315.6, 778.7),
+            "application_day": (323.6, 768.0, 359.6, 778.7),
         },
         "checks": {
             "personal_insurance": (98.8, 66.1, 106.4, 75.1),
