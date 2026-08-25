@@ -1,18 +1,18 @@
 ---
 name: insurance-claim-form-automation
-description: 產生、校正與驗證未簽名的理賠申請書草稿，含新光、元大、遠雄、富邦、凱基、宏泰、保誠及既有支援表單。當使用者提供案件資料與診斷證明書，要求填寫、修改、驗證或交付醫療或意外理賠申請書時使用。Use when the user asks to prepare, revise, validate, or deliver unsigned medical claim application PDFs from current-case details and a diagnosis document.
+description: 產生、校正與驗證未簽名的理賠申請書草稿，含新光、元大、遠雄、富邦、凱基、宏泰、保誠、南山及既有支援表單。當使用者提供案件資料與診斷證明書，要求填寫、修改、驗證或交付醫療或意外理賠申請書時使用。Use when the user asks to prepare, revise, validate, or deliver unsigned medical claim application PDFs from current-case details and a diagnosis document.
 ---
 
 # Insurance Claim Form Automation
 
-Prepare private, unsigned claim-form drafts for the verified insurers listed in the contract, including 新光、元大、遠雄、富邦、凱基、宏泰、保誠、全球、三商美邦、國泰學團險 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
+Prepare private, unsigned claim-form drafts for the verified insurers listed in the contract, including 新光、元大、遠雄、富邦、凱基、宏泰、保誠、南山、全球、三商美邦、國泰學團險 and 台灣人壽. Treat every output as a draft for human review; never submit a claim.
 
 ## 兩個填表引擎，依保險公司選用
 
 | 引擎 | 適用 | 座標形式 | 狀態 |
 |---|---|---|---|
 | `scripts/claim_forms.py` | 全球人壽 2026.03、三商美邦 CL106C、國泰人壽 303002/303004 學團險 114.12 | 單點座標，可跨頁 | 2026-07-30 實案驗證 |
-| `scripts/claim_overlay_fill.py` | 新光、元大、遠雄、富邦 114.11、凱基、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 座標由上游提供，**尚未用真實表單驗證** |
+| `scripts/claim_overlay_fill.py` | 新光、元大、遠雄、富邦 114.11、凱基 1040014(11507版)、南山 115/04/01(LD03)、宏泰、保誠 | 讀 `claim_overlay_layout.py` 的矩形方框 | 凱基、南山已 144 DPI 實案渲染驗證（見下表）；新光、元大、遠雄、富邦、宏泰、保誠座標尚未用真實表單驗證 |
 
 ```bash
 # 全球／三商／國泰
@@ -26,8 +26,8 @@ python "<skill-dir>/scripts/claim_overlay_fill.py" --form <空白表單.pdf> --i
 每欄用了幾級字、幾行、是否溢出、逐格欄位寫了幾格、頁面尺寸是否與版面宣告相符、
 以及該版面有無方框互相重疊。**有任何警告就以離開碼 1 結束**，不要當成填好了。
 
-⚠️ 那七家的座標尚未經真實表單驗證。第一次用某一家時，**務必以 144 DPI 以上渲染逐欄目視確認**，
-確認無誤後再把該家改註記為已驗證。
+⚠️ 除凱基（1040014 11507版）與南山（115/04/01 LD03，2026-08-25 實案驗證）外，其餘座標尚未經真實表單驗證。
+第一次用某一家或某一版次時，**務必以 144 DPI 以上渲染逐欄目視確認**，確認無誤後再把該家改註記為已驗證。
 
 相依套件：填表需 `pymupdf`，輸出驗證需 `pypdf`（`pip install pymupdf pypdf`）。
 
@@ -45,7 +45,7 @@ Do not describe a routine run as development work. If the required form version 
 
 Read [references/claim-contract.md](references/claim-contract.md) before filling or revising a form. Its intake rules, insurer matrix, blank-field rules, privacy limits, and delivery checks are mandatory.
 
-For 新光、元大、遠雄、富邦、凱基、宏泰、保誠, reuse the bundled tested layout adapter at `scripts/claim_overlay_layout.py`. Never reconstruct these coordinates from label positions. If an official form edition changes, enter development mode and replace the affected rectangles only after render-based verification.
+For 新光、元大、遠雄、富邦、凱基、南山、宏泰、保誠, reuse the bundled tested layout adapter at `scripts/claim_overlay_layout.py`. Never reconstruct these coordinates from label positions. If an official form edition changes, enter development mode and replace the affected rectangles only after render-based verification.
 
 ## Routine workflow
 

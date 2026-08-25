@@ -19,6 +19,11 @@ Added after a verified live run (2026-07-30), with layouts in `scripts/claim_for
 - 三商美邦人壽 保險金申請書 CL106C — 版面已驗證
 - 國泰人壽 理賠申請書 303002 學團險專用 114.12 版 — 版面已驗證
 
+Added after a verified live run (2026-08-25), with layouts in `scripts/claim_overlay_layout.py`:
+
+- 凱基人壽 理賠申請書 1040014(11507版) — 座標已重新解析並 144 DPI 渲染驗證（取代原本未驗證、頁面尺寸不符的座標）
+- 南山人壽 保險金申請書 115/04/01(LD03) — 全新支援，座標已 144 DPI 渲染驗證
+
 Stop instead of guessing for death, disability, critical-illness lump sum, travel insurance, group insurance, OIU, a changed form edition, or any unsupported benefit.
 
 ## Standing user rules
@@ -113,6 +118,8 @@ Keep the narrative inside the accident/cause box. Adjust font size and line brea
 | 台灣人壽 | Check the first policy-address mailing option; do not check alternate mailing address; leave the address line blank. | Page 1 only |
 | 三商美邦 | 勾選「聯絡地址 ■同『收費地址』」，郵遞區號與地址欄全部留空。 | Page 1 only |
 | 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | **本文 303002 + 附件 303004 共 2 頁** |
+| 凱基人壽 | 表單無「同保單地址」選項，「理賠聯絡地址」為單行填寫（郵遞區號留空，地址整段填入）；受益人/事故人與法定代理人的簽章區身分證字號都要填，簽名留空。 | Page 1 only |
+| 南山人壽 | 表單無「同保單地址」選項，「聯絡地址」為縣市／鄉鎮市區／村里／路街／段／巷／弄／號／樓／之逐格填寫（郵遞區號留空）；表單沒有法定代理人身分證字號欄位可填。 | Page 1 only |
 
 Fill only insurers named in the current case.
 
@@ -155,7 +162,7 @@ Before delivery:
 7. Confirm all prohibited signature, consent, sender, policy-number, and application-date fields remain blank.
 8. Run `scripts/validate_claim_output.py`.
 
-## Seven-insurer verified layout rules
+## Overlay-layout insurer writing rules
 
 Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not position text by guessing from nearby labels. These rules are reusable and contain no customer data.
 
@@ -165,7 +172,8 @@ Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not
 | 元大 | Check 個人險. Center the accident date as `民國年年/月/月/日/日` text inside the complete accident-date cell. |
 | 遠雄 | Keep name clear of its label. Write identity and account one character per printed cell. Check 同公司最新地址 and align work content and accident date to their own cells. |
 | 富邦 | Use the official 114.11 form. Write county/city and district as full names, then put road, lane, and house-number values before the form's printed units. |
-| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. |
+| 凱基 | 1040014(11507版)，144 DPI 渲染已驗證。Name/identity/birth sit in the top ID row's three value cells; narrative goes in the tall 事故經過說明 box (also used for the disease sentence — this form has no separate illness box); fill the lower 受益人/事故人 and 法定代理人 identity numbers while leaving both signatures blank; account is a 14-cell grid; address is a single free-text line after 理賠聯絡地址 (zip boxes left blank). |
+| 南山 | 115/04/01(LD03)，144 DPI 渲染已驗證。Address is a comb of 縣市／鄉鎮市區／村里／路街／段／巷／弄／號／樓／之 single-line cells (郵遞區號 left blank); 路街 value needs the widened box that also covers the unused 段 cell. Bank name is written directly in the gap after the 銀行／合作社／農會 checkbox (there is no separate 分行 name field — only 通匯代碼 grids, left blank when not provided). The only narrative field is 意外事故內容's box, labelled for accident claims but reused for the disease sentence since the form has no other free-text field. This form has no legal-representative identity field to fill. |
 | 宏泰 | Start the identity value after the 身分證字號 label. Keep occupation and work content in separate lower cells. |
 | 保誠 | Center the top-left name inside its value cell. Put the accident-cause check inside the box immediately before 其他. |
 
@@ -188,8 +196,8 @@ Render every completed first page at **144 DPI** or higher. Inspect the reported
 （accident_year／accident_month、bank／beneficiary_identity），新光有兩組（申請人區三列上下各壓 4pt）。**
 這幾欄輸出後務必放大確認。
 
-⚠️ 上表七家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
-144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
+⚠️ 上表除**凱基（1040014 11507版）與南山（115/04/01 LD03，2026-08-25 已驗證）外**，其餘座標**尚未經真實空白表單驗證**。
+第一次處理某一家或某一版次時視為 development mode：144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
 
 ## Drive delivery
 
