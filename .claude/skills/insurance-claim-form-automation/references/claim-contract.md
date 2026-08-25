@@ -19,6 +19,18 @@ Added after a verified live run (2026-07-30), with layouts in `scripts/claim_for
 - 三商美邦人壽 保險金申請書 CL106C — 版面已驗證
 - 國泰人壽 理賠申請書 303002 學團險專用 114.12 版 — 版面已驗證
 
+⚠️ 「台灣人壽 general medical claim」在上面被列為「初版即支援」，但初版其實**沒有任何一個填表引擎
+含台灣人壽的座標**——`claim_forms.py` 只認全球／三商美邦／國泰，七家共用的
+`claim_overlay_layout.py` 當時也沒有台灣人壽。也就是說文件講「支援」，程式碼卻填不出來，
+遇到實案才發現這個落差。已於 2026-08-25 補上（見下方），**日後新增任何保險公司，都要先去
+程式碼裡確認真的有對應的 LAYOUTS/座標項目，不能只看這份文件的支援清單就當作可以填。**
+
+Added after a verified live run (2026-08-25), with layouts in `scripts/claim_overlay_layout.py`:
+
+- 凱基人壽 理賠申請書 1040014(11507版) — 版面重新量測並修正（舊座標宣告頁面 540×780，
+  實際表單 595.2×841.92，整組偏移，已對照真實表單重量）
+- 台灣人壽 保險金申請書 2025.02 版 — 新增版面（初版文件雖列為支援，實際無填表引擎，此次補上）
+
 Stop instead of guessing for death, disability, critical-illness lump sum, travel insurance, group insurance, OIU, a changed form edition, or any unsupported benefit.
 
 ## Standing user rules
@@ -155,7 +167,7 @@ Before delivery:
 7. Confirm all prohibited signature, consent, sender, policy-number, and application-date fields remain blank.
 8. Run `scripts/validate_claim_output.py`.
 
-## Seven-insurer verified layout rules
+## Eight-insurer verified layout rules
 
 Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not position text by guessing from nearby labels. These rules are reusable and contain no customer data.
 
@@ -165,11 +177,21 @@ Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not
 | 元大 | Check 個人險. Center the accident date as `民國年年/月/月/日/日` text inside the complete accident-date cell. |
 | 遠雄 | Keep name clear of its label. Write identity and account one character per printed cell. Check 同公司最新地址 and align work content and accident date to their own cells. |
 | 富邦 | Use the official 114.11 form. Write county/city and district as full names, then put road, lane, and house-number values before the form's printed units. |
-| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. |
+| 凱基 | 官方版次 1040014(11507版)，實際頁面 595.2×841.92（早期版面誤宣告 540×780，已修正）。戶名／銀行／分行都寫在標籤下方的同一欄內，14 碼帳號逐格填。這張表單**沒有獨立的受款人身分證欄位**——底部「受益人/事故人 簽章：___身分證字號：___」是身分證字號跟簽名綁在同一行，見下方「受款人身分證只在表單有獨立方框時才填」規則，故不填。理賠聯絡地址也沒有「同保單地址」可勾，需要地址時要先問使用者。 |
 | 宏泰 | Start the identity value after the 身分證字號 label. Keep occupation and work content in separate lower cells. |
 | 保誠 | Center the top-left name inside its value cell. Put the accident-cause check inside the box immediately before 其他. |
+| 台灣人壽 | 官方版次 2025.02。出生日期／事故發生日的年月日是無框行內文字（不是印刷方格），必須用真實字元座標（rawdict char bbox）量測「：」與「年/月/日」的準確位置，不能用整段文字的平均字寬估算，否則數字會貼著前一個字或標籤。事故欄要在同一個方框內同時寫「職業＋事故經過」（此表沒有獨立的事故時職業欄），內容欄左邊界要對齊到內容欄的印刷起點，不可誤用左側直式列標籤「事故／種類」的欄寬。銀行代號／分行代號（□□□－□□□□－...）沒有取得時留空，只填帳號 14 碼。通知書地址勾「以您留存本公司之保單地址」那一格，不勾「郵寄其它地址」。 |
 
 Render every completed first page at **144 DPI** or higher. Inspect the reported fields at enlarged scale, not only the whole-page thumbnail. Draw checkmarks as vector strokes so they do not disappear when the selected font lacks a check glyph.
+
+### 受款人身分證只在表單有獨立方框時才填
+
+不是每家都有「受款人身分證統一編號」這種獨立欄位。新光、元大、宏泰、台灣人壽的表單上，這是一個
+跟簽名分開、有自己方框（或自己一整欄）的欄位，正常填。但像凱基，表單上唯一出現在底部的身分證字號
+是跟「簽章：」印在同一行、緊接在空白簽名之後——那是簽章區的一部分，不是獨立的收款人身分資料欄。
+依「簽章、蓋章一律留空」的原則，**這種跟空白簽名綁在同一行的身分證字號也留空**，除非它明確標示為
+法定代理人欄位（見下方標準規則 4，法定代理人的身分證字號與生日仍要填）。判斷方式：先看該欄位是否
+在簽名格線之外自成一格；在同一行、同一格內緊跟著簽名空格出現的，一律不填。
 
 ### 寫入方式
 
@@ -188,8 +210,23 @@ Render every completed first page at **144 DPI** or higher. Inspect the reported
 （accident_year／accident_month、bank／beneficiary_identity），新光有兩組（申請人區三列上下各壓 4pt）。**
 這幾欄輸出後務必放大確認。
 
-⚠️ 上表七家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
-144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
+⚠️ **警告是必要條件，不是充分條件**：`report["warnings"]` 是空的只代表「值沒有超出方框」，
+不代表「排版好看」。台灣人壽的出生年月日一開始就是這樣漏掉的——每個字都乖乖待在自己的方框裡，
+exit code 是 0，但方框本身量得太靠近印刷標籤，肉眼看起來像是數字黏在「出生日期」後面。凡是
+表單用行內文字而非印刷方格畫出的空格（沒有格線可以當方框邊界），量座標時：
+1. 用 `page.search_for()` 或 `page.get_text("rawdict")` 的逐字元座標去對到「：」「年」「月」「日」
+   這類錨點字元的精確邊界，不要用整段文字的 bbox 除以字數去估平均字寬（中英文、全形標點混排時
+   字寬差很多，會系統性算錯，這正是台灣人壽事故發生日一開始被算錯的原因）。
+2. 量出邊界後，值的起點要離標籤文字至少留 2–4pt 視覺間距，不要貼著量出的邊界寫，否則技術上「在框內」
+   但看起來會像跑出格子或疊字。
+3. 填完一定要用 `page.get_pixmap(matrix=fitz.Matrix(5,5), clip=...)` 把該欄裁切放大檢查，
+   不能只看整頁縮圖。
+
+⚠️ 新光、元大、遠雄、富邦、宏泰、保誠這六家的座標**尚未經真實空白表單驗證**（凱基、台灣人壽已於
+2026-08-25 完成）。第一次處理某一家時視為 development mode：對照真實空白表單逐格量測、
+144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證——不要只因為 `claim_overlay_layout.py`
+裡已經有座標就當作可信；凱基的舊座標就是這樣被沿用下來的，宣告頁面 540×780，實際表單是
+595.2×841.92，整組座標對到錯的表單版次，直到這次實案才發現。
 
 ## Drive delivery
 
