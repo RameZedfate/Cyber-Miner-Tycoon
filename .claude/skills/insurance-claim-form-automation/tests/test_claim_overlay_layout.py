@@ -27,7 +27,7 @@ class ClaimOverlayLayoutTests(unittest.TestCase):
     def test_reported_misaligned_targets_have_explicit_boxes(self):
         self.assertEqual((518, 75, 530, 87), get_layout("yuanta")["checks"]["personal_insurance"])
         self.assertEqual((55, 665, 70, 680), get_layout("farglory")["checks"]["same_policy_address"])
-        self.assertEqual((420, 588, 520, 608), get_layout("kgi")["fields"]["beneficiary_identity"])
+        self.assertEqual((291, 701.5, 536, 714), get_layout("kgi")["fields"]["address"])
         self.assertEqual((92, 330, 190, 350), get_layout("hontai")["fields"]["occupation"])
         self.assertEqual("114.11", get_layout("fubon_114_11")["edition"])
 
@@ -49,8 +49,9 @@ class ClaimOverlayLayoutTests(unittest.TestCase):
 
     def test_latest_reported_alignment_regressions_are_fixed(self):
         kgi = get_layout("kgi")
-        self.assertEqual((95, 257, 268, 281), kgi["fields"]["account_holder"])
-        self.assertEqual((225, 171, 300, 191), kgi["fields"]["occupation"])
+        self.assertEqual((121, 293, 293, 313), kgi["fields"]["account_holder"])
+        self.assertEqual((246, 206, 325, 218), kgi["fields"]["occupation"])
+        self.assertEqual((595.2, 841.92), kgi["page"])
 
         yuanta = get_layout("yuanta")
         self.assertEqual("roc_text_centered", yuanta["formats"]["accident_date"])

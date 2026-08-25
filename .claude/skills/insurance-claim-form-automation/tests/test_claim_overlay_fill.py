@@ -38,11 +38,16 @@ def blank_form(path: Path, size) -> None:
     doc.close()
 
 
-# 依各版面 formats 規定必須符合特定寫法的欄位（虛構值）
+# 依各版面 formats 規定必須符合特定寫法的欄位（虛構值）；
+# 凱基意外事故的年/月/日空格是表單原生的窄欄（僅容 2-3 位數字），
+# 真實內容一律是 ROC 日期數字，不會是「測試值」這種全形字，故給數字樣本。
 FORMAT_SAFE_VALUES = {
     "address_city": "高雄市",
     "address_district": "小港區",
     "address_number": "79",
+    "accident_year": "115",
+    "accident_month": "05",
+    "accident_day": "26",
 }
 
 
