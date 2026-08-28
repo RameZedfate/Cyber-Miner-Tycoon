@@ -46,14 +46,28 @@ FORMAT_SAFE_VALUES = {
 }
 
 
+def sample_value_for(name: str) -> str:
+    """年/月/日欄位在真實表單上一律是窄格 ASCII 數字，不會塞中文字。
+
+    有些保險公司的月、日格只容得下兩位數字（例如兩個「/」中間那格），
+    用「測試值」這種三個中文字的通用假值去撐爆它是測試資料不寫實，不是版面錯。
+    """
+    if name in FORMAT_SAFE_VALUES:
+        return FORMAT_SAFE_VALUES[name]
+    if name.endswith("_year"):
+        return "115"
+    if name.endswith("_month") or name.endswith("_day"):
+        return "07"
+    return "測試值"
+
+
 def sample_case(insurer: str) -> dict:
     layout = get_layout(insurer)
     return {
         "checks": list(layout["checks"]),
         "segments": {name: fake_cells(config["count"])
                      for name, config in layout["segments"].items()},
-        "fields": {name: FORMAT_SAFE_VALUES.get(name, "測試值")
-                   for name in layout["fields"]},
+        "fields": {name: sample_value_for(name) for name in layout["fields"]},
     }
 
 

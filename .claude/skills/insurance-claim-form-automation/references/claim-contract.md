@@ -165,7 +165,7 @@ Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not
 | 元大 | Check 個人險. Center the accident date as `民國年年/月/月/日/日` text inside the complete accident-date cell. |
 | 遠雄 | Keep name clear of its label. Write identity and account one character per printed cell. Check 同公司最新地址 and align work content and accident date to their own cells. |
 | 富邦 | Use the official 114.11 form. Write county/city and district as full names, then put road, lane, and house-number values before the form's printed units. |
-| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. |
+| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. 版面已對照真實表單 1040014(11507版) 驗證。 |
 | 宏泰 | Start the identity value after the 身分證字號 label. Keep occupation and work content in separate lower cells. |
 | 保誠 | Center the top-left name inside its value cell. Put the accident-cause check inside the box immediately before 其他. |
 
@@ -188,8 +188,12 @@ Render every completed first page at **144 DPI** or higher. Inspect the reported
 （accident_year／accident_month、bank／beneficiary_identity），新光有兩組（申請人區三列上下各壓 4pt）。**
 這幾欄輸出後務必放大確認。
 
-⚠️ 上表七家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
+⚠️ 上表除凱基外六家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
 144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
+
+凱基已於 2026-08-28 對照真實表單（1040014，11507 版）逐欄核對並修正座標（原座標對應的頁面尺寸
+540×780pt，與此版實際的 595.2×841.92pt 不符，導致所有欄位落錯位）。若日後遇到不同版次（頁首右下角
+版本號不是 1040014(11507版)），仍須視為 development mode 重新驗證，不可沿用現有座標。
 
 ## Drive delivery
 
