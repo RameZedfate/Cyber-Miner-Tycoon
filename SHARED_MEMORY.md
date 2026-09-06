@@ -44,7 +44,38 @@
 - 三邊真正的共用橋樑 = **GitHub repo `RameZedfate/Cyber-Miner-Tycoon`**。
 - 規矩：一次讓一個助手做事，做完 `push`，另一個 `pull` 接手，避免衝突。
 
+## 🌐 三邊能力差異（派工前先看，這條最常踩）
+
+| 事情 | 雲端 Claude（web） | 本機 Claude / Codex（Windows） |
+| --- | --- | --- |
+| **從網路下載檔案（保險公司空白表單、PDF、圖）** | ❌ **不行** | ✅ 可以 |
+| 讀寫 GitHub repo、寫程式、產 PDF | ✅ | ✅ |
+| 讀 Google Drive / Gmail | ✅ | 視設定 |
+| 跑 Windows OCR（歸檔技能） | ❌ | ✅ |
+
+- ⚠️ **雲端 Claude 的容器是「白名單制」網路**：只放行套件庫（pypi/npm）與 GitHub，
+  **其他網站一律連不出去**（`fubon.com`、`fubonlife.com.tw`、各家銀行、連 Wikipedia 都不通，
+  proxy 直接回 403／CONNECT 失敗，也不可繞道）。
+- ➜ **派工規則：凡是「要去某個網站把檔案抓下來」的任務，一律交給本機 Claude 或 Codex。**
+  雲端 Claude 負責的是：檔案給它之後的**合併、預填、排版、產 PDF、寫規則、改 repo**。
+- ➜ 使用者的標準動作：把空白表單／原始檔丟進 Google Drive 或直接傳給雲端 Claude，它就能接手。
+
 ## 📝 工作進度 / 重要決定（最新在最上面）
+
+- 2026-09-06（同日追記）：**確認雲端 Claude 抓不到富邦官方空白表單，已改成派工規則寫在上面「三邊能力差異」。**
+  - 試過且全部失敗：`fubon.com`、`fubonlife.com.tw`、`ctbcbank.com` 鏡像檔、任意外部網站 → egress proxy 403。
+  - 也找過使用者的 **Google Drive**（只有個案資料夾，「空白 XX.pdf」是掃描機預設檔名，不是空白表單）
+    與 **Gmail**（富邦來信只有照會通知、產險要保書、信貸廣告）→ 都沒有空白表單庫。
+  - ✅ **決定：不自製「看起來像富邦官方」的表單**，那種送保全一定被退，反而害使用者多跑一趟。
+  - 📌 已查到的富邦表單位置（給本機 Claude／Codex 抓，或使用者自己點）：
+    - 契約內容變更/復效/復繳暨保險單補發申請書（簡式）2025-01：
+      `https://www.fubon.com/life/cms/26316A2EBF774B809CD0859A39B8D5E2/2025-01/202501021449023509758514.pdf`
+    - 完整版 3 頁（含「□保全變更」勾選，中信銀行鏡像）：
+      `https://www.ctbcbank.com/content/dam/twrbo/pdf/insurance/Fubonlife_change.pdf`
+    - 表單下載總頁（版本以此為準）：
+      `https://www.fubon.com/life/eservice/member/form/26316A2EBF774B809CD0859A39B8D5E2/`
+  - ⚠️ **抓錯張的坑**：「保險單**要保人聯絡資訊暨基本資料**變更申請書」(2025-08) 是改要保人自己的聯絡資料，
+    **不是換要保人**。名字很像，別抓錯。
 
 - 2026-09-06：**新增「富邦人壽 要保人變更 應備文件檢核表」PDF**（`outputs/insurance/fubon-policyholder-change/`）。
   - 產出：A4 兩頁的**單一 PDF** + 原始 `checklist.html`。做法：寫 HTML → headless Chromium `--print-to-pdf`，
