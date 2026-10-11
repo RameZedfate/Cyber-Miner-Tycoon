@@ -67,7 +67,7 @@ For accident, also require:
 事故經過：<the user's factual wording>
 ```
 
-Do not ask for a policy number or address.
+Do not ask for a policy number. Ask for an address only when the selected form requires it and has no approved same-policy/same-billing-address option.
 
 ## Common defaults
 
@@ -82,7 +82,7 @@ Do not ask for a policy number or address.
 - Medical-consent signature blank
 - Sender and agent fields blank
 - Application date blank
-- Final deliverable contains page 1 only
+- Final deliverable keeps only the insurer-specific approved application pages
 
 ## Disease narrative
 
@@ -146,14 +146,16 @@ Fill only insurers named in the current case.
 Before delivery:
 
 1. Confirm the official blank-form edition and expected geometry.
-2. Confirm every selected insurer has exactly one PDF.
+2. Confirm every selected insurer has exactly one approved intermediate PDF.
 3. Confirm every final PDF has exactly the approved page count for that insurer
    （預設 1 頁；國泰學團險為 2 頁，見 insurer matrix）。
-4. Render page 1 and inspect every filled field and checkbox.
+4. Render every approved page and inspect every filled field and checkbox.
 5. Confirm the narrative remains inside its box.
 6. Confirm bank digits, identity number, date, and phone are legible and not truncated.
 7. Confirm all prohibited signature, consent, sender, policy-number, and application-date fields remain blank.
-8. Run `scripts/validate_claim_output.py`.
+8. Run `scripts/validate_claim_output.py` with the insurer-specific expected page count.
+9. Merge the validated insurer PDFs with `scripts/merge_claim_pdfs.py` in the exact order named by the user.
+10. Validate the combined page count, insurer order, text readback, and 144-DPI visual quality. Deliver only the combined PDF unless separate files were explicitly requested.
 
 ## Seven-insurer verified layout rules
 

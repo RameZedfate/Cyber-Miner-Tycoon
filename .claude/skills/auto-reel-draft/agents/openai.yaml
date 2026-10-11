@@ -1,0 +1,4 @@
+interface:
+  display_name: "Auto Reel Draft"
+  short_description: "Build a licensed editable JianYing Reel draft"
+  default_prompt: "Use $auto-reel-draft to analyze my reference, source licensed media, and build a validated editable JianYing draft."

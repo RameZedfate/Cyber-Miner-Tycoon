@@ -54,20 +54,21 @@ For 新光、元大、遠雄、富邦、凱基、宏泰、保誠, reuse the bund
 3. Inspect the current diagnosis document. Do not reuse facts from another customer or an earlier case.
 4. Apply the disease or accident rules below and the insurer-specific checkbox rules in the reference.
 5. Render the official form without altering its page geometry. Keep text inside the intended boxes.
-6. Produce an internal QA draft if needed, but **只交付第 1 頁** for every insurer.
+6. Keep only the approved application pages for each insurer. The default is page 1, but a form-specific contract may require more pages (for example, 國泰學團險本文與附件共 2 頁).
 7. Run:
 
    ```powershell
    python "<skill-dir>\scripts\validate_claim_output.py" --expected-count <insurer-count> <pdf-files>
    ```
 
-8. Render page 1 at 144 DPI or higher and visually confirm legibility, line wrapping, checkbox placement, bank digits, and that nothing crosses a form boundary.
-9. If Drive delivery is requested, create or use the approved customer folder, upload new page-1 PDFs only, download them again, and verify byte size plus SHA-256 before returning the customer-folder link.
+8. Render every approved page at 144 DPI or higher and visually confirm legibility, line wrapping, checkbox placement, bank digits, and that nothing crosses a form boundary.
+9. For multiple insurers, merge the approved PDFs with `scripts/merge_claim_pdfs.py` in the exact insurer order supplied by the user. Deliver one combined PDF unless the user explicitly requests separate files.
+10. If Drive delivery is requested, create or use the approved customer folder, upload only the final combined PDF, download it again, and verify byte size plus SHA-256 before returning the customer-folder link.
 
 ## Non-negotiable form rules
 
 - 不要求保單號碼；保單號碼保持空白。
-- 不詢問或填寫地址。全球人壽與台灣人壽都固定勾選「同保單／要保書地址」的相對應選項。
+- 只有表單明確需要地址且沒有「同保單／收費地址」選項時才向使用者索取；不得推測或跨案件沿用。全球人壽與台灣人壽優先勾選「同保單／要保書地址」。
 - Account holder, insured person, applicant, and beneficiary default to the customer's name unless the user explicitly states an exception.
 - Disease: leave accident date, time, and location blank. Use only supported diagnosis, admission, surgery, and discharge facts. Never invent a missing fact.
 - Accident: use the user-confirmed accident date. If the user asks to derive it from the diagnosis document, use the earliest confirmed encounter related to that accident. Leave time and location blank.
