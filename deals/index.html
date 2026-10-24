@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>HOWTRAVLE 便宜票雷達</title>
-<meta name="description" content="台灣出發飛日本、韓國、泰國、越南的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
+<meta name="description" content="台灣出發飛日本、韓國、泰國、越南、中國大陸、香港的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
 <meta name="theme-color" content="#0E2A47" />
 <style>
   :root{
@@ -109,7 +109,7 @@
   <div class="wrap">
     <div class="brand"><h1>HOWTRAVLE <b>便宜票雷達</b></h1></div>
     <div class="pill-box" aria-hidden="true">
-      <div class="t" id="scopeText">台灣出發 → 日本・韓國・泰國・越南</div>
+      <div class="t" id="scopeText">台灣出發 → 日韓泰越・中國大陸・香港</div>
       <div class="s" id="scopeSub">任何日期・1 位成人・每天自動更新</div>
     </div>
   </div>
@@ -203,14 +203,14 @@ const HOLIDAYS = [
 ];
 
 const COUNTRIES = { JP:"日本", KR:"韓國", TH:"泰國", VN:"越南", CN:"中國大陸", HK:"香港" };
-const MAIN_COUNTRIES = ["JP","KR","TH","VN"];                 // 便宜機票
+const MAIN_COUNTRIES = ["JP","KR","TH","VN","CN","HK"];       // 便宜機票
 const FSC_COUNTRIES  = ["JP","KR","TH","VN","CN","HK"];       // 傳統航空
 // 傳統航空名單（要增減就改這裡；worker.js 也有一份，新增時兩邊都加）
 const FSC_AIRLINES = {
   CI:"中華航空", BR:"長榮航空", JX:"星宇航空", AE:"華信航空", B7:"立榮航空",
   JL:"日本航空", NH:"全日空", KE:"大韓航空", OZ:"韓亞航空",
   CX:"國泰航空", HX:"香港航空", NX:"澳門航空",
-  TG:"泰國航空", VN:"越南航空", SQ:"新加坡航空", MH:"馬來西亞航空", PR:"菲律賓航空",
+  TG:"泰國航空", VN:"越南航空", "9G":"富國太陽航空", QH:"越竹航空", SQ:"新加坡航空", MH:"馬來西亞航空", PR:"菲律賓航空",
   CA:"中國國際航空", MU:"東方航空", CZ:"南方航空", FM:"上海航空", MF:"廈門航空",
   ZH:"深圳航空", "3U":"四川航空", HU:"海南航空", SC:"山東航空", HO:"吉祥航空",
 };
@@ -428,7 +428,7 @@ function renderFlights(){
   renderMonths(); renderChips();
   const [y,m] = state.month.split("-");
   const fsc = state.mode === "fsc";
-  const where = state.country ? COUNTRIES[state.country] : (fsc ? "日韓泰越・大陸港" : "日韓泰越");
+  const where = state.country ? COUNTRIES[state.country] : "日韓泰越・大陸港";
   $("#fTitle").textContent = fsc ? `傳統航空飛往${where}的超值航班` : `飛往${where}的超值航班`;
   $("#fSub").textContent = `${Number(m)}月期間預估最低價格（${state.type === "rt" ? "來回" : "單程"}・1 位成人・含稅）`;
 
@@ -579,7 +579,6 @@ document.querySelector(".tabs").addEventListener("click", e => {
   $("#flights").classList.toggle("hidden", state.tab === "hotels");
   $("#hotels").classList.toggle("hidden", state.tab !== "hotels");
   const fsc = state.tab === "fsc";
-  $("#scopeText").textContent = fsc ? "台灣出發 → 日韓泰越・中國大陸・香港" : "台灣出發 → 日本・韓國・泰國・越南";
   $("#scopeSub").textContent = fsc ? "華航・長榮・星宇・國泰等傳統航空" : "任何日期・1 位成人・每天自動更新";
   if (state.tab !== "hotels"){
     const mode = fsc ? "fsc" : "all";

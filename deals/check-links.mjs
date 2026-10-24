@@ -52,9 +52,10 @@ const FSC = {
     row("TPE", "CAN", "TPE", "CAN", day(29), day(33), 6100, 0, 0, "CZ"),
   ],
 };
-MOCK.rows.push(row("TPE", "SHA", "TPE", "PVG", day(25), day(28), 1234)); // 廉航飛上海 → 兩個分頁都不該出現
-MOCK.rows.push(row("TPE", "HKG", "TPE", "HKG", day(25), day(28), 2345)); // 廉航飛香港 → 兩個分頁都不該出現
-MOCK.rows.push(row("TPE", "XMN", "TPE", "XMN", day(31), day(34), 5555, 0, 0, "MF")); // 一般資料裡的傳統航空飛大陸 → 只在傳統航空出現
+MOCK.rows.push(row("TPE", "SHA", "TPE", "PVG", day(25), day(28), 1234)); // 廉航飛上海 → 只在便宜機票出現
+MOCK.rows.push(row("TPE", "HKG", "TPE", "HKG", day(25), day(28), 2345)); // 廉航飛香港 → 只在便宜機票出現
+MOCK.rows.push(row("TPE", "XMN", "TPE", "XMN", day(31), day(34), 5555, 0, 0, "MF")); // 傳統航空飛大陸 → 兩邊都出現
+MOCK.rows.push(row("TPE", "PQC", "TPE", "PQC", day(33), day(38), 8888, 0, 0, "9G")); // 富國太陽航空 → 傳統航空要出現
 const PICKS = { updated_at: new Date().toISOString(), items: [
   { origin: "TPE", destination: "OSA", departDate: day(20), returnDate: day(24), price: 5980, direct: true,
     checkedAt: new Date().toISOString(), note: "週末出發，大阪直飛不到六千" },
@@ -127,9 +128,10 @@ try {
     if (!text.includes("Adam 精選")) problems.push("精選區沒顯示");
     if (SHOTS && !src) await page.screenshot({ path: path.join(SHOTS, "flights.png"), fullPage: true });
 
-    // 便宜機票：不該出現大陸、香港
+    // 便宜機票：要有大陸、香港
     const allText = await collect(page);
-    for (const bad of ["上海", "香港", "北京", "廈門", "NT$1,234", "NT$2,345"]) if (allText.includes(bad)) problems.push(`便宜機票出現不該有的：${bad}`);
+    for (const want of ["上海", "香港", "廈門", "NT$1,234", "NT$2,345"]) if (!allText.includes(want)) problems.push(`便宜機票缺少：${want}`);
+    for (const bad of ["洛杉磯", "馬尼拉"]) if (allText.includes(bad)) problems.push(`便宜機票出現不該有的：${bad}`);
 
     // 傳統航空
     await page.click('.tabs button[data-tab="fsc"]');
@@ -138,7 +140,7 @@ try {
     if (await page.isVisible("#picks")) problems.push("傳統航空分頁不該顯示精選");
     if (SHOTS && !src) await page.screenshot({ path: path.join(SHOTS, "fsc.png"), fullPage: true });
     const fscText = await collect(page);
-    for (const want of ["國泰航空", "中華航空", "星宇航空", "大韓航空", "南方航空", "廈門航空", "香港", "上海", "北京", "廣州", "廈門"]) if (!fscText.includes(want)) problems.push(`傳統航空缺少：${want}`);
+    for (const want of ["國泰航空", "中華航空", "星宇航空", "大韓航空", "南方航空", "廈門航空", "富國太陽航空", "香港", "上海", "北京", "廣州", "廈門"]) if (!fscText.includes(want)) problems.push(`傳統航空缺少：${want}`);
     for (const bad of ["NT$1,234", "NT$2,345", "NT$6,890"]) if (fscText.includes(bad)) problems.push(`傳統航空出現不該有的票：${bad}`);
     await page.click('.tabs button[data-tab="flights"]');
     if (!(await page.isVisible("#picks"))) problems.push("回到便宜機票後精選不見了");
