@@ -131,6 +131,7 @@ try {
     // 便宜機票：要有大陸、香港
     const allText = await collect(page);
     for (const want of ["上海", "香港", "廈門", "NT$1,234", "NT$2,345"]) if (!allText.includes(want)) problems.push(`便宜機票缺少：${want}`);
+    if (!allText.includes("台灣虎航")) problems.push("便宜機票卡片沒顯示航空公司名稱");
     for (const bad of ["洛杉磯", "馬尼拉"]) if (allText.includes(bad)) problems.push(`便宜機票出現不該有的：${bad}`);
 
     // 傳統航空

@@ -234,6 +234,18 @@ const CITIES = {
   XIY:["西安","CN"], KMG:["昆明","CN"], DLC:["大連","CN"], FOC:["福州","CN"], TSN:["天津","CN"],
   CSX:["長沙","CN"], SYX:["三亞","CN"], CGO:["鄭州","CN"], SHE:["瀋陽","CN"], NGB:["寧波","CN"],
 };
+// 卡片右上角顯示的航空公司名稱（傳統航空＋常見廉航）。不在名單裡的會改顯示國家。
+const AIRLINE_NAMES = {
+  ...FSC_AIRLINES,
+  IT:"台灣虎航", MM:"樂桃航空", GK:"捷星日本", BC:"天馬航空", NU:"日本越洋航空", "7G":"星悅航空",
+  ZG:"ZIPAIR", IJ:"日本春秋航空",
+  "7C":"濟州航空", TW:"德威航空", LJ:"真航空", BX:"釜山航空", ZE:"易斯達航空", RS:"首爾航空", RF:"Aero K",
+  UO:"香港快運", HB:"大灣區航空",
+  FD:"泰國亞洲航空", AK:"亞洲航空", D7:"全亞洲航空", XJ:"泰國全亞洲航空", SL:"泰國獅子航空", DD:"皇雀航空",
+  VZ:"泰越捷航空", VJ:"越捷航空", VU:"越南旅遊航空",
+  TR:"酷航", "3K":"捷星亞洲", JQ:"捷星航空", OD:"馬印航空", "5J":"宿霧太平洋航空", Z2:"菲律賓亞洲航空",
+  "9C":"春秋航空", KN:"中國聯合航空", GJ:"長龍航空", JD:"首都航空", GS:"天津航空", PN:"西部航空", "8L":"祥鵬航空",
+};
 const ORIGIN_NAME = { TPE:"台北", TSA:"台北", KHH:"高雄", RMQ:"台中", TNN:"台南" };
 const ORIGIN_GROUP = { TPE:"TPE", TSA:"TPE", KHH:"KHH", RMQ:"RMQ", TNN:"TNN" };
 
@@ -392,7 +404,7 @@ function flightCard(f){
   return `
   <article class="card">
     <div class="body">
-      <div class="dest"><span class="name">${esc(ORIGIN_NAME[f.o])} → ${esc(cityName(f.d))}</span><span class="from">${esc([FSC_AIRLINES[f.airline], COUNTRIES[f.country]].filter(Boolean).join("・"))}</span></div>
+      <div class="dest"><span class="name">${esc(ORIGIN_NAME[f.o])} → ${esc(cityName(f.d))}</span><span class="from">${esc(AIRLINE_NAMES[f.airline] || COUNTRIES[f.country] || "")}</span></div>
       <div class="leg">${ICON_OUT}
         <div><div class="d">${esc(fmtDate(f.dep))}</div><div class="r">${esc(f.oAp)} 飛往 ${esc(f.dAp)}</div></div>
         <div class="x ${f.tr === 0 ? "" : "stop"}">${esc(legStops(f.tr))}</div>
