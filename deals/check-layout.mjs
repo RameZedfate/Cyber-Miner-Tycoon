@@ -85,6 +85,8 @@ async function setup(page) {
     });
     r.fulfill({ contentType: "application/json", body: JSON.stringify({ query: { pages } }) });
   });
+  await page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**", r =>
+    r.fulfill({ contentType: "image/svg+xml", body: svg(2400, 900, "panorama", "#7c3aed") }));
   await page.route("https://img.mock/**", r => {
     const m = r.request().url().match(/\/(\d+)x(\d+)\.svg/);
     r.fulfill({ contentType: "image/svg+xml", body: svg(+m[1], +m[2], `${m[1]}x${m[2]}`, "#3b6ea5") });
@@ -206,6 +208,12 @@ async function measure(page) {
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
     }
+    // 篩選面板：每排內容的左緣要對齊
+    const ctl = [...document.querySelectorAll(".panel .pctl")].filter(vis).map(c => {
+      const first = c.querySelector(".scroller > *, .row > *"); return first ? Math.round(R(first).left) : null; }).filter(v => v !== null);
+    if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
+    const panel = document.querySelector(".panel");
+    if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
