@@ -385,7 +385,7 @@ const AIRLINE_NAMES = {
   ...FSC_AIRLINES,
   IT:"台灣虎航", MM:"樂桃航空", GK:"捷星日本", BC:"天馬航空", NU:"日本越洋航空", "7G":"星悅航空",
   ZG:"ZIPAIR", IJ:"日本春秋航空",
-  "7C":"濟州航空", TW:"德威航空", LJ:"真航空", BX:"釜山航空", ZE:"易斯達航空", RS:"首爾航空", RF:"Aero K",
+  "7C":"濟州航空", TW:"泰瑞航空", LJ:"真航空", BX:"釜山航空", ZE:"易斯達航空", RS:"首爾航空", RF:"Aero K",
   UO:"香港快運", HB:"大灣區航空",
   FD:"泰國亞洲航空", AK:"亞洲航空", D7:"全亞洲航空", XJ:"泰國全亞洲航空", SL:"泰國獅子航空", DD:"皇雀航空",
   VZ:"泰越捷航空", VJ:"越捷航空", VU:"越南旅遊航空",
@@ -519,10 +519,18 @@ async function loadImages(){
     if (c) applyImg(im, c.u);
   }
 }
+// 標誌來源還沒更新的航空公司，在這裡指定：{ src:"圖片網址" } 或 { text:"字樣", bg:"底色", fg:"字色" }
+// TW：德威航空 2026/9/10 改名 Trinity Airways（泰瑞航空），新標誌圖檔取得前先用品牌色 Trinity Gray 字樣
+const LOGO_OVERRIDE = {
+  TW: { text: "TRINITY", bg: "#5E6167", fg: "#FFFFFF" },
+};
 // 航空公司標誌：先用 pics.avs.io（Travelpayouts），失敗換 img.wway.io，再失敗就顯示代碼
 function logoHTML(code){
   const c = airCode(code);
   if (!c) return "";
+  const ov = LOGO_OVERRIDE[c];
+  if (ov && ov.text) return `<span class="logo"><span class="code" style="background:${esc(ov.bg || "#F1F4F9")};color:${esc(ov.fg || "#0B2340")}">${esc(ov.text)}</span></span>`;
+  if (ov && ov.src) return `<span class="logo"><img src="${esc(ov.src)}" alt="${esc(AIRLINE_NAMES[c] || c)}" loading="lazy" decoding="async" onerror="logoErr(this,'${c}')" /></span>`;
   return `<span class="logo"><img src="https://pics.avs.io/144/48/${c}.png" alt="${esc(AIRLINE_NAMES[c] || c)}" loading="lazy" decoding="async" onerror="logoErr(this,'${c}')" /></span>`;
 }
 function logoErr(img, c){
