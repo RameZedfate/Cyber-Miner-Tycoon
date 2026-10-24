@@ -18,9 +18,10 @@
 ## 機票資料怎麼來
 
 - 價格來自 Travelpayouts 的低價快取，是**預估最低價**，網頁上有標明。
-- 目前先沿用舊版那支 Worker，**現在就能用**；但舊版只抓「不分月份最便宜」，部分月份可能沒票。
-- 想讓每個月都有票：把 `worker.js` 部署成一支**新的** Cloudflare Worker（步驟寫在檔案最上面），
-  再把網址貼到 `index.html` 的 `CONFIG.dataUrls` 第一格。
+- 主要來源：Cloudflare Worker `howtravle-deals`（https://howtravle-deals.a8225012.workers.dev/，程式碼就是 `worker.js`），
+  每 3 小時更新一次，依出發地 × 月份抓。
+- 備援：舊版 Worker `cold-union-5668`。舊版網頁 `cheap-flights/` 還在用它，不要刪。
+- 改了 `worker.js` 之後，要把新內容貼回 Cloudflare 的 `howtravle-deals` 再按 Deploy 才會生效。
 
 ## 分辨哪篇貼文帶來訂單
 
