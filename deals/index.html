@@ -32,7 +32,7 @@
   /* 機票／酒店 切換 */
   .tabs{display:flex;gap:6px;background:#fff;border-radius:999px;padding:5px;margin:16px 0 4px;
     box-shadow:0 1px 2px rgba(0,0,0,.05)}
-  .tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:10px 0;font-weight:700;font-size:16px}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:10px 0;font-weight:700;font-size:15px;white-space:nowrap}
   .tabs button[aria-selected="true"]{background:var(--navy);color:#fff}
 
   h2.sec{font-size:26px;margin:22px 0 4px;line-height:1.25}
@@ -101,7 +101,7 @@
   .empty a.btn{display:inline-block;margin-top:12px;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:999px}
 
   footer{color:var(--muted);font-size:12.5px;line-height:1.7;padding:22px 0 40px}
-  .hidden{display:none !important}
+  .hidden,#picks.off{display:none !important}
 </style>
 </head>
 <body>
@@ -109,8 +109,8 @@
   <div class="wrap">
     <div class="brand"><h1>HOWTRAVLE <b>便宜票雷達</b></h1></div>
     <div class="pill-box" aria-hidden="true">
-      <div class="t">台灣出發 → 日本・韓國・泰國・越南</div>
-      <div class="s">任何日期・1 位成人・每天自動更新</div>
+      <div class="t" id="scopeText">台灣出發 → 日本・韓國・泰國・越南</div>
+      <div class="s" id="scopeSub">任何日期・1 位成人・每天自動更新</div>
     </div>
   </div>
 </header>
@@ -118,6 +118,7 @@
 <main class="wrap">
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="flights">✈️ 便宜機票</button>
+    <button role="tab" aria-selected="false" data-tab="fsc">🛫 傳統航空</button>
     <button role="tab" aria-selected="false" data-tab="hotels">🏨 便宜酒店</button>
   </div>
 
@@ -147,6 +148,7 @@
 
     <div class="scroller" id="months" style="margin-top:10px"></div>
     <div class="scroller" id="countries"></div>
+    <div class="scroller hidden" id="airlines"></div>
     <div class="scroller" id="filters"></div>
 
     <div id="holidayHint" class="holiday-hint hidden"></div>
@@ -184,6 +186,7 @@ const AFFILIATE = {
 const CONFIG = {
   // 機票資料來源，依序嘗試。第一格貼新 Worker（deals/worker.js）的網址；第二格是舊版 Worker，當備援。
   dataUrls: ["https://howtravle-deals.a8225012.workers.dev/", "https://cold-union-5668.a8225012.workers.dev/"],
+  fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空（長榮、華航、星宇、國泰）
   picksUrl: "picks.json",   // Adam 今日精選（HOWTRAVLE 每日 Top 2）
   hotelsUrl: "hotels.json", // 精選酒店
   monthsAhead: 4,
@@ -200,7 +203,10 @@ const HOLIDAYS = [
   { name:"清明兒童節連假", start:"2027-04-03", end:"2027-04-06" },
 ];
 
-const COUNTRIES = { JP:"日本", KR:"韓國", TH:"泰國", VN:"越南" };
+const COUNTRIES = { JP:"日本", KR:"韓國", TH:"泰國", VN:"越南", CN:"中國大陸", HK:"香港" };
+const MAIN_COUNTRIES = ["JP","KR","TH","VN"];                 // 便宜機票
+const FSC_COUNTRIES  = ["JP","KR","TH","VN","CN","HK"];       // 傳統航空
+const FSC_AIRLINES = { BR:"長榮航空", CI:"中華航空", JX:"星宇航空", CX:"國泰航空" };
 const CITIES = {
   TYO:["東京","JP"], NRT:["東京","JP"], HND:["東京","JP"], OSA:["大阪","JP"], KIX:["大阪","JP"], ITM:["大阪","JP"],
   NGO:["名古屋","JP"], SPK:["札幌","JP"], CTS:["札幌","JP"], FUK:["福岡","JP"], OKA:["沖繩","JP"], SDJ:["仙台","JP"],
@@ -214,6 +220,12 @@ const CITIES = {
   UTP:["芭達雅","TH"], CEI:["清萊","TH"],
   SGN:["胡志明市","VN"], HAN:["河內","VN"], DAD:["峴港","VN"], CXR:["芽莊","VN"], PQC:["富國島","VN"], HPH:["海防","VN"],
   DLI:["大叻","VN"], VCA:["芹苴","VN"], HUI:["順化","VN"], VDO:["下龍灣","VN"],
+  HKG:["香港","HK"],
+  SHA:["上海","CN"], PVG:["上海","CN"], BJS:["北京","CN"], PEK:["北京","CN"], PKX:["北京","CN"],
+  CAN:["廣州","CN"], SZX:["深圳","CN"], CTU:["成都","CN"], TFU:["成都","CN"], CKG:["重慶","CN"],
+  XMN:["廈門","CN"], HGH:["杭州","CN"], NKG:["南京","CN"], TAO:["青島","CN"], WUH:["武漢","CN"],
+  XIY:["西安","CN"], KMG:["昆明","CN"], DLC:["大連","CN"], FOC:["福州","CN"], TSN:["天津","CN"],
+  CSX:["長沙","CN"], SYX:["三亞","CN"], CGO:["鄭州","CN"], SHE:["瀋陽","CN"], NGB:["寧波","CN"],
 };
 const ORIGIN_NAME = { TPE:"台北", TSA:"台北", KHH:"高雄", RMQ:"台中", TNN:"台南" };
 const ORIGIN_GROUP = { TPE:"TPE", TSA:"TPE", KHH:"KHH", RMQ:"RMQ", TNN:"TNN" };
@@ -293,6 +305,7 @@ function normalize(r){
   return {
     o, d, oAp: r.origin_airport || r.origin, dAp: r.destination_airport || r.destination,
     dep, ret, price, tr, rtr, direct: tr === 0 && rtr === 0, country: countryOf(d),
+    airline: String(r.airline || "").toUpperCase(),
   };
 }
 function holidayOf(f){
@@ -310,7 +323,7 @@ function isWeekend(f){
 }
 
 const state = {
-  tab: "flights", type: "rt", origin: "", month: null, country: "", filter: "cheap",
+  tab: "flights", mode: "all", airline: "", type: "rt", origin: "", month: null, country: "", filter: "cheap",
   shown: CONFIG.pageSize, flights: [], updatedAt: null,
   hotels: [], hotelsUpdated: null, hCountry: "",
 };
@@ -326,7 +339,11 @@ function monthKeys(){
 
 // 依目前條件篩選（不含「月份」），讓月份按鈕能顯示各月最低價
 function baseFiltered(){
+  const fsc = state.mode === "fsc";
+  const countries = fsc ? FSC_COUNTRIES : MAIN_COUNTRIES;
   return state.flights.filter(f =>
+    countries.includes(f.country) &&
+    (!fsc || (FSC_AIRLINES[f.airline] && (!state.airline || f.airline === state.airline))) &&
     (state.type === "rt" ? !!f.ret : !f.ret) &&
     (!state.origin || f.o === state.origin) &&
     (!state.country || f.country === state.country) &&
@@ -339,7 +356,7 @@ function baseFiltered(){
 function cheapestPerRoute(list){
   const best = new Map();
   for (const f of list){
-    const k = f.o + "-" + f.d;
+    const k = f.o + "-" + f.d + (state.mode === "fsc" ? "-" + f.airline : "");
     const cur = best.get(k);
     if (!cur || f.price < cur.price || (f.price === cur.price && f.dep < cur.dep)) best.set(k, f);
   }
@@ -368,7 +385,7 @@ function flightCard(f){
   return `
   <article class="card">
     <div class="body">
-      <div class="dest"><span class="name">${esc(ORIGIN_NAME[f.o])} → ${esc(cityName(f.d))}</span><span class="from">${esc(COUNTRIES[f.country] || "")}</span></div>
+      <div class="dest"><span class="name">${esc(ORIGIN_NAME[f.o])} → ${esc(cityName(f.d))}</span><span class="from">${esc([FSC_AIRLINES[f.airline], COUNTRIES[f.country]].filter(Boolean).join("・"))}</span></div>
       <div class="leg">${ICON_OUT}
         <div><div class="d">${esc(fmtDate(f.dep))}</div><div class="r">${esc(f.oAp)} 飛往 ${esc(f.dAp)}</div></div>
         <div class="x ${f.tr === 0 ? "" : "stop"}">${esc(legStops(f.tr))}</div>
@@ -394,16 +411,22 @@ function renderMonths(){
   }).join("");
 }
 function renderChips(){
-  $("#countries").innerHTML = [["", "全部國家"], ...Object.entries(COUNTRIES)].map(([v,t]) =>
+  const cs = state.mode === "fsc" ? FSC_COUNTRIES : MAIN_COUNTRIES;
+  $("#countries").innerHTML = [["", "全部地區"], ...cs.map(c => [c, COUNTRIES[c]])].map(([v,t]) =>
     `<button class="chip" aria-pressed="${v === state.country}" data-v="${v}">${t}</button>`).join("");
+  $("#airlines").classList.toggle("hidden", state.mode !== "fsc");
+  $("#airlines").innerHTML = [["", "全部航空"], ...Object.entries(FSC_AIRLINES)].map(([v,t]) =>
+    `<button class="chip" aria-pressed="${v === state.airline}" data-v="${v}">${t}</button>`).join("");
   $("#filters").innerHTML = FILTERS.map(x =>
     `<button class="chip" aria-pressed="${x.v === state.filter}" data-v="${x.v}">${x.t}</button>`).join("");
 }
 function renderFlights(){
   renderMonths(); renderChips();
   const [y,m] = state.month.split("-");
-  const where = state.country ? COUNTRIES[state.country] : "日韓泰越";
-  $("#fTitle").textContent = `飛往${where}的超值航班`;
+  const fsc = state.mode === "fsc";
+  const where = state.country ? COUNTRIES[state.country] : (fsc ? "日韓泰越・大陸港" : "日韓泰越");
+  const who = fsc ? (state.airline ? FSC_AIRLINES[state.airline] : "傳統航空") : "";
+  $("#fTitle").textContent = fsc ? `${who}飛往${where}的超值航班` : `飛往${where}的超值航班`;
   $("#fSub").textContent = `${Number(m)}月期間預估最低價格（${state.type === "rt" ? "來回" : "單程"}・1 位成人・含稅）`;
 
   const hols = HOLIDAYS.filter(h => h.start.startsWith(state.month) || h.end.startsWith(state.month));
@@ -509,14 +532,17 @@ async function loadHotels(){
    ⑧ 讀取機票資料
    ==================================================================== */
 async function loadFlights(){
+  const fscP = CONFIG.fscUrl ? getJSON(CONFIG.fscUrl).catch(() => null) : Promise.resolve(null);
+  let fscRows = null;
   for (const url of CONFIG.dataUrls.filter(Boolean)){
     try {
       const j = await getJSON(url);
-      const raw = [].concat(j.rows || [], j.data || [], j.air || []);
+      if (fscRows === null) fscRows = ((await fscP) || {}).rows || [];
+      const raw = [].concat(j.rows || [], j.data || [], j.air || [], fscRows);
       const seen = new Set(); const list = [];
       for (const r of raw){
         const f = normalize(r); if (!f) continue;
-        const k = [f.o, f.d, f.dep, f.ret, f.price, f.tr].join("|");
+        const k = [f.o, f.d, f.dep, f.ret, f.price, f.tr, f.airline].join("|");
         if (seen.has(k)) continue; seen.add(k); list.push(f);
       }
       if (list.length){ state.flights = list; state.updatedAt = j.updated_at || null; break; }
@@ -524,7 +550,11 @@ async function loadFlights(){
   }
   $("#updated").textContent = state.flights.length
     ? `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "今天"}` : "";
-  // 預設選「有票、而且最便宜」的月份
+  state.month = bestMonth();
+  renderFlights();
+}
+// 預設選「有票、而且最便宜」的月份
+function bestMonth(){
   const keys = monthKeys(); const today = todayTW();
   const base = baseFiltered().filter(f => f.dep > today);
   let best = keys[0], bestPrice = Infinity;
@@ -532,8 +562,7 @@ async function loadFlights(){
     const ps = base.filter(f => f.dep.startsWith(k)).map(f => f.price);
     if (ps.length && Math.min(...ps) < bestPrice){ bestPrice = Math.min(...ps); best = k; }
   }
-  state.month = best;
-  renderFlights();
+  return best;
 }
 
 /* ====================================================================
@@ -544,8 +573,21 @@ document.querySelector(".tabs").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return;
   state.tab = b.dataset.tab;
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
-  $("#flights").classList.toggle("hidden", state.tab !== "flights");
+  $("#flights").classList.toggle("hidden", state.tab === "hotels");
   $("#hotels").classList.toggle("hidden", state.tab !== "hotels");
+  const fsc = state.tab === "fsc";
+  $("#scopeText").textContent = fsc ? "台灣出發 → 日韓泰越・中國大陸・香港" : "台灣出發 → 日本・韓國・泰國・越南";
+  $("#scopeSub").textContent = fsc ? "長榮・華航・星宇・國泰・1 位成人・每天自動更新" : "任何日期・1 位成人・每天自動更新";
+  if (state.tab !== "hotels"){
+    const mode = fsc ? "fsc" : "all";
+    if (mode !== state.mode){
+      state.mode = mode; state.country = ""; state.airline = ""; resetPage();
+      $("#picks").dataset.mode = mode;
+      $("#picks").classList.toggle("off", fsc);
+      if (state.flights.length) state.month = bestMonth();
+      renderFlights();
+    }
+  }
 });
 $("#tripType").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -555,6 +597,7 @@ $("#tripType").addEventListener("click", e => {
 });
 $("#origin").addEventListener("change", e => { state.origin = e.target.value; resetPage(); renderFlights(); });
 $("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
+$("#airlines").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.airline = b.dataset.v; resetPage(); renderFlights(); });
 $("#countries").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.country = b.dataset.v; resetPage(); renderFlights(); });
 $("#filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.v; resetPage(); renderFlights(); });
 $("#moreBtn").addEventListener("click", () => { state.shown += CONFIG.pageSize; renderFlights(); });

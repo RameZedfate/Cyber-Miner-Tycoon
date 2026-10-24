@@ -1,26 +1,26 @@
 /**
- * Cloudflare Worker：每天自動抓「台灣出發 → 日韓泰越」的預估低價機票
+ * Cloudflare Worker：自動抓「台灣出發」的預估低價機票
+ *
+ *   https://你的網址/            → 一般低價：日韓泰越，所有航空公司
+ *   https://你的網址/?part=fsc   → 傳統航空：長榮、華航、星宇、國泰，日韓泰越＋中國大陸＋香港
  *
  * 價格來源：Travelpayouts（Aviasales）低價快取。這是「預估最低價」，
  * 不是 Trip.com 即時價；網頁會標明，訂票按鈕一律導到 Trip.com 聯盟連結。
  *
- * 部署（只要做一次）：
- *   1) Cloudflare → Workers & Pages → Create → Worker → 把這整份貼上 → Deploy
- *   2) Settings → Variables and Secrets → 新增 Secret：TP_TOKEN = 你的 Travelpayouts token
- *      （跟舊版那支 Worker 用的是同一個 token）
- *   3) 複製 Worker 網址，貼到 deals/index.html 的 CONFIG.dataUrls 第一格
+ * 更新方式：Cloudflare → howtravle-deals → 編輯代碼 → 全選刪掉 → 貼上這整份 → 部署
+ * 需要的 Secret：TP_TOKEN（Travelpayouts token）
  *
- * 回傳：{ updated_at, rows: [ Travelpayouts prices_for_dates 的原始列 ] }
+ * 回傳：{ updated_at, part, count, rows: [ Travelpayouts prices_for_dates 的原始列 ] }
  */
 
-const ORIGINS = ["TPE", "KHH", "RMQ"];   // 台北（含桃園、松山）、高雄、台中
-const MONTHS_AHEAD = 4;                  // 本月 + 往後 3 個月
 const CURRENCY = "twd";
 const LIMIT = 1000;
-const CACHE_SECONDS = 3 * 60 * 60;       // 3 小時更新一次就夠（快取資料本來就是每天更新）
+const CACHE_SECONDS = 3 * 60 * 60; // 3 小時更新一次
 
-// 只留這四國的城市（城市代碼）
-const KEEP = new Set([
+// ---------- 一般低價 ----------
+const ORIGINS = ["TPE", "KHH", "RMQ"]; // 台北（含桃園、松山）、高雄、台中
+const MONTHS_AHEAD = 4;                 // 本月 + 往後 3 個月
+const MAIN_KEEP = new Set([
   // 日本
   "TYO","OSA","NGO","SPK","FUK","OKA","SDJ","HIJ","KMJ","KOJ","KIJ","TAK","OKJ","MYJ",
   "ISG","UKB","KMQ","HKD","AOJ","IBR","SHI","FSZ","TOY","AKJ","NGS","OIT","YGJ","HSG","KCZ",
@@ -31,6 +31,14 @@ const KEEP = new Set([
   // 越南
   "SGN","HAN","DAD","CXR","PQC","HPH","DLI","VCA","HUI","VDO",
 ]);
+
+// ---------- 傳統航空 ----------
+const FSC_AIRLINES = new Set(["BR", "CI", "JX", "CX"]); // 長榮、華航、星宇、國泰
+const FSC_ROUTES = {
+  TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","BKK","CNX","SGN","HAN","DAD",
+        "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO"],
+  KHH: ["TYO","OSA","OKA","SEL","BKK","HKG","SHA","BJS"],
+}; // 共 32 次查詢，低於免費方案 50 次上限
 
 function months() {
   const out = [];
@@ -57,8 +65,11 @@ export default {
       return new Response(JSON.stringify({ error: "缺少 TP_TOKEN" }), { status: 500, headers });
     }
 
+    const url = new URL(request.url);
+    const part = url.searchParams.get("part") === "fsc" ? "fsc" : "main";
+
     const cache = caches.default;
-    const cacheKey = new Request(new URL(request.url).origin + "/_deals_cache_v1");
+    const cacheKey = new Request(`${url.origin}/_deals_cache_v2_${part}`);
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
@@ -71,31 +82,43 @@ export default {
       } catch { return []; }
     };
 
-    // 每個出發地 × 每個月：來回（不限轉機＋只限直飛）、單程。共 3×4×3 = 36 次，低於免費方案 50 次上限。
     const jobs = [];
-    for (const origin of ORIGINS) {
-      for (const m of months()) {
-        const q = `origin=${origin}&departure_at=${m}`;
-        jobs.push(get(`${q}&one_way=false&direct=false`));
-        jobs.push(get(`${q}&one_way=false&direct=true`));
-        jobs.push(get(`${q}&one_way=true&direct=false`));
+    if (part === "main") {
+      // 每個出發地 × 每個月：來回（不限轉機＋只限直飛）、單程。共 3×4×3 = 36 次。
+      for (const origin of ORIGINS) {
+        for (const m of months()) {
+          const q = `origin=${origin}&departure_at=${m}`;
+          jobs.push(get(`${q}&one_way=false&direct=false`));
+          jobs.push(get(`${q}&one_way=false&direct=true`));
+          jobs.push(get(`${q}&one_way=true&direct=false`));
+        }
+      }
+    } else {
+      // 指定航線抓來回，才抓得到傳統航空（不指定航線時多半只剩廉航）
+      for (const [origin, dests] of Object.entries(FSC_ROUTES)) {
+        for (const dest of dests) {
+          jobs.push(get(`origin=${origin}&destination=${dest}&one_way=false&direct=false`));
+        }
       }
     }
     const all = (await Promise.all(jobs)).flat();
 
-    // 只留日韓泰越、去掉重複
+    const keep = (r) => part === "main"
+      ? MAIN_KEEP.has(r.destination)
+      : FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
+
     const seen = new Set();
     const rows = [];
     for (const r of all) {
-      if (!KEEP.has(r.destination)) continue;
-      const key = [r.origin, r.destination, r.departure_at, r.return_at || "", r.price, r.transfers].join("|");
+      if (!keep(r)) continue;
+      const key = [r.origin, r.destination, r.departure_at, r.return_at || "", r.price, r.transfers, r.airline].join("|");
       if (seen.has(key)) continue;
       seen.add(key);
       delete r.link; // 這是 Aviasales 的連結，不是你的聯盟連結，絕不外流
       rows.push(r);
     }
 
-    const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), count: rows.length, rows }), { headers });
+    const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), part, count: rows.length, rows }), { headers });
     ctx.waitUntil(cache.put(cacheKey, res.clone()));
     return res;
   },
