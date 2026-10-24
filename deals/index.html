@@ -104,28 +104,36 @@
   .tile[aria-pressed="true"]{outline:3px solid var(--yellow);outline-offset:-3px}
 
   /* ---------- 篩選列 ---------- */
-  .row{display:flex;gap:10px;align-items:center;margin:10px 0 2px;flex-wrap:wrap}
-  .seg{display:inline-flex;background:#E2E8F0;border-radius:999px;padding:3px}
+  .panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 16px;overflow:hidden;margin-top:8px}
+  .prow{display:grid;grid-template-columns:minmax(0,1fr);row-gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+  .prow:first-child{border-top:0}
+  .plbl{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.5px}
+  .pctl{min-width:0}
+  @media (min-width:760px){
+    .prow{grid-template-columns:84px minmax(0,1fr);align-items:center;column-gap:12px}
+  }
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
   .seg button{border:0;background:transparent;border-radius:999px;height:34px;padding:0 16px;font-size:14px;font-weight:700}
   .seg button[aria-pressed="true"]{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-  select{font:inherit;font-size:14px;border:1.5px solid #CBD5E1;border-radius:999px;height:40px;padding:0 12px;background:#fff;color:var(--ink)}
-  .scroller{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 8px;margin:0 -16px;scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+  select{font:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:999px;height:40px;padding:0 12px;background:#fff;color:var(--ink)}
+  .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
   .scroller::-webkit-scrollbar{display:none}
-  .month{flex:0 0 auto;width:96px;border:0;border-radius:16px;background:#fff;padding:10px 6px;text-align:center;scroll-snap-align:start;
-    box-shadow:var(--shadow)}
+  .month{flex:0 0 auto;width:92px;border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:8px 6px;text-align:center;scroll-snap-align:start}
   .month .m{font-size:18px;font-weight:900}
   .month .y{font-size:12.5px;color:var(--muted);margin-top:1px}
-  .month .p{font-size:12px;margin-top:4px;color:var(--red);font-weight:700;white-space:nowrap}
+  .month .p{font-size:12px;margin-top:3px;color:#334155;font-weight:700;white-space:nowrap}
+  .month .p.low{color:var(--red)}
   .month .p.none{color:#94A3B8;font-weight:500}
-  .month[aria-pressed="true"]{background:var(--navy);color:#fff}
+  .month[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
   .month[aria-pressed="true"] .y{color:#C9D6EA}
   .month[aria-pressed="true"] .p{color:var(--yellow)}
-  .chip{flex:0 0 auto;border:1.5px solid #CBD5E1;background:#fff;border-radius:999px;height:38px;padding:0 16px;font-size:14.5px;
+  .chip{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;border-radius:999px;height:36px;padding:0 15px;font-size:14px;
     white-space:nowrap;font-weight:500;display:inline-flex;align-items:center}
   .chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700}
   .meta-row{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;margin:12px 2px 10px;gap:12px}
-  .holiday-hint{background:#FFF6D6;border-radius:12px;padding:9px 12px;font-size:13.5px;color:#7A5600;margin:8px 0}
+  .holiday-hint{background:#FFF6D6;border-radius:12px;padding:9px 12px;font-size:13.5px;color:#7A5600;margin:0 0 12px}
 
   /* ---------- 機票卡片 ---------- */
   .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
@@ -224,24 +232,27 @@
       <p class="sub" id="fSub">預估最低價格</p>
     </div>
 
-    <div class="row">
-      <div class="seg" id="tripType">
-        <button aria-pressed="true" data-v="rt">來回</button>
-        <button aria-pressed="false" data-v="ow">單程</button>
+    <div class="panel">
+      <div class="prow">
+        <span class="plbl">行程</span>
+        <div class="pctl row">
+          <div class="seg" id="tripType">
+            <button aria-pressed="true" data-v="rt">來回</button>
+            <button aria-pressed="false" data-v="ow">單程</button>
+          </div>
+          <select id="origin" aria-label="出發地">
+            <option value="">全部出發地</option>
+            <option value="TPE">台北出發</option>
+            <option value="KHH">高雄出發</option>
+            <option value="RMQ">台中出發</option>
+          </select>
+        </div>
       </div>
-      <select id="origin" aria-label="出發地">
-        <option value="">全部出發地</option>
-        <option value="TPE">台北出發</option>
-        <option value="KHH">高雄出發</option>
-        <option value="RMQ">台中出發</option>
-      </select>
+      <div class="prow"><span class="plbl">出發月份</span><div class="pctl"><div class="scroller" id="months"></div></div></div>
+      <div class="prow"><span class="plbl">地區</span><div class="pctl"><div class="scroller" id="countries"></div></div></div>
+      <div class="prow"><span class="plbl">條件</span><div class="pctl"><div class="scroller" id="filters"></div></div></div>
+      <div id="holidayHint" class="holiday-hint hidden"></div>
     </div>
-
-    <div class="scroller" id="months" style="margin-top:10px"></div>
-    <div class="scroller" id="countries"></div>
-    <div class="scroller" id="filters"></div>
-
-    <div id="holidayHint" class="holiday-hint hidden"></div>
     <div class="meta-row"><span id="updated">讀取中…</span><span id="count"></span></div>
     <div class="grid" id="flightList">
       <div class="skel"><div class="a"></div><div class="b"></div></div>
@@ -338,10 +349,11 @@ const CITIES = {
 // 機場代碼 → 城市代碼（照片用）
 const CITY_CANON = { NRT:"TYO", HND:"TYO", KIX:"OSA", ITM:"OSA", CTS:"SPK", ICN:"SEL", GMP:"SEL", DMK:"BKK",
   PVG:"SHA", PEK:"BJS", PKX:"BJS", TFU:"CTU" };
-// 各城市代表地標：[英文維基條目, 中文名稱]。照片從維基百科抓，抓不到會顯示漸層底。
+// 各城市代表地標：[英文維基條目 或 "File:維基共享資源檔名", 中文名稱]。
+// 寫條目名稱＝用該條目的代表照片；寫 "File:…"＝指定那一張照片。抓不到會顯示漸層底。
 const LANDMARKS = {
   TYO:["Tokyo Tower","東京鐵塔"], OSA:["Osaka Castle","大阪城"], NGO:["Nagoya Castle","名古屋城"], SPK:["Odori Park","大通公園"],
-  FUK:["Fukuoka Tower","福岡塔"], OKA:["Okinawa Churaumi Aquarium","美麗海水族館"], SDJ:["Matsushima","松島"],
+  FUK:["Fukuoka Tower","福岡塔"], OKA:["File:Furuzamami beach Okinawa Zamami.jpg","古座間味海灘"], SDJ:["Matsushima","松島"],
   HIJ:["Itsukushima Shrine","嚴島神社"], KMJ:["Kumamoto Castle","熊本城"], KOJ:["Sakurajima","櫻島"], KIJ:["Niigata (city)","新潟"],
   TAK:["Ritsurin Garden","栗林公園"], OKJ:["Kōraku-en","岡山後樂園"], MYJ:["Dōgo Onsen","道後溫泉"], ISG:["Kabira Bay","川平灣"],
   UKB:["Kobe Port Tower","神戶港塔"], KMQ:["Kenroku-en","兼六園"], HKD:["Goryōkaku","五稜郭"], AOJ:["Hirosaki Castle","弘前城"],
@@ -355,8 +367,8 @@ const LANDMARKS = {
   SGN:["Saigon Notre-Dame Basilica","西貢紅教堂"], HAN:["Hoàn Kiếm Lake","還劍湖"], DAD:["Golden Bridge (Vietnam)","黃金橋"],
   CXR:["Nha Trang","芽莊海灘"], PQC:["Phú Quốc","富國島"], HPH:["Cát Bà Island","吉婆島"], DLI:["Da Lat","大叻"],
   VCA:["Cần Thơ","芹苴"], HUI:["Imperial City of Huế","順化皇城"], VDO:["Hạ Long Bay","下龍灣"],
-  HKG:["Victoria Harbour","維多利亞港"],
-  SHA:["The Bund","外灘"], BJS:["Temple of Heaven","天壇"], CAN:["Canton Tower","廣州塔"], SZX:["Ping An Finance Center","平安金融中心"],
+  HKG:["File:Hong Kong Night Skyline.jpg","維多利亞港夜景"],
+  SHA:["File:2014.11.15.190758 View Night Pudong Bund Shanghai.jpg","外灘・東方明珠"], BJS:["Temple of Heaven","天壇"], CAN:["Canton Tower","廣州塔"], SZX:["Ping An Finance Center","平安金融中心"],
   CTU:["Chengdu Research Base of Giant Panda Breeding","熊貓基地"], CKG:["Hongyadong","洪崖洞"], XMN:["Gulangyu","鼓浪嶼"],
   HGH:["West Lake","西湖"], NKG:["Sun Yat-sen Mausoleum","中山陵"], TAO:["Zhanqiao","棧橋"], WUH:["Yellow Crane Tower","黃鶴樓"],
   XIY:["Terracotta Army","兵馬俑"], KMG:["Stone Forest","石林"], DLC:["Xinghai Square","星海廣場"],
@@ -366,7 +378,7 @@ const LANDMARKS = {
 // 「依地區探索」磚塊的代表照
 const COUNTRY_PHOTO = {
   JP:["Mount Fuji","富士山"], KR:["Bukchon Hanok Village","北村韓屋村"], TH:["Grand Palace","大皇宮"],
-  VN:["Hội An","會安古鎮"], CN:["Great Wall of China","萬里長城"], HK:["Victoria Peak","太平山頂"],
+  VN:["Golden Bridge (Vietnam)","黃金橋"], CN:["Great Wall of China","萬里長城"], HK:["File:Hong Kong Night Skyline.jpg","維多利亞港夜景"],
 };
 // 卡片顯示的航空公司名稱（傳統航空＋常見廉航）。不在名單裡的會顯示航空代碼。
 const AIRLINE_NAMES = {
@@ -456,8 +468,14 @@ const imgPending = new Set();
 let imgTimer = null;
 
 // 照片區塊：漸層底＋地標文字（抓不到照片時看到的）＋照片（抓到才淡入）
+function commonsUrl(file, size){
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file.replace(/^File:/, "").replace(/ /g, "_")) + "?width=" + (size || 800);
+}
 function photoHTML(wiki, country, label, size, eager){
-  const img = wiki ? `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size || 800}"${eager ? "" : ' loading="lazy"'} decoding="async" />` : "";
+  const lazy = eager ? "" : ' loading="lazy"';
+  const img = !wiki ? "" : /^File:/.test(wiki)
+    ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${lazy} decoding="async" />`
+    : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size || 800}"${lazy} decoding="async" />`;
   return `<div class="fb">${esc(label || "")}</div>${img}<div class="shade"></div>`;
 }
 function queueImages(){ clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
@@ -469,6 +487,7 @@ function applyImg(im, src){
   im.src = src;
 }
 async function loadImages(){
+  for (const im of document.querySelectorAll("img[data-file]:not([data-done])")) applyImg(im, im.dataset.file);
   const want = {};
   for (const im of document.querySelectorAll("img[data-wiki]:not([data-done])")){
     const size = im.dataset.size || "800", key = im.dataset.wiki + "|" + size, c = imgCache[key];
@@ -724,12 +743,13 @@ function renderTiles(){
    ==================================================================== */
 function renderMonths(){
   const base = baseFiltered();
-  $("#months").innerHTML = monthKeys().map(k => {
+  const mins = monthKeys().map(k => { const ps = base.filter(f => f.dep.startsWith(k)).map(f => f.price); return ps.length ? Math.min(...ps) : null; });
+  const low = Math.min(...mins.filter(Boolean));
+  $("#months").innerHTML = monthKeys().map((k, i) => {
     const [y,m] = k.split("-");
-    const inMonth = base.filter(f => f.dep.startsWith(k));
-    const min = inMonth.length ? Math.min(...inMonth.map(f => f.price)) : null;
+    const min = mins[i];
     return `<button class="month" aria-pressed="${k === state.month}" data-v="${k}">
-      <div class="m">${Number(m)}月</div><div class="y">${y}</div><div class="p${min ? "" : " none"}">${min ? money(min) + " 起" : "—"}</div></button>`;
+      <div class="m">${Number(m)}月</div><div class="y">${y}</div><div class="p${min ? (min === low ? " low" : "") : " none"}">${min ? money(min) + " 起" : "—"}</div></button>`;
   }).join("");
 }
 function renderChips(){
