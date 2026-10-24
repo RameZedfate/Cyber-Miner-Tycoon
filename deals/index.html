@@ -148,7 +148,6 @@
 
     <div class="scroller" id="months" style="margin-top:10px"></div>
     <div class="scroller" id="countries"></div>
-    <div class="scroller hidden" id="airlines"></div>
     <div class="scroller" id="filters"></div>
 
     <div id="holidayHint" class="holiday-hint hidden"></div>
@@ -186,7 +185,7 @@ const AFFILIATE = {
 const CONFIG = {
   // 機票資料來源，依序嘗試。第一格貼新 Worker（deals/worker.js）的網址；第二格是舊版 Worker，當備援。
   dataUrls: ["https://howtravle-deals.a8225012.workers.dev/", "https://cold-union-5668.a8225012.workers.dev/"],
-  fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空（長榮、華航、星宇、國泰）
+  fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空
   picksUrl: "picks.json",   // Adam 今日精選（HOWTRAVLE 每日 Top 2）
   hotelsUrl: "hotels.json", // 精選酒店
   monthsAhead: 4,
@@ -206,7 +205,15 @@ const HOLIDAYS = [
 const COUNTRIES = { JP:"日本", KR:"韓國", TH:"泰國", VN:"越南", CN:"中國大陸", HK:"香港" };
 const MAIN_COUNTRIES = ["JP","KR","TH","VN"];                 // 便宜機票
 const FSC_COUNTRIES  = ["JP","KR","TH","VN","CN","HK"];       // 傳統航空
-const FSC_AIRLINES = { BR:"長榮航空", CI:"中華航空", JX:"星宇航空", CX:"國泰航空" };
+// 傳統航空名單（要增減就改這裡；worker.js 也有一份，新增時兩邊都加）
+const FSC_AIRLINES = {
+  CI:"中華航空", BR:"長榮航空", JX:"星宇航空", AE:"華信航空", B7:"立榮航空",
+  JL:"日本航空", NH:"全日空", KE:"大韓航空", OZ:"韓亞航空",
+  CX:"國泰航空", HX:"香港航空", NX:"澳門航空",
+  TG:"泰國航空", VN:"越南航空", SQ:"新加坡航空", MH:"馬來西亞航空", PR:"菲律賓航空",
+  CA:"中國國際航空", MU:"東方航空", CZ:"南方航空", FM:"上海航空", MF:"廈門航空",
+  ZH:"深圳航空", "3U":"四川航空", HU:"海南航空", SC:"山東航空", HO:"吉祥航空",
+};
 const CITIES = {
   TYO:["東京","JP"], NRT:["東京","JP"], HND:["東京","JP"], OSA:["大阪","JP"], KIX:["大阪","JP"], ITM:["大阪","JP"],
   NGO:["名古屋","JP"], SPK:["札幌","JP"], CTS:["札幌","JP"], FUK:["福岡","JP"], OKA:["沖繩","JP"], SDJ:["仙台","JP"],
@@ -323,7 +330,7 @@ function isWeekend(f){
 }
 
 const state = {
-  tab: "flights", mode: "all", airline: "", type: "rt", origin: "", month: null, country: "", filter: "cheap",
+  tab: "flights", mode: "all", type: "rt", origin: "", month: null, country: "", filter: "cheap",
   shown: CONFIG.pageSize, flights: [], updatedAt: null,
   hotels: [], hotelsUpdated: null, hCountry: "",
 };
@@ -343,7 +350,7 @@ function baseFiltered(){
   const countries = fsc ? FSC_COUNTRIES : MAIN_COUNTRIES;
   return state.flights.filter(f =>
     countries.includes(f.country) &&
-    (!fsc || (FSC_AIRLINES[f.airline] && (!state.airline || f.airline === state.airline))) &&
+    (!fsc || FSC_AIRLINES[f.airline]) &&
     (state.type === "rt" ? !!f.ret : !f.ret) &&
     (!state.origin || f.o === state.origin) &&
     (!state.country || f.country === state.country) &&
@@ -356,7 +363,7 @@ function baseFiltered(){
 function cheapestPerRoute(list){
   const best = new Map();
   for (const f of list){
-    const k = f.o + "-" + f.d + (state.mode === "fsc" ? "-" + f.airline : "");
+    const k = f.o + "-" + f.d;
     const cur = best.get(k);
     if (!cur || f.price < cur.price || (f.price === cur.price && f.dep < cur.dep)) best.set(k, f);
   }
@@ -414,9 +421,6 @@ function renderChips(){
   const cs = state.mode === "fsc" ? FSC_COUNTRIES : MAIN_COUNTRIES;
   $("#countries").innerHTML = [["", "全部地區"], ...cs.map(c => [c, COUNTRIES[c]])].map(([v,t]) =>
     `<button class="chip" aria-pressed="${v === state.country}" data-v="${v}">${t}</button>`).join("");
-  $("#airlines").classList.toggle("hidden", state.mode !== "fsc");
-  $("#airlines").innerHTML = [["", "全部航空"], ...Object.entries(FSC_AIRLINES)].map(([v,t]) =>
-    `<button class="chip" aria-pressed="${v === state.airline}" data-v="${v}">${t}</button>`).join("");
   $("#filters").innerHTML = FILTERS.map(x =>
     `<button class="chip" aria-pressed="${x.v === state.filter}" data-v="${x.v}">${x.t}</button>`).join("");
 }
@@ -425,8 +429,7 @@ function renderFlights(){
   const [y,m] = state.month.split("-");
   const fsc = state.mode === "fsc";
   const where = state.country ? COUNTRIES[state.country] : (fsc ? "日韓泰越・大陸港" : "日韓泰越");
-  const who = fsc ? (state.airline ? FSC_AIRLINES[state.airline] : "傳統航空") : "";
-  $("#fTitle").textContent = fsc ? `${who}飛往${where}的超值航班` : `飛往${where}的超值航班`;
+  $("#fTitle").textContent = fsc ? `傳統航空飛往${where}的超值航班` : `飛往${where}的超值航班`;
   $("#fSub").textContent = `${Number(m)}月期間預估最低價格（${state.type === "rt" ? "來回" : "單程"}・1 位成人・含稅）`;
 
   const hols = HOLIDAYS.filter(h => h.start.startsWith(state.month) || h.end.startsWith(state.month));
@@ -577,11 +580,11 @@ document.querySelector(".tabs").addEventListener("click", e => {
   $("#hotels").classList.toggle("hidden", state.tab !== "hotels");
   const fsc = state.tab === "fsc";
   $("#scopeText").textContent = fsc ? "台灣出發 → 日韓泰越・中國大陸・香港" : "台灣出發 → 日本・韓國・泰國・越南";
-  $("#scopeSub").textContent = fsc ? "長榮・華航・星宇・國泰・1 位成人・每天自動更新" : "任何日期・1 位成人・每天自動更新";
+  $("#scopeSub").textContent = fsc ? "華航・長榮・星宇・國泰等傳統航空" : "任何日期・1 位成人・每天自動更新";
   if (state.tab !== "hotels"){
     const mode = fsc ? "fsc" : "all";
     if (mode !== state.mode){
-      state.mode = mode; state.country = ""; state.airline = ""; resetPage();
+      state.mode = mode; state.country = ""; resetPage();
       $("#picks").dataset.mode = mode;
       $("#picks").classList.toggle("off", fsc);
       if (state.flights.length) state.month = bestMonth();
@@ -597,7 +600,6 @@ $("#tripType").addEventListener("click", e => {
 });
 $("#origin").addEventListener("change", e => { state.origin = e.target.value; resetPage(); renderFlights(); });
 $("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
-$("#airlines").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.airline = b.dataset.v; resetPage(); renderFlights(); });
 $("#countries").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.country = b.dataset.v; resetPage(); renderFlights(); });
 $("#filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.v; resetPage(); renderFlights(); });
 $("#moreBtn").addEventListener("click", () => { state.shown += CONFIG.pageSize; renderFlights(); });

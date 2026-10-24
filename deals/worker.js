@@ -2,7 +2,7 @@
  * Cloudflare Worker：自動抓「台灣出發」的預估低價機票
  *
  *   https://你的網址/            → 一般低價：日韓泰越，所有航空公司
- *   https://你的網址/?part=fsc   → 傳統航空：長榮、華航、星宇、國泰，日韓泰越＋中國大陸＋香港
+ *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
  *
  * 價格來源：Travelpayouts（Aviasales）低價快取。這是「預估最低價」，
  * 不是 Trip.com 即時價；網頁會標明，訂票按鈕一律導到 Trip.com 聯盟連結。
@@ -33,12 +33,27 @@ const MAIN_KEEP = new Set([
 ]);
 
 // ---------- 傳統航空 ----------
-const FSC_AIRLINES = new Set(["BR", "CI", "JX", "CX"]); // 長榮、華航、星宇、國泰
+// 要跟 index.html 的 FSC_AIRLINES 保持一致（網頁以 index.html 那份為準）
+const FSC_AIRLINES = new Set([
+  "CI","BR","JX","AE","B7",            // 台灣：華航、長榮、星宇、華信、立榮
+  "JL","NH",                           // 日本：日航、全日空
+  "KE","OZ",                           // 韓國：大韓、韓亞
+  "CX","HX","NX",                      // 港澳：國泰、香港航空、澳門航空
+  "TG","VN","SQ","MH","PR",            // 東南亞：泰航、越南航空、新航、馬航、菲航
+  "CA","MU","CZ","FM","MF","ZH","3U","HU","SC","HO", // 中國大陸
+]);
+const CN_HK = new Set([
+  "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO","WUH","XIY","KMG",
+  "DLC","FOC","TSN","CSX","SYX","CGO","SHE","NGB",
+]);
+// 指定航線抓來回（不指定航線時多半只剩廉航）。共 46 次查詢，低於免費方案 50 次上限。
 const FSC_ROUTES = {
   TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","BKK","CNX","SGN","HAN","DAD",
-        "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO"],
-  KHH: ["TYO","OSA","OKA","SEL","BKK","HKG","SHA","BJS"],
-}; // 共 32 次查詢，低於免費方案 50 次上限
+        "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO",
+        "WUH","XIY","KMG","DLC","FOC","TSN","CSX","NGB","SHE","CGO"],
+  KHH: ["TYO","OSA","OKA","SEL","BKK","HKG","SHA","BJS","CAN","SZX","XMN"],
+  RMQ: ["HKG"],
+};
 
 function months() {
   const out = [];
@@ -69,7 +84,7 @@ export default {
     const part = url.searchParams.get("part") === "fsc" ? "fsc" : "main";
 
     const cache = caches.default;
-    const cacheKey = new Request(`${url.origin}/_deals_cache_v2_${part}`);
+    const cacheKey = new Request(`${url.origin}/_deals_cache_v3_${part}`);
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
@@ -103,9 +118,11 @@ export default {
     }
     const all = (await Promise.all(jobs)).flat();
 
+    const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
+    // 一般低價也順便留下「傳統航空飛大陸／香港」的票，讓傳統航空分頁每個月都更完整
     const keep = (r) => part === "main"
-      ? MAIN_KEEP.has(r.destination)
-      : FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
+      ? (MAIN_KEEP.has(r.destination) || (CN_HK.has(r.destination) && isFsc(r)))
+      : isFsc(r);
 
     const seen = new Set();
     const rows = [];
