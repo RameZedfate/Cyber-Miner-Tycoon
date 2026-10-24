@@ -1,0 +1,257 @@
+// 版面檢查：用各種比例的模擬照片與航空公司標誌，在多種螢幕寬度下量測有沒有沒對齊、跑版、超出畫面。
+// 用法：node deals/check-layout.mjs [截圖資料夾]
+// 模擬資料只在這支檢查程式裡使用，不會出現在正式網頁上。
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { chromium } = require("playwright");
+const DIR = path.dirname(fileURLToPath(import.meta.url));
+const SHOTS = process.argv[2] || null;
+
+const today = new Date(Date.now() + 8 * 3600e3);
+const day = (n) => { const d = new Date(today); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const row = (o, d, oa, da, dep, ret, price, tr, rtr, airline) => ({
+  origin: o, destination: d, origin_airport: oa, destination_airport: da, price, airline,
+  departure_at: dep + "T08:00:00+08:00", return_at: ret ? ret + "T18:00:00+09:00" : undefined,
+  transfers: tr, return_transfers: ret ? rtr : undefined,
+});
+const MAIN = { updated_at: new Date().toISOString(), rows: [
+  row("TPE","TYO","TPE","NRT",day(10),day(14),6890,0,0,"IT"),
+  row("TPE","OSA","TPE","KIX",day(12),day(16),5980,0,0,"MM"),
+  row("KHH","OKA","KHH","OKA",day(13),day(16),4590,0,0,"IT"),
+  row("TPE","SEL","TPE","ICN",day(14),day(18),6100,0,0,"TW"),
+  row("TPE","BKK","TPE","DMK",day(15),day(22),7350,1,1,"FD"),
+  row("TPE","PQC","TPE","PQC",day(16),day(30),4551,0,0,"9G"),        // 標誌載不到 → 顯示代碼
+  row("RMQ","DAD","RMQ","DAD",day(17),day(22),5200,0,0,"VJ"),
+  row("TPE","SHA","TPE","PVG",day(18),day(21),3999,0,0,"MU"),
+  row("TPE","HKG","TPE","HKG",day(19),day(22),3500,0,0,"UO"),
+  row("TPE","CTU","TPE","TFU",day(20),day(25),8800,1,1,"3U"),
+  row("TPE","CJU","TPE","CJU",day(21),day(26),4387,0,0,"7C"),
+  row("TPE","VDO","TPE","VDO",day(22),day(27),9900,1,0,"QQ"),        // 不在名單的航空公司
+  row("TPE","FUK","TPE","FUK",day(15),null,2399,0,0,"IT"),
+  row("TPE","CJU","TPE","CJU","2027-02-04","2027-02-09",8900,0,0,"KE"),
+] };
+const FSC = { updated_at: new Date().toISOString(), part: "fsc", rows: [
+  row("TPE","HKG","TPE","HKG",day(18),day(21),5111,0,0,"CX"),
+  row("TPE","SHA","TSA","SHA",day(25),day(29),6333,0,0,"CI"),
+  row("TPE","BJS","TPE","PEK",day(26),day(30),7444,0,0,"CA"),
+  row("TPE","TYO","TPE","NRT",day(27),day(31),8555,0,0,"JX"),
+  row("TPE","SEL","TPE","ICN",day(28),day(32),7777,0,0,"KE"),
+] };
+const PICKS = { items: [{ origin:"TPE", destination:"OSA", departDate:day(12), returnDate:day(16), price:5980, direct:true,
+  airline:"MM", checkedAt:new Date().toISOString(), note:"週末出發，大阪直飛不到六千" }] };
+const HOTELS = { updated_at: new Date().toISOString(), items: [
+  { city:"東京", country:"JP", name:"淺草站前一間名字很長很長很長的精品設計酒店（測試換行）", area:"淺草站步行 3 分鐘", rating:8.6,
+    pricePerNight:2450, checkin:day(10), checkout:day(14), url:"https://tw.trip.com/hotels/detail/?hotelId=1" },
+  { city:"曼谷", country:"TH", name:"測試酒店 B", area:"暹羅", rating:8.2, pricePerNight:1350, url:"https://tw.trip.com/hotels/detail/?hotelId=2" },
+] };
+
+// 模擬照片：各種比例輪流（直式、橫式、超寬、正方形），其中一個條目故意沒有照片
+const SHAPES = [[600, 900], [1600, 900], [2000, 500], [800, 800], [1280, 853]];
+const NO_PHOTO = "Mount Daisen";
+function svg(w, h, label, bg) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="100%" height="100%" fill="${bg}"/><rect x="4" y="4" width="${w - 8}" height="${h - 8}" fill="none" stroke="#fff" stroke-width="8"/>
+  <text x="50%" y="50%" font-size="${Math.min(w, h) / 8}" fill="#fff" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`;
+}
+
+const server = http.createServer((req, res) => {
+  const p = path.join(DIR, decodeURIComponent(new URL(req.url, "http://x").pathname).replace(/\/$/, "/index.html"));
+  if (!p.startsWith(DIR) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { "Content-Type": p.endsWith(".html") ? "text/html; charset=utf-8" : "application/json" });
+  fs.createReadStream(p).pipe(res);
+}).listen(0);
+const base = `http://127.0.0.1:${server.address().port}/`;
+
+async function setup(page) {
+  await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+    body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MAIN) }));
+  await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(PICKS) }));
+  await page.route("**/hotels.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(HOTELS) }));
+  await page.route("https://fonts.googleapis.com/**", r => r.fulfill({ contentType: "text/css", body: "" }));
+  await page.route("https://fonts.gstatic.com/**", r => r.abort());
+  await page.route("https://en.wikipedia.org/w/api.php**", r => {
+    const u = new URL(r.request().url());
+    const titles = u.searchParams.get("titles").split("|");
+    const size = u.searchParams.get("pithumbsize");
+    const pages = titles.map((t, i) => {
+      if (t === NO_PHOTO) return { title: t };
+      const [w, h] = SHAPES[(t.length + i) % SHAPES.length];
+      return { title: t, thumbnail: { source: `https://img.mock/${encodeURIComponent(t)}/${w}x${h}.svg?s=${size}`, width: w, height: h } };
+    });
+    r.fulfill({ contentType: "application/json", body: JSON.stringify({ query: { pages } }) });
+  });
+  await page.route("https://img.mock/**", r => {
+    const m = r.request().url().match(/\/(\d+)x(\d+)\.svg/);
+    r.fulfill({ contentType: "image/svg+xml", body: svg(+m[1], +m[2], `${m[1]}x${m[2]}`, "#3b6ea5") });
+  });
+  // 航空公司標誌：一般是寬版；9G 兩個來源都失敗 → 要顯示代碼；MM 是很高的直式標誌
+  await page.route("https://pics.avs.io/**", r => {
+    const code = r.request().url().match(/\/([A-Z0-9]{2,3})\.png/)[1];
+    if (code === "9G" || code === "QQ") return r.fulfill({ status: 404, body: "" });
+    const [w, h] = code === "MM" ? [60, 120] : [288, 96];
+    r.fulfill({ contentType: "image/svg+xml", body: svg(w, h, code, "#e11d48") });
+  });
+  await page.route("https://img.wway.io/**", r => r.fulfill({ status: 404, body: "" }));
+}
+
+// 在頁面裡量測
+async function measure(page) {
+  return page.evaluate(() => {
+    const out = [];
+    const R = (el) => el.getBoundingClientRect();
+    const vis = (el) => { const r = R(el); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden"; };
+    const near = (a, b, t = 1.01) => Math.abs(a - b) <= t;
+    const W = document.documentElement.clientWidth;
+
+    if (document.documentElement.scrollWidth > W + 1) out.push(`整頁出現橫向捲軸：內容寬 ${document.documentElement.scrollWidth} > 畫面 ${W}`);
+
+    // 1. 照片要剛好填滿照片框
+    for (const img of document.querySelectorAll(".ph img.bgimg.ok")) {
+      if (!vis(img.parentElement)) continue;
+      const a = R(img), b = R(img.parentElement);
+      if (!near(a.left, b.left) || !near(a.top, b.top) || !near(a.width, b.width) || !near(a.height, b.height))
+        out.push(`照片沒填滿框：${img.alt}（照片 ${a.width.toFixed(0)}x${a.height.toFixed(0)}，框 ${b.width.toFixed(0)}x${b.height.toFixed(0)}）`);
+      if (getComputedStyle(img).objectFit !== "cover") out.push(`照片不是 cover：${img.alt}`);
+    }
+    // 2. 卡片照片框比例一致（16:10）
+    for (const ph of document.querySelectorAll(".card .ph")) {
+      if (!vis(ph)) continue;
+      const r = R(ph);
+      if (Math.abs(r.width / r.height - 1.6) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}`);
+    }
+    // 3. 航空公司標誌：框大小一致、圖在框內、跟文字垂直置中
+    for (const lg of document.querySelectorAll(".card .logo")) {
+      if (!vis(lg)) continue;
+      const r = R(lg);
+      if (r.width > 72.5 || !near(r.height, 24)) out.push(`標誌框大小不對：${r.width}x${r.height}`);
+      const inner = lg.firstElementChild;
+      if (inner) {
+        const i = R(inner);
+        if (i.left < r.left - 1 || i.right > r.right + 1 || i.top < r.top - 1 || i.bottom > r.bottom + 1)
+          out.push(`標誌超出框：${inner.alt || inner.textContent}`);
+      }
+      const an = lg.parentElement.querySelector(".an");
+      if (an) {
+        const a = R(an);
+        if (Math.abs((r.top + r.bottom) / 2 - (a.top + a.bottom) / 2) > 2) out.push(`標誌跟航空公司名稱沒有垂直置中：${an.textContent}`);
+      }
+    }
+    // 4. 同一列卡片：上緣、高度、按鈕底部要對齊
+    for (const grid of document.querySelectorAll(".grid")) {
+      const cards = [...grid.children].filter(c => c.classList.contains("card") && vis(c));
+      const rows = {};
+      for (const c of cards) (rows[Math.round(R(c).top)] ||= []).push(c);
+      for (const [top, cs] of Object.entries(rows)) {
+        if (cs.length < 2) continue;
+        const hs = cs.map(c => R(c).height), bs = cs.map(c => R(c.querySelector(".cta")).bottom);
+        const phs = cs.map(c => R(c.querySelector(".ph")).bottom);
+        if (Math.max(...hs) - Math.min(...hs) > 1) out.push(`同一列卡片高度不一（top=${top}）：${hs.map(h => h.toFixed(0)).join("/")}`);
+        if (Math.max(...bs) - Math.min(...bs) > 1) out.push(`同一列按鈕沒對齊（top=${top}）`);
+        if (Math.max(...phs) - Math.min(...phs) > 1) out.push(`同一列照片底部沒對齊（top=${top}）`);
+      }
+      // 卡片左右邊界要貼齊格線
+      const lefts = new Set(cards.map(c => Math.round(R(c).left)));
+      const gridR = R(grid);
+      for (const c of cards) { const r = R(c); if (r.right > gridR.right + 1 || r.left < gridR.left - 1) out.push("卡片超出格線"); }
+      if (cards.length && lefts.size > 3) out.push(`卡片左邊界有 ${lefts.size} 種位置（欄位沒對齊）`);
+    }
+    // 5. 去程／回程：標籤、日期、直飛三欄在同一張卡片內要對齊
+    for (const legs of document.querySelectorAll(".legs")) {
+      if (!vis(legs)) continue;
+      const ls = [...legs.querySelectorAll(".lg")];
+      if (ls.length < 2) continue;
+      const col = (sel, side) => ls.map(l => R(l.querySelector(sel))[side]);
+      for (const [sel, side, name] of [[".lbl", "left", "去程／回程標籤"], [".lbl", "right", "標籤右緣"], [".st", "right", "直飛／轉機"]]) {
+        const v = col(sel, side);
+        if (Math.max(...v) - Math.min(...v) > 1) out.push(`${name}沒對齊`);
+      }
+      const dt = ls.map(l => R(l.querySelector(".dt")).left);
+      if (Math.max(...dt) - Math.min(...dt) > 1) out.push("去程／回程日期沒對齊");
+    }
+    // 6. 文字被截斷或撐破
+    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge"]) {
+      for (const el of document.querySelectorAll(sel)) {
+        if (!vis(el)) continue;
+        if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
+        const p = el.closest(".card,.tile,.slide,.tabs,.month");
+        if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
+      }
+    }
+    // 7. 照片上的標籤不能壓到城市名稱
+    for (const ph of document.querySelectorAll(".card .ph")) {
+      if (!vis(ph)) continue;
+      const b = ph.querySelector(".badges"), c = ph.querySelector(".cap");
+      if (b && c && b.children.length && R(b).bottom > R(c).top - 4) out.push(`照片上的標籤壓到城市名稱：${c.textContent.trim().slice(0, 10)}`);
+      const r = R(ph), cr = R(c);
+      if (cr.bottom > r.bottom || cr.left < r.left) out.push("城市名稱超出照片");
+    }
+    // 8. 大圖輪播：每張跟畫面同寬、內容不超出
+    for (const s of document.querySelectorAll(".slide")) {
+      const r = R(s);
+      if (s.closest("section.hidden")) continue;
+      if (!near(r.width, W, 1.5)) out.push(`輪播圖寬度 ${r.width} ≠ 畫面 ${W}`);
+      for (const el of s.querySelectorAll(".in > .wrap")) { const a = R(el); if (a.bottom > r.bottom + 1 || a.top < r.top - 1) out.push("輪播文字超出圖片"); }
+      const cta = s.querySelector(".hero-cta"); if (cta) { const a = R(cta); if (a.right > r.right + 1 || a.left < r.left - 1) out.push("輪播按鈕超出圖片"); }
+    }
+    const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
+    if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
+    // 9. 地區磚塊、月份按鈕大小一致
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"]]) {
+      const els = [...document.querySelectorAll(sel)].filter(vis);
+      const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
+      if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
+    }
+    // 10. 分頁按鈕三顆等寬
+    const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
+    if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
+    // 11. 篩選列每顆按鈕高度一致、垂直置中
+    for (const sc of document.querySelectorAll(".scroller")) {
+      const bs = [...sc.children].filter(vis);
+      const tops = bs.map(b => Math.round(R(b).top)), hs = bs.map(b => Math.round(R(b).height));
+      if (bs.length && (Math.max(...tops) - Math.min(...tops) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`#${sc.id} 按鈕沒對齊`);
+    }
+    return out;
+  });
+}
+
+const VIEWPORTS = [[360, 780], [390, 844], [768, 1024], [1280, 900], [1440, 900]];
+const all = [];
+const browser = await chromium.launch();
+try {
+  for (const [w, h] of VIEWPORTS) {
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: w < 700 ? 2 : 1 });
+    page.on("pageerror", e => all.push(`[${w}] 網頁錯誤：${e.message}`));
+    await setup(page);
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    for (const tab of ["flights", "fsc", "hotels"]) {
+      await page.click(`.tabs button[data-tab="${tab}"]`);
+      // 捲動整頁讓延遲載入的照片都載入
+      await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 40)); } window.scrollTo(0, 0); });
+      await page.waitForTimeout(700);
+      const issues = await measure(page);
+      issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
+      const ok = await page.$$eval(".bgimg.ok", els => els.filter(e => !e.closest("section.hidden")).length);
+      const fb = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).length);
+      const fbNames = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).map(e => e.textContent));
+      console.log(`[${w}px ${tab}] 照片載入 ${ok} 張、使用漸層底 ${fb} 個${fb ? "（" + fbNames.join("、") + "）" : ""}、問題 ${issues.length} 個`);
+      if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `layout-${w}-${tab}.png`), fullPage: true });
+    }
+    // 篩選到國家後再量一次（版面最容易出問題的情境：只剩 1～2 張卡）
+    await page.click('.tabs button[data-tab="flights"]');
+    await page.click('#tiles .tile[data-v="HK"]');
+    await page.waitForTimeout(300);
+    (await measure(page)).forEach(i => all.push(`[${w}px 香港] ${i}`));
+    await page.close();
+  }
+} finally {
+  await browser.close();
+  server.close();
+}
+if (all.length) { console.log("❌ 版面問題：\n" + [...new Set(all)].join("\n")); process.exit(1); }
+console.log("✅ 版面檢查全部通過");
