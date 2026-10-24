@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker：自動抓「台灣出發」的預估低價機票
  *
- *   https://你的網址/            → 一般低價：日韓泰越，所有航空公司
+ *   https://你的網址/            → 一般低價：日韓泰越＋中國大陸＋香港，所有航空公司
  *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
  *
  * 價格來源：Travelpayouts（Aviasales）低價快取。這是「預估最低價」，
@@ -20,7 +20,12 @@ const CACHE_SECONDS = 3 * 60 * 60; // 3 小時更新一次
 // ---------- 一般低價 ----------
 const ORIGINS = ["TPE", "KHH", "RMQ"]; // 台北（含桃園、松山）、高雄、台中
 const MONTHS_AHEAD = 4;                 // 本月 + 往後 3 個月
+const CN_HK = [
+  "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO","WUH","XIY","KMG",
+  "DLC","FOC","TSN","CSX","SYX","CGO","SHE","NGB",
+];
 const MAIN_KEEP = new Set([
+  ...CN_HK, // 中國大陸＋香港
   // 日本
   "TYO","OSA","NGO","SPK","FUK","OKA","SDJ","HIJ","KMJ","KOJ","KIJ","TAK","OKJ","MYJ",
   "ISG","UKB","KMQ","HKD","AOJ","IBR","SHI","FSZ","TOY","AKJ","NGS","OIT","YGJ","HSG","KCZ",
@@ -39,16 +44,12 @@ const FSC_AIRLINES = new Set([
   "JL","NH",                           // 日本：日航、全日空
   "KE","OZ",                           // 韓國：大韓、韓亞
   "CX","HX","NX",                      // 港澳：國泰、香港航空、澳門航空
-  "TG","VN","SQ","MH","PR",            // 東南亞：泰航、越南航空、新航、馬航、菲航
+  "TG","VN","9G","QH","SQ","MH","PR", // 東南亞：泰航、越南航空、富國太陽、越竹、新航、馬航、菲航
   "CA","MU","CZ","FM","MF","ZH","3U","HU","SC","HO", // 中國大陸
 ]);
-const CN_HK = new Set([
-  "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO","WUH","XIY","KMG",
-  "DLC","FOC","TSN","CSX","SYX","CGO","SHE","NGB",
-]);
-// 指定航線抓來回（不指定航線時多半只剩廉航）。共 46 次查詢，低於免費方案 50 次上限。
+// 指定航線抓來回（不指定航線時多半只剩廉航）。共 47 次查詢，低於免費方案 50 次上限。
 const FSC_ROUTES = {
-  TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","BKK","CNX","SGN","HAN","DAD",
+  TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","BKK","CNX","SGN","HAN","DAD","PQC",
         "HKG","SHA","BJS","CAN","SZX","CTU","CKG","XMN","HGH","NKG","TAO",
         "WUH","XIY","KMG","DLC","FOC","TSN","CSX","NGB","SHE","CGO"],
   KHH: ["TYO","OSA","OKA","SEL","BKK","HKG","SHA","BJS","CAN","SZX","XMN"],
@@ -84,7 +85,7 @@ export default {
     const part = url.searchParams.get("part") === "fsc" ? "fsc" : "main";
 
     const cache = caches.default;
-    const cacheKey = new Request(`${url.origin}/_deals_cache_v3_${part}`);
+    const cacheKey = new Request(`${url.origin}/_deals_cache_v4_${part}`);
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
@@ -112,7 +113,8 @@ export default {
       // 指定航線抓來回，才抓得到傳統航空（不指定航線時多半只剩廉航）
       for (const [origin, dests] of Object.entries(FSC_ROUTES)) {
         for (const dest of dests) {
-          jobs.push(get(`origin=${origin}&destination=${dest}&one_way=false&direct=false`));
+          jobs.push(get(`origin=${origin}&destination=${dest}&one_way=false&direct=false`)
+            .then(list => { list.forEach(r => { r._route = `${origin}-${dest}`; }); return list; }));
         }
       }
     }
@@ -120,9 +122,19 @@ export default {
 
     const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
     // 一般低價也順便留下「傳統航空飛大陸／香港」的票，讓傳統航空分頁每個月都更完整
-    const keep = (r) => part === "main"
-      ? (MAIN_KEEP.has(r.destination) || (CN_HK.has(r.destination) && isFsc(r)))
-      : isFsc(r);
+    const keep = (r) => part === "main" ? MAIN_KEEP.has(r.destination) : isFsc(r);
+
+    // 傳統航空：每條航線抓到幾筆、其中幾筆是傳統航空、出現哪些航空公司（用來檢查資料夠不夠）
+    const stats = {};
+    if (part === "fsc") {
+      for (const r of all) {
+        const s = (stats[r._route] ||= { total: 0, fsc: 0, airlines: {} });
+        s.total++;
+        if (isFsc(r)) s.fsc++;
+        const a = String(r.airline || "?").toUpperCase();
+        s.airlines[a] = (s.airlines[a] || 0) + 1;
+      }
+    }
 
     const seen = new Set();
     const rows = [];
@@ -132,10 +144,11 @@ export default {
       if (seen.has(key)) continue;
       seen.add(key);
       delete r.link; // 這是 Aviasales 的連結，不是你的聯盟連結，絕不外流
+      delete r._route;
       rows.push(r);
     }
 
-    const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), part, count: rows.length, rows }), { headers });
+    const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), part, count: rows.length, stats, rows }), { headers });
     ctx.waitUntil(cache.put(cacheKey, res.clone()));
     return res;
   },
