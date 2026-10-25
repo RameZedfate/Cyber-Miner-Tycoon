@@ -180,11 +180,11 @@ async function measure(page) {
       if (Math.max(...dt) - Math.min(...dt) > 1) out.push("去程／回程日期沒對齊");
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge"]) {
+    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
@@ -207,7 +207,7 @@ async function measure(page) {
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
-    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"]]) {
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"]]) {
       const els = [...document.querySelectorAll(sel)].filter(vis);
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
@@ -248,6 +248,7 @@ try {
       await page.waitForTimeout(700);
       const issues = await measure(page);
       issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
+      if (tab === "flights") { const n = await page.$$eval("#weekendList .mini", e => e.length); console.log(`[${w}px] 說走就走：${n} 張`); if (!n) all.push(`[${w}px] 說走就走沒有顯示`); }
       const ok = await page.$$eval(".bgimg.ok", els => els.filter(e => !e.closest("section.hidden")).length);
       const fb = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).length);
       const fbNames = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).map(e => e.textContent));

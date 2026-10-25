@@ -192,6 +192,21 @@
   .countdown .t2{font-size:13px;color:#C9D6EA;margin-top:3px}
   .countdown .go-ic{flex:0 0 auto;width:20px;height:20px}
 
+  /* ---------- 說走就走 ---------- */
+  .wk-row{gap:12px;padding-top:4px;padding-bottom:12px}
+  .mini{flex:0 0 210px;scroll-snap-align:start;background:#fff;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);
+    text-decoration:none;color:var(--ink);display:flex;flex-direction:column}
+  .mini .ph{aspect-ratio:4/3}
+  .mini .ph .cap{left:12px;right:12px;bottom:10px}
+  .mini .ph .cap .city{font-size:22px}
+  .mini .mb{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+  .mini .md{font-size:13px;color:#334155;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+  .mini .mp strong{font-size:21px;font-weight:900;color:var(--red);white-space:nowrap}
+  .mini .mp span{font-size:12px;color:var(--muted);white-space:nowrap}
+  .mini .go2{font-size:13px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:4px}
+  .mini .go2 .ic{width:15px;height:15px}
+
   /* ---------- 便宜票雷達 ---------- */
   .radar-wrap{background:radial-gradient(circle at 50% 50%,#12335F 0%,#0A1D38 62%,#071428 100%);border-radius:24px;padding:6px;box-shadow:var(--shadow);overflow:hidden}
   #radar{display:block;width:100%;max-width:620px;margin:0 auto;aspect-ratio:1/1;font-family:var(--font)}
@@ -370,6 +385,12 @@
     </div>
     <div class="tiles" id="tiles"></div>
     <button class="countdown hidden" id="countdown"></button>
+
+    <section id="weekendSec" class="hidden">
+      <h2 class="sec">說走就走：近 3 週的週末</h2>
+      <p class="sub">週四到週六出發、週日或週一回來，請個假就能走</p>
+      <div class="scroller wk-row" id="weekendList"></div>
+    </section>
 
     <section id="radarSec" class="hidden">
       <h2 class="sec">便宜票雷達</h2>
@@ -1111,6 +1132,7 @@ function renderFlights(){
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
   renderMoreRoutes(list);
   renderCountdown();
+  renderWeekend();
   renderRadar();
   $("#moreBtn").classList.toggle("hidden", list.length <= state.shown);
   queueImages();
@@ -1484,6 +1506,29 @@ function openRouteFromUrl(){
   if (ORIGIN_GROUP[m[1]] && CITIES[m[2]] && routeFlights(ORIGIN_GROUP[m[1]], m[2]).length){ pendingRoute = false; openRoute(ORIGIN_GROUP[m[1]], m[2]); }
 }
 
+
+
+/* ====================================================================
+   ⑰ 說走就走：近 3 週的週末
+   ==================================================================== */
+function renderWeekend(){
+  const sec = $("#weekendSec");
+  if (!state.loaded || state.type !== "rt"){ sec.classList.add("hidden"); return; }
+  const t = todayTW(), until = addDays(t, 21), from = addDays(t, 1);
+  const list = cheapestPerCity(modeFiltered().filter(f => f.dep > from && f.dep <= until && isWeekend(f))).slice(0, 10);
+  if (list.length < 2){ sec.classList.add("hidden"); return; }
+  $("#weekendList").innerHTML = list.map(f => {
+    const url = flightUrl(f); if (!url) return "";
+    const lm = landmarkOf(f.d);
+    return `<a class="mini" href="${esc(url)}" target="_blank" rel="noopener sponsored">
+      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 640, false)}
+        <div class="cap"><div class="city">${esc(cityName(f.d))}</div><div class="lm">${icon("pin")}${esc(ORIGIN_NAME[f.o])}出發</div></div></div>
+      <div class="mb"><div class="md">${esc(fmtDate(f.dep))} → ${esc(fmtDate(f.ret))}</div>
+        <div class="mp"><strong>${money(f.price)}</strong><span>${diffDays(f.dep, f.ret) + 1} 天${f.direct ? "・直飛" : ""}</span></div>
+        <div class="go2">去 Trip.com 訂${ARROW()}</div></div></a>`;
+  }).join("");
+  sec.classList.remove("hidden");
+}
 
 /* ====================================================================
    ⑯ 便宜票雷達（以台灣為中心，方向＝真實方位，距離＝飛行距離）
