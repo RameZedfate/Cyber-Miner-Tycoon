@@ -3,6 +3,9 @@
  *
  *   https://你的網址/            → 一般低價：日韓泰越＋中國大陸＋香港，所有航空公司
  *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
+ *   https://你的網址/?part=m0～m3 → 熱門航線細抓：每條熱門航線各抓一個月（m0＝本月、m1＝下個月…），日期選擇更多
+ *
+ * 為什麼要分段：Cloudflare 免費方案每次最多對外查 50 次，分成幾段各自有 50 次額度。
  *
  * 價格來源：Travelpayouts（Aviasales）低價快取。這是「預估最低價」，
  * 不是 Trip.com 即時價；網頁會標明，訂票按鈕一律導到 Trip.com 聯盟連結。
@@ -10,11 +13,12 @@
  * 更新方式：Cloudflare → howtravle-deals → 編輯代碼 → 全選刪掉 → 貼上這整份 → 部署
  * 需要的 Secret：TP_TOKEN（Travelpayouts token）
  *
- * 回傳：{ updated_at, part, count, rows: [ Travelpayouts prices_for_dates 的原始列 ] }
+ * 回傳：{ updated_at, part, count, stats, rows: [ 機票列（只留網頁需要的欄位）] }
  */
 
 const CURRENCY = "twd";
 const LIMIT = 1000;
+const ROUTE_LIMIT = 60;             // 熱門航線細抓：每條航線每個月留最便宜的 60 組日期
 const CACHE_SECONDS = 3 * 60 * 60; // 3 小時更新一次
 
 // ---------- 一般低價 ----------
@@ -56,6 +60,19 @@ const FSC_ROUTES = {
   RMQ: ["HKG"],
 };
 
+// ---------- 熱門航線細抓（每段 = 所有熱門航線 × 一個月）----------
+// 每段查詢次數 = 這裡的航線總數，要保持在 48 以下
+const HOT_ROUTES = {
+  TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","CJU","BKK","CNX","HKT","SGN","HAN","DAD","CXR","PQC",
+        "HKG","SHA","BJS","CAN","SZX","XMN","CTU"],
+  KHH: ["TYO","OSA","OKA","FUK","SEL","PUS","BKK","SGN","HAN","DAD","HKG","SHA"],
+  RMQ: ["OSA","OKA","SEL","BKK","DAD","HKG","CJU","FUK"],
+}; // 24 + 12 + 8 = 44 條
+
+// 只留網頁用得到的欄位，傳輸量小一點
+const FIELDS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers"];
+function slim(r) { const o = {}; for (const k of FIELDS) if (r[k] !== undefined) o[k] = r[k]; return o; }
+
 function months() {
   const out = [];
   const now = new Date(Date.now() + 8 * 3600 * 1000); // 台灣時間
@@ -82,17 +99,19 @@ export default {
     }
 
     const url = new URL(request.url);
-    const part = url.searchParams.get("part") === "fsc" ? "fsc" : "main";
+    const p = url.searchParams.get("part") || "";
+    const monthIdx = /^m[0-3]$/.test(p) ? Number(p[1]) : -1;
+    const part = p === "fsc" ? "fsc" : (monthIdx >= 0 ? p : "main");
 
     const cache = caches.default;
-    const cacheKey = new Request(`${url.origin}/_deals_cache_v4_${part}`);
+    const cacheKey = new Request(`${url.origin}/_deals_cache_v5_${part}`);
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
     const base = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
-    const get = async (q) => {
+    const get = async (q, limit = LIMIT) => {
       try {
-        const r = await fetch(`${base}?${q}&currency=${CURRENCY}&sorting=price&limit=${LIMIT}&token=${token}`);
+        const r = await fetch(`${base}?${q}&currency=${CURRENCY}&sorting=price&limit=${limit}&token=${token}`);
         const j = await r.json();
         return Array.isArray(j?.data) ? j.data : [];
       } catch { return []; }
@@ -109,6 +128,14 @@ export default {
           jobs.push(get(`${q}&one_way=true&direct=false`));
         }
       }
+    } else if (monthIdx >= 0) {
+      // 熱門航線 × 指定月份：來回，不限轉機
+      const m = months()[monthIdx];
+      for (const [origin, dests] of Object.entries(HOT_ROUTES)) {
+        for (const dest of dests) {
+          jobs.push(get(`origin=${origin}&destination=${dest}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
+        }
+      }
     } else {
       // 指定航線抓來回，才抓得到傳統航空（不指定航線時多半只剩廉航）
       for (const [origin, dests] of Object.entries(FSC_ROUTES)) {
@@ -122,7 +149,7 @@ export default {
 
     const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
     // 一般低價也順便留下「傳統航空飛大陸／香港」的票，讓傳統航空分頁每個月都更完整
-    const keep = (r) => part === "main" ? MAIN_KEEP.has(r.destination) : isFsc(r);
+    const keep = (r) => part === "fsc" ? isFsc(r) : MAIN_KEEP.has(r.destination);
 
     // 傳統航空：每條航線抓到幾筆、其中幾筆是傳統航空、出現哪些航空公司（用來檢查資料夠不夠）
     const stats = {};
@@ -143,9 +170,7 @@ export default {
       const key = [r.origin, r.destination, r.departure_at, r.return_at || "", r.price, r.transfers, r.airline].join("|");
       if (seen.has(key)) continue;
       seen.add(key);
-      delete r.link; // 這是 Aviasales 的連結，不是你的聯盟連結，絕不外流
-      delete r._route;
-      rows.push(r);
+      rows.push(slim(r)); // 只留需要的欄位（Aviasales 的連結不是你的聯盟連結，不會外流）
     }
 
     const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), part, count: rows.length, stats, rows }), { headers });

@@ -56,6 +56,8 @@ MOCK.rows.push(row("TPE", "SHA", "TPE", "PVG", day(25), day(28), 1234)); // 廉�
 MOCK.rows.push(row("TPE", "HKG", "TPE", "HKG", day(25), day(28), 2345)); // 廉航飛香港 → 只在便宜機票出現
 MOCK.rows.push(row("TPE", "XMN", "TPE", "XMN", day(31), day(34), 5555, 0, 0, "MF")); // 傳統航空飛大陸 → 兩邊都出現
 MOCK.rows.push(row("TPE", "PQC", "TPE", "PQC", day(33), day(38), 8888, 0, 0, "9G")); // 富國太陽航空 → 傳統航空要出現
+// 熱門航線細抓（?part=m0～m3）：只出現在這裡的名古屋航線，要能顯示在網頁上
+const EXTRA = { part: "m1", rows: [ row("TPE", "NGO", "TPE", "NGO", day(24), day(28), 3333, 0, 0, "IT") ] };
 const PICKS = { updated_at: new Date().toISOString(), items: [
   { origin: "TPE", destination: "OSA", departDate: day(20), returnDate: day(24), price: 5980, direct: true,
     checkedAt: new Date().toISOString(), note: "週末出發，大阪直飛不到六千" },
@@ -115,7 +117,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
     page.on("pageerror", e => problems.push("網頁錯誤：" + e.message));
     await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
-      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : /part=m\d/.test(r.request().url()) ? EXTRA : MOCK) }));
     await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(PICKS) }));
     await page.route("**/hotels.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(HOTELS) }));
     const sub1 = src ? `howtravle_${src}` : "howtravle";
@@ -130,7 +132,7 @@ try {
 
     // 便宜機票：要有大陸、香港
     const allText = await collect(page);
-    for (const want of ["上海", "香港", "廈門", "NT$1,234", "NT$2,345"]) if (!allText.includes(want)) problems.push(`便宜機票缺少：${want}`);
+    for (const want of ["上海", "香港", "廈門", "名古屋", "NT$1,234", "NT$2,345"]) if (!allText.includes(want)) problems.push(`便宜機票缺少：${want}`);
     if (!allText.includes("台灣虎航")) problems.push("便宜機票卡片沒顯示航空公司名稱");
     for (const bad of ["洛杉磯", "馬尼拉"]) if (allText.includes(bad)) problems.push(`便宜機票出現不該有的：${bad}`);
 
@@ -155,6 +157,21 @@ try {
     if (!htext.includes("測試酒店 A")) problems.push("酒店沒顯示");
     await checkLinks(page, "hotels", sub1);
     if (SHOTS && !src) await page.screenshot({ path: path.join(SHOTS, "hotels.png"), fullPage: true });
+    await page.close();
+  }
+
+  // 細抓的資料一直沒回應：網頁仍要在等待上限後顯示主要資料
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*workers.dev/**", r => /part=m\d/.test(r.request().url())
+      ? new Promise(() => {}) // 永遠不回應
+      : r.fulfill({ contentType: "application/json", body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    const t0 = Date.now();
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card", { timeout: 15000 }).catch(() => problems.push("細抓資料沒回應時，網頁沒有顯示機票"));
+    const waited = Date.now() - t0;
+    if (waited > 12000) problems.push(`細抓資料沒回應時等太久：${waited}ms`);
+    console.log(`細抓資料沒回應：${(waited / 1000).toFixed(1)} 秒後顯示主要資料`);
     await page.close();
   }
 

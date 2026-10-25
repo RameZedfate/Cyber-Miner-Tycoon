@@ -20,7 +20,11 @@
 
 - 價格來自 Travelpayouts 的低價快取，是**預估最低價**，網頁上有標明。
 - 主要來源：Cloudflare Worker `howtravle-deals`（https://howtravle-deals.a8225012.workers.dev/，程式碼就是 `worker.js`），
-  每 3 小時更新一次，依出發地 × 月份抓。
+  每 3 小時更新一次，分成幾段（Cloudflare 免費方案每段最多對外查 50 次）：
+  - `/`：依出發地 × 月份，抓日韓泰越＋大陸港所有低價
+  - `/?part=fsc`：47 條航線指定抓，只留傳統航空
+  - `/?part=m0`～`m3`：44 條熱門航線 × 每個月（m0＝本月），每條每月留最便宜 60 組日期，讓選擇更多。
+    網頁先顯示前兩段，這四段到了再自動補進去。熱門航線清單在 `worker.js` 的 `HOT_ROUTES`（總數要在 48 以下）
 - 備援：舊版 Worker `cold-union-5668`。舊版網頁 `cheap-flights/` 還在用它，不要刪。
 - 改了 `worker.js` 之後，要把新內容貼回 Cloudflare 的 `howtravle-deals` 再按 Deploy 才會生效。
 

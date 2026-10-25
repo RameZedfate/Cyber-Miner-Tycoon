@@ -308,6 +308,8 @@ const CONFIG = {
   // 機票資料來源，依序嘗試。第一格是新 Worker（deals/worker.js）；第二格是舊版 Worker，當備援。
   dataUrls: ["https://howtravle-deals.a8225012.workers.dev/", "https://cold-union-5668.a8225012.workers.dev/"],
   fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空
+  // 熱門航線細抓（每段一個月），讓同一條航線有更多日期可選；抓不到就略過
+  extraUrls: ["m0","m1","m2","m3"].map(p => `https://howtravle-deals.a8225012.workers.dev/?part=${p}`),
   picksUrl: "picks.json",   // Adam 今日精選（HOWTRAVLE 每日 Top 2）
   hotelsUrl: "hotels.json", // 精選酒店
   monthsAhead: 4,
@@ -703,7 +705,7 @@ function flightCard(f, opt = {}){
 /* ====================================================================
    ⑦ 大圖輪播
    ==================================================================== */
-let heroTimer = null;
+let heroTimer = null, heroTouched = false;
 function renderHero(){
   const box = $("#hero");
   clearInterval(heroTimer);
@@ -752,7 +754,7 @@ function renderHero(){
   const cur = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
   const go = (i) => track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
   track.addEventListener("scroll", () => { const i = cur(); dots.forEach((d, k) => d.setAttribute("aria-current", k === i)); }, { passive: true });
-  ["pointerdown","touchstart","mouseenter"].forEach(ev => track.addEventListener(ev, () => { paused = true; }, { passive: true }));
+  ["pointerdown","touchstart","mouseenter"].forEach(ev => track.addEventListener(ev, () => { paused = true; if (ev !== "mouseenter") heroTouched = true; }, { passive: true }));
   ["mouseleave","touchend"].forEach(ev => track.addEventListener(ev, () => { setTimeout(() => { paused = false; }, 4000); }, { passive: true }));
   $("#heroDots").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(Number(b.dataset.i)); });
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -917,21 +919,32 @@ async function loadHotels(){
 /* ====================================================================
    ⑫ 讀取機票資料
    ==================================================================== */
+const flightKeys = new Set();
+function addRows(raw){
+  let added = 0;
+  for (const r of raw){
+    const f = normalize(r); if (!f) continue;
+    const k = [f.o, f.d, f.dep, f.ret, f.price, f.tr, f.airline].join("|");
+    if (flightKeys.has(k)) continue; flightKeys.add(k); state.flights.push(f); added++;
+  }
+  return added;
+}
+// 細抓資料：先顯示主要資料，這些到了再補進去（不讓粉絲等）
+function loadExtras(){
+  for (const u of (CONFIG.extraUrls || [])){
+    getJSON(u).then(j => {
+      if (!state.loaded || !addRows((j && j.rows) || [])) return;
+      if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); }
+    }).catch(() => {});
+  }
+}
 async function loadFlights(){
   const fscP = CONFIG.fscUrl ? getJSON(CONFIG.fscUrl).catch(() => null) : Promise.resolve(null);
-  let fscRows = null;
   for (const url of CONFIG.dataUrls.filter(Boolean)){
     try {
       const j = await getJSON(url);
-      if (fscRows === null) fscRows = ((await fscP) || {}).rows || [];
-      const raw = [].concat(j.rows || [], j.data || [], j.air || [], fscRows);
-      const seen = new Set(); const list = [];
-      for (const r of raw){
-        const f = normalize(r); if (!f) continue;
-        const k = [f.o, f.d, f.dep, f.ret, f.price, f.tr, f.airline].join("|");
-        if (seen.has(k)) continue; seen.add(k); list.push(f);
-      }
-      if (list.length){ state.flights = list; state.updatedAt = j.updated_at || null; break; }
+      const fscRows = ((await fscP) || {}).rows || [];
+      if (addRows([].concat(j.rows || [], j.data || [], j.air || [], fscRows))){ state.updatedAt = j.updated_at || null; break; }
     } catch(e) { /* 換下一個來源 */ }
   }
   state.loaded = true;
@@ -940,6 +953,7 @@ async function loadFlights(){
   state.month = bestMonth();
   renderHero();
   renderFlights();
+  loadExtras();
 }
 // 預設選「有票、而且最便宜」的月份
 function bestMonth(){
