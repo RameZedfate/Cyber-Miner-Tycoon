@@ -163,6 +163,7 @@
   }
   /* 怎麼用 */
   .how{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:8px}
+  #howto{padding-bottom:8px}
   @media (min-width:760px){ .how{grid-template-columns:repeat(3,minmax(0,1fr))} }
   .how > div{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:16px;padding:14px;box-shadow:var(--shadow)}
   .how .n{flex:0 0 auto;width:32px;height:32px;border-radius:999px;background:var(--navy);color:var(--yellow);font-weight:900;display:flex;align-items:center;justify-content:center}
@@ -886,7 +887,7 @@ function routeMedian(f){
     const groups = new Map(), today = todayTW();
     for (const x of state.flights){ if (x.dep <= today) continue; const k = routeKey(x); (groups.get(k) || groups.set(k, []).get(k)).push(x.price); }
     const map = new Map();
-    for (const [k, ps] of groups){ if (ps.length < 6) continue; ps.sort((a, b) => a - b); map.set(k, ps[Math.floor(ps.length / 2)]); }
+    for (const [k, ps] of groups){ if (ps.length < 8) continue; ps.sort((a, b) => a - b); map.set(k, ps[Math.floor(ps.length / 2)]); }
     medianCache = { v: flightsVersion, map };
   }
   return medianCache.map.get(routeKey(f)) || null;
@@ -946,7 +947,7 @@ function flightCard(f, opt = {}){
   if (isWeekend(f)) badges.push('<span class="badge">週末出發</span>');
   if (f.direct) badges.push('<span class="badge">直飛</span>');
   const save = opt.pick ? 0 : savingPct(f);
-  if (save) badges.unshift(`<span class="badge save">${icon("down")}比平常便宜 ${save}%</span>`);
+  if (save) badges.unshift(`<span class="badge save">${icon("down")}比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}</span>`);
   const nDates = opt.pick || opt.noMore ? 0 : routeFlights(f.o, f.d).length;
   const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
   const airName = AIRLINE_NAMES[f.airline] || (f.airline ? "其他航空" : "");
