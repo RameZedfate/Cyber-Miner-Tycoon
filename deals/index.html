@@ -327,7 +327,11 @@ const CONFIG = {
   dataUrls: ["https://howtravle-deals.a8225012.workers.dev/", "https://cold-union-5668.a8225012.workers.dev/"],
   fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空
   // 熱門航線細抓（每段一個月），讓同一條航線有更多日期可選；抓不到就略過
-  extraUrls: ["m0","m1","m2","m3"].map(p => `https://howtravle-deals.a8225012.workers.dev/?part=${p}`),
+  // 熱門航線細抓（m＝逐月、g＝每天最低價），先顯示主要資料，這些到了再補進去
+  extraUrls: ["m0","m1","m2","m3","g0","g1","g2","g3"].map(p => `https://howtravle-deals.a8225012.workers.dev/?part=${p}`),
+  // 累積資料庫（Cloudflare KV＋排程，選用）。累積到 poolEnough 筆以上就不再分段抓
+  poolUrl: "https://howtravle-deals.a8225012.workers.dev/?part=all",
+  poolEnough: 300,
   picksUrl: "picks.json",   // Adam 今日精選（HOWTRAVLE 每日 Top 2）
   hotelsUrl: "hotels.json", // 精選酒店
   monthsAhead: 4,
@@ -997,12 +1001,18 @@ function addRows(raw){
   return added;
 }
 // 細抓資料：先顯示主要資料，這些到了再補進去（不讓粉絲等）
-function loadExtras(){
+function mergeAndRender(rows){
+  if (!state.loaded || !addRows(rows || [])) return;
+  if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); }
+}
+async function loadExtras(){
+  // 累積資料庫夠多就直接用；不夠（或沒設定）才分段抓
+  const pool = CONFIG.poolUrl ? await getJSON(CONFIG.poolUrl).catch(() => null) : null;
+  const poolRows = (pool && Array.isArray(pool.rows)) ? pool.rows : [];
+  mergeAndRender(poolRows);
+  if (poolRows.length >= (CONFIG.poolEnough || 300)) return;
   for (const u of (CONFIG.extraUrls || [])){
-    getJSON(u).then(j => {
-      if (!state.loaded || !addRows((j && j.rows) || [])) return;
-      if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); }
-    }).catch(() => {});
+    getJSON(u).then(j => mergeAndRender(j && j.rows)).catch(() => {});
   }
 }
 async function loadFlights(){

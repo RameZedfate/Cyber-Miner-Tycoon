@@ -175,6 +175,25 @@ try {
     await page.close();
   }
 
+  // 累積資料庫有 300 筆以上：直接用，不再分段抓
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const big = { part: "all", count: 320, rows: Array.from({ length: 320 }, (_, i) =>
+      row("TPE", ["TYO","OSA","SEL","BKK","HKG"][i % 5], "TPE", ["NRT","KIX","ICN","BKK","HKG"][i % 5], day(5 + (i % 90)), day(9 + (i % 90)), 3000 + i, 0, 0, "IT")) };
+    let partCalls = 0;
+    await page.route("**/*workers.dev/**", r => {
+      const u = r.request().url();
+      if (/part=(m|g)\d/.test(u)) partCalls++;
+      r.fulfill({ contentType: "application/json", body: JSON.stringify(u.includes("part=all") ? big : u.includes("part=fsc") ? FSC : MOCK) });
+    });
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    await page.waitForTimeout(800);
+    if (partCalls) problems.push(`資料庫已有 320 筆，網頁仍分段抓了 ${partCalls} 次`);
+    console.log(`資料庫 320 筆時分段抓的次數：${partCalls}`);
+    await page.close();
+  }
+
   // 資料抓不到時：不可以顯示假價格
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.route("**/*workers.dev/**", r => r.fulfill({ status: 500, body: "" }));
