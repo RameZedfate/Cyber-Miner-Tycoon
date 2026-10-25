@@ -25,6 +25,8 @@
   img{display:block}
   .wrap{max-width:1160px;margin:0 auto;padding:0 16px}
   .hidden,#picks.off{display:none !important}
+  .ic{width:1.15em;height:1.15em;flex:0 0 auto;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ic.f{fill:currentColor;stroke:none}
 
   /* ---------- 頂部 ---------- */
   .brandbar{background:var(--navy);color:#fff}
@@ -142,10 +144,20 @@
   .card{display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);min-width:0}
   .card .ph{aspect-ratio:16/10}
   .badges{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:2}
-  .badge{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:700;
+  .badge{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:700;
     background:rgba(255,255,255,.92);color:var(--navy);white-space:nowrap}
   .badge.hol{background:var(--yellow);color:var(--navy)}
   .badge.top{background:var(--red);color:#fff}
+  .badge .ic{width:14px;height:14px}
+  .ic.gold{color:#F5A700}
+  .cap .lm .ic{width:14px;height:14px;margin-right:3px;vertical-align:-2px}
+  .hero .lm .ic{width:16px;height:16px;margin-right:3px;vertical-align:-3px}
+  .holiday-hint{display:flex;align-items:center;gap:6px}
+  .checked{display:flex;align-items:center;gap:4px}
+  .checked .ic{width:15px;height:15px;stroke-width:2.6}
+  .cta .ic, .hero-cta .ic{width:18px;height:18px;stroke-width:2.4}
+  .eyebrow .ic{width:15px;height:15px}
+  .tabs .ic{width:18px;height:18px}
   .badge.pick{background:var(--yellow);color:var(--navy)}
   .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:2}
   .cap .city{font-size:28px;font-weight:900;line-height:1.1;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.4);
@@ -205,9 +217,9 @@
 <nav class="tabbar">
   <div class="wrap">
     <div class="tabs" role="tablist">
-      <button role="tab" aria-selected="false" data-tab="fsc">🛫 傳統航空</button>
-      <button role="tab" aria-selected="true" data-tab="flights">✈️ 便宜機票</button>
-      <button role="tab" aria-selected="false" data-tab="hotels">🏨 便宜酒店</button>
+      <button role="tab" aria-selected="false" data-tab="fsc"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></svg>傳統航空</button>
+      <button role="tab" aria-selected="true" data-tab="flights"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.6"/></svg>便宜機票</button>
+      <button role="tab" aria-selected="false" data-tab="hotels"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6v13"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="2"/></svg>便宜酒店</button>
     </div>
   </div>
 </nav>
@@ -277,7 +289,7 @@
 
 <footer class="wrap">
   機票價格為「預估最低價」，來自航班比價快取，每天自動更新；實際價格、座位與行李規定以 Trip.com 頁面為準。<br />
-  本頁所有訂購連結都是 Trip.com 聯盟行銷連結，透過連結訂購，我會獲得少量回饋，你付的價格不變。謝謝支持 🙏<br />
+  本頁所有訂購連結都是 Trip.com 聯盟行銷連結，透過連結訂購，我會獲得少量回饋，你付的價格不變。謝謝支持！<br />
   城市照片來源：Wikipedia／Wikimedia Commons（各作者，依原授權）。航空公司標誌版權屬各航空公司。<br />
   本站非 Trip.com 官方網站。
 </footer>
@@ -425,6 +437,25 @@ function flightUrl(f){
   if (f.ret) p.set("rdate", f.ret);
   return affiliate("https://tw.trip.com/flights/showfarefirst?" + p.toString());
 }
+
+// 自繪圖示（取代 Emoji）。F 開頭＝實心。
+const ICONS = {
+  tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.6"/>',
+  plane: 'F<path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/>',
+  bed: '<path d="M3 6v13"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="2"/>',
+  pin: '<path d="M12 21s-7-6-7-11.3a7 7 0 0 1 14 0C19 15 12 21 12 21z"/><circle cx="12" cy="9.7" r="2.4"/>',
+  flame: 'F<path d="M12.6 2.2c.6 3 4.9 5.3 4.9 10.3a5.5 5.5 0 0 1-11 0c0-2.4 1.1-4.1 2.3-5.2.1 2 .9 3.2 2 3.4-.4-3.2.4-6 1.8-8.5z"/>',
+  star: 'F<path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+};
+function icon(name, cls){
+  const v = ICONS[name] || ""; const f = v.startsWith("F");
+  return `<svg class="ic${f ? " f" : ""}${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true">${f ? v.slice(1) : v}</svg>`;
+}
+const ARROW = () => icon("arrow");
 
 /* ====================================================================
    ③ 小工具
@@ -637,8 +668,8 @@ function flightCard(f, opt = {}){
   const lm = landmarkOf(f.d);
   const hol = holidayOf(f);
   const badges = [];
-  if (opt.pick) badges.push('<span class="badge pick">⭐ Adam 精選</span>');
-  if (opt.rank === 1) badges.push('<span class="badge top">🔥 最低價</span>');
+  if (opt.pick) badges.push(`<span class="badge pick">${icon("star")}Adam 精選</span>`);
+  if (opt.rank === 1) badges.push(`<span class="badge top">${icon("flame")}最低價</span>`);
   if (hol) badges.push(`<span class="badge hol">${esc(hol.name)}</span>`);
   if (isWeekend(f)) badges.push('<span class="badge">週末出發</span>');
   if (f.direct) badges.push('<span class="badge">直飛</span>');
@@ -654,17 +685,17 @@ function flightCard(f, opt = {}){
       ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 800, false)}
       <div class="badges">${badges.join("")}</div>
       <div class="cap"><div class="city">${esc(cityName(f.d))}</div>
-        <div class="lm">📍 ${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[f.country] || "")}</div></div>
+        <div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[f.country] || "")}</div></div>
     </a>
     <div class="cb">
       ${(f.airline || opt.pick) ? `<div class="air">${logoHTML(f.airline)}<span class="an">${esc(airName)}</span><span class="from">${esc(ORIGIN_NAME[f.o])}出發</span></div>` : ""}
       <div class="legs">${leg("去程", f.dep, f.oAp, f.dAp, f.tr)}${f.ret ? leg("回程", f.ret, f.dAp, f.oAp, f.rtr) : ""}</div>
-      ${opt.pick && (opt.note || opt.checkedAt) ? `<div>${opt.note ? `<div class="memo">${esc(opt.note)}</div>` : ""}${opt.checkedAt ? `<div class="checked">✓ ${esc(fmtTime(opt.checkedAt))} 已在 Trip.com 核對</div>` : ""}</div>` : ""}
+      ${opt.pick && (opt.note || opt.checkedAt) ? `<div>${opt.note ? `<div class="memo">${esc(opt.note)}</div>` : ""}${opt.checkedAt ? `<div class="checked">${icon("check")}${esc(fmtTime(opt.checkedAt))} 已在 Trip.com 核對</div>` : ""}</div>` : ""}
       <div class="pr">
         <div class="l">${esc(ORIGIN_NAME[f.o])}出發<br/>${esc(days)}</div>
         <div class="v"><small>${f.ret ? "來回" : "單程"}</small><strong>${money(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></div>
       </div>
-      <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">${opt.pick ? "去 Trip.com 訂這張" : "去 Trip.com 看這些日期"} →</a>
+      <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">${opt.pick ? "去 Trip.com 訂這張" : "去 Trip.com 看這些日期"}${ARROW()}</a>
     </div>
   </article>`;
 }
@@ -685,9 +716,9 @@ function renderHero(){
     slides = [`
       <div class="slide g-JP ph" style="display:block">
         ${photoHTML("Mount Fuji", "JP", "富士山", 1280, true)}
-        <div class="in"><div class="wrap"><span class="eyebrow">✈️ 下一趟旅行，從這裡開始</span></div>
+        <div class="in"><div class="wrap"><span class="eyebrow">${icon("compass")}下一趟旅行，從這裡開始</span></div>
           <div class="wrap"><h2>想去哪裡？</h2><div class="lm">便宜機票整理中，先去 Trip.com 逛逛</div>
-            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找機票 →</a></div></div>
+            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找機票${ARROW()}</a></div></div>
       </div>`];
   } else {
     slides = top.map((f, i) => {
@@ -699,14 +730,14 @@ function renderHero(){
       <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
         ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}
         <div class="in">
-          <div class="wrap"><span class="eyebrow">${fsc ? "🛫 傳統航空" : "🔥 現在最便宜"}・第 ${i + 1} 名</span></div>
+          <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span></div>
           <div class="wrap">
             <h2>${esc(cityName(f.d))}</h2>
-            <div class="lm">📍 ${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[f.country] || "")}</div>
+            <div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[f.country] || "")}</div>
             <div class="pricebig"><small>${f.ret ? "來回" : "單程"}</small><strong>${money(f.price)}</strong><small>起</small></div>
             ${f.airline ? `<div class="air-line">${logoHTML(f.airline)}<span>${esc(AIRLINE_NAMES[f.airline] || f.airline)}</span></div>` : ""}
             <div class="meta">${[`${ORIGIN_NAME[f.o]}出發`, dates, days, f.direct ? "直飛" : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div>
-            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看機票，說走就走 →</a>
+            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看機票，說走就走${ARROW()}</a>
           </div>
         </div>
       </div>`;
@@ -780,7 +811,7 @@ function renderFlights(){
   const hint = $("#holidayHint");
   if (hols.length){
     hint.classList.remove("hidden");
-    hint.textContent = "🗓️ 本月連假：" + hols.map(h => `${h.name} ${h.start.slice(5).replace("-","/")}–${h.end.slice(5).replace("-","/")}`).join("、");
+    hint.innerHTML = icon("cal") + esc("本月連假：" + hols.map(h => `${h.name} ${h.start.slice(5).replace("-","/")}–${h.end.slice(5).replace("-","/")}`).join("、"));
   } else hint.classList.add("hidden");
 
   const list = cheapestPerRoute(baseFiltered().filter(f => f.dep.startsWith(state.month)));
@@ -788,7 +819,7 @@ function renderFlights(){
   if (!state.flights.length){
     box.innerHTML = `<div class="empty">暫時抓不到價格，請稍後再試。<br/><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">直接去 Trip.com 看機票</a></div>`;
   } else if (!list.length){
-    box.innerHTML = `<div class="empty">這個條件下目前沒有低價票，換個月份或篩選看看 👀</div>`;
+    box.innerHTML = `<div class="empty">這個條件下目前沒有低價票，換個月份或篩選看看</div>`;
   } else {
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
   }
@@ -837,8 +868,8 @@ function hotelCard(h){
   <article class="card hotel">
     <a class="ph g-${esc(h.country || "")}" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(h.name)}">
       ${photo}
-      <div class="badges">${Number(h.rating) ? `<span class="badge">⭐ ${esc(Number(h.rating).toFixed(1))}</span>` : ""}</div>
-      <div class="cap"><div class="city">${esc(h.city || "")}</div><div class="lm">📍 ${esc(h.area || COUNTRIES[h.country] || "")}</div></div>
+      <div class="badges">${Number(h.rating) ? `<span class="badge">${icon("star", "gold")}${esc(Number(h.rating).toFixed(1))}</span>` : ""}</div>
+      <div class="cap"><div class="city">${esc(h.city || "")}</div><div class="lm">${icon("pin")}${esc(h.area || COUNTRIES[h.country] || "")}</div></div>
     </a>
     <div class="cb">
       <div class="name">${esc(h.name)}</div>
@@ -848,7 +879,7 @@ function hotelCard(h){
         <div class="l">${nights ? `${nights} 晚` : ""}</div>
         <div class="v"><small>每晚含稅約</small><strong>${money(h.pricePerNight)}</strong></div>
       </div>
-      <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 看這間 →</a>
+      <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 看這間${ARROW()}</a>
     </div>
   </article>`;
 }
@@ -856,9 +887,9 @@ function renderHotelHero(){
   const url = affiliate("https://tw.trip.com/hotels/");
   $("#hotelHero").innerHTML = `<div class="hero-track"><div class="slide ph g-JP" style="display:block">
       ${photoHTML("Fushimi Inari-taisha", "JP", "伏見稻荷大社", 1280, false)}
-      <div class="in"><div class="wrap"><span class="eyebrow">🏨 便宜又不踩雷</span></div>
+      <div class="in"><div class="wrap"><span class="eyebrow">${icon("bed")}便宜又不踩雷</span></div>
         <div class="wrap"><h2>今晚住哪裡？</h2><div class="lm">評分 8.0 以上・每晚含稅價・Adam 親自挑過</div>
-          <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找酒店 →</a></div></div>
+          <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找酒店${ARROW()}</a></div></div>
     </div></div>`;
 }
 function renderHotels(){
@@ -868,7 +899,7 @@ function renderHotels(){
   $("#hUpdated").textContent = state.hotelsUpdated ? `更新於 ${fmtTime(state.hotelsUpdated)}` : "";
   $("#hCount").textContent = list.length ? `共 ${list.length} 間` : "";
   $("#hotelList").innerHTML = list.length ? list.map(hotelCard).join("") :
-    `<div class="empty">酒店精選整理中，很快上線 🛠️<br/><a class="btn" href="${esc(affiliate("https://tw.trip.com/hotels/"))}" target="_blank" rel="noopener sponsored">先去 Trip.com 看酒店</a></div>`;
+    `<div class="empty">酒店精選整理中，很快上線<br/><a class="btn" href="${esc(affiliate("https://tw.trip.com/hotels/"))}" target="_blank" rel="noopener sponsored">先去 Trip.com 看酒店</a></div>`;
   queueImages();
 }
 async function loadHotels(){
