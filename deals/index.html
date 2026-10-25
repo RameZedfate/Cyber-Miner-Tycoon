@@ -6,6 +6,14 @@
 <title>HOWTRAVLE 便宜票雷達</title>
 <meta name="description" content="台灣出發飛日本、韓國、泰國、越南、中國大陸、香港的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
 <meta name="theme-color" content="#0B2340" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Cpath fill='%23FFC72C' d='M32 9c1.8 0 3.2 1.9 3.2 4.3v10l16 9.2v4.7l-16-4.9v9.4l4.7 3.4V50L32 47.6 24.1 50v-4.9l4.7-3.4v-9.4l-16 4.9v-4.7l16-9.2v-10C28.8 10.9 30.2 9 32 9z'/%3E%3C/svg%3E" />
+<!-- 分享預覽（LINE／FB／IG 貼連結時顯示的標題與大圖） -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
+<meta property="og:title" content="HOWTRAVLE 便宜票雷達｜台灣出發日韓泰越・大陸港便宜機票" />
+<meta property="og:description" content="每天自動整理台灣出發的低價機票，價格日曆、連假倒數、幫你抽目的地，一鍵到 Trip.com 訂。" />
+<meta property="og:image" content="https://commons.wikimedia.org/wiki/Special:FilePath/Hong_Kong_Night_Skyline.jpg?width=1200" />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -50,6 +58,8 @@
   @media (min-width:760px){ .slide{height:540px} }
   .slide .bgimg, .ph .bgimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease}
   .slide .bgimg.ok, .ph .bgimg.ok{opacity:1}
+  .slide .bgimg.ok{animation:kb 14s ease-out both}
+  @keyframes kb{from{transform:scale(1.0)}to{transform:scale(1.09)}}
   .hero .slide .shade{position:absolute;inset:0;background:
     linear-gradient(180deg,rgba(6,16,32,.55) 0%,rgba(6,16,32,.05) 30%,rgba(6,16,32,.15) 55%,rgba(6,16,32,.85) 100%)}
   .slide .in{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:22px 0 30px}
@@ -141,7 +151,20 @@
   .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
   @media (min-width:640px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (min-width:1000px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px} }
-  .card{display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);min-width:0}
+  .card{display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);min-width:0;
+    transition:transform .2s ease, box-shadow .2s ease}
+  .card .ph .bgimg{transition:opacity .5s ease, transform .6s ease}
+  @media (hover:hover){
+    .card:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(15,23,42,.06),0 16px 36px rgba(15,23,42,.12)}
+    .card:hover .ph .bgimg.ok{transform:scale(1.05)}
+  }
+  /* 怎麼用 */
+  .how{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:8px}
+  @media (min-width:760px){ .how{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  .how > div{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+  .how .n{flex:0 0 auto;width:32px;height:32px;border-radius:999px;background:var(--navy);color:var(--yellow);font-weight:900;display:flex;align-items:center;justify-content:center}
+  .how b{display:block;font-size:15px}
+  .how span{display:block;font-size:13px;color:var(--muted);margin-top:2px;line-height:1.5}
   .card .ph{aspect-ratio:16/10}
   .badges{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:2}
   .badge{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:700;
@@ -396,6 +419,15 @@
     <div id="sheetBody"></div>
   </div>
 </div>
+
+<section class="wrap" id="howto" aria-label="怎麼用">
+  <h2 class="sec">怎麼用？</h2>
+  <div class="how">
+    <div><span class="n">1</span><div><b>挑一個便宜目的地</b><span>每天自動整理台灣出發的低價機票，用月份、地區、預算篩選</span></div></div>
+    <div><span class="n">2</span><div><b>點進 Trip.com 確認</b><span>這裡是預估最低價，實際價格與座位以 Trip.com 當下為準</span></div></div>
+    <div><span class="n">3</span><div><b>訂好就出發</b><span>看到喜歡的價格就快下手，便宜票通常賣得很快</span></div></div>
+  </div>
+</section>
 
 <footer class="wrap">
   機票價格為「預估最低價」，來自航班比價快取，每天自動更新；實際價格、座位與行李規定以 Trip.com 頁面為準。<br />
@@ -1201,6 +1233,7 @@ document.querySelector(".tabs").addEventListener("click", e => {
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
   $("#flights").classList.toggle("hidden", state.tab === "hotels");
   $("#hotels").classList.toggle("hidden", state.tab !== "hotels");
+  $("#howto").classList.toggle("hidden", state.tab === "hotels");
   if (state.tab === "hotels"){ clearInterval(heroTimer); queueImages(); return; }
   const mode = state.tab === "fsc" ? "fsc" : "all";
   if (mode !== state.mode){

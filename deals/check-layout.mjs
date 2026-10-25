@@ -117,9 +117,10 @@ async function measure(page) {
     // 1. 照片要剛好填滿照片框
     for (const img of document.querySelectorAll(".ph img.bgimg.ok")) {
       if (!vis(img.parentElement)) continue;
-      const a = R(img), b = R(img.parentElement);
-      if (!near(a.left, b.left) || !near(a.top, b.top) || !near(a.width, b.width) || !near(a.height, b.height))
-        out.push(`照片沒填滿框：${img.alt}（照片 ${a.width.toFixed(0)}x${a.height.toFixed(0)}，框 ${b.width.toFixed(0)}x${b.height.toFixed(0)}）`);
+      // 用未放大前的尺寸量（大圖有刻意的慢慢放大效果）
+      const pe = img.parentElement;
+      if (img.offsetLeft !== 0 || img.offsetTop !== 0 || Math.abs(img.offsetWidth - pe.clientWidth) > 1 || Math.abs(img.offsetHeight - pe.clientHeight) > 1)
+        out.push(`照片沒填滿框：${img.alt}（照片 ${img.offsetWidth}x${img.offsetHeight}，框 ${pe.clientWidth}x${pe.clientHeight}）`);
       if (getComputedStyle(img).objectFit !== "cover") out.push(`照片不是 cover：${img.alt}`);
     }
     // 2. 卡片照片框比例一致（16:10）
