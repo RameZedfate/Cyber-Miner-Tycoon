@@ -36,7 +36,7 @@ const ctx = { waitUntil(p) { return p; } };
 const call = async (q, env) => (await worker.fetch(new Request("https://x.dev/" + q), env, ctx)).json();
 
 // 1. 每一段
-for (const part of ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3", "bogus"]) {
+for (const part of ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3", "n0", "n1", "n2", "n3", "bogus"]) {
   calls = 0; paths = new Set();
   const j = await call(`?part=${part}`, { TP_TOKEN: "t" });
   const expect = part === "bogus" ? "main" : part;
@@ -67,14 +67,14 @@ for (const part of ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3
   const env = { TP_TOKEN: "t", DEALS: KV };
   const first = await call("?part=all", env);
   ok(first.count > 0, "有 KV 但資料庫是空的時，?part=all 應先抓一段");
-  for (let i = 0; i < 10; i++) await worker.scheduled({}, env, ctx);
+  for (let i = 0; i < 14; i++) await worker.scheduled({}, env, ctx);
   const pool = JSON.parse(store.get("pool_v1"));
-  console.log(`排程 10 次後資料庫：${pool.count} 筆，最後一段 ${pool.last_part}，下一段索引 ${store.get("cursor_v1")}`);
+  console.log(`排程 14 次後資料庫：${pool.count} 筆，最後一段 ${pool.last_part}，下一段索引 ${store.get("cursor_v1")}`);
   ok(pool.count >= first.count, "資料庫沒有累積");
   ok(new Set(pool.rows.map(r => r.destination)).size > 1, "資料庫只有一個目的地");
   // 價格變動：同一組日期要更新成新價格，不能變成兩筆
   priceBump = 100;
-  for (let i = 0; i < 10; i++) await worker.scheduled({}, env, ctx);
+  for (let i = 0; i < 14; i++) await worker.scheduled({}, env, ctx);
   const pool2 = JSON.parse(store.get("pool_v1"));
   const keys = pool2.rows.map(r => [r.origin, r.destination, r.departure_at.slice(0, 10), (r.return_at || "").slice(0, 10), r.airline, r.transfers].join("|"));
   ok(new Set(keys).size === keys.length, "同一組日期＋航空出現重複");

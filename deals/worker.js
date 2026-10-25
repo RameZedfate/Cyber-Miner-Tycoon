@@ -5,6 +5,7 @@
  *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
  *   https://你的網址/?part=m0～m3 → 熱門航線細抓：每條熱門航線各抓一個月（m0＝本月、m1＝下個月…），日期選擇更多
  *   https://你的網址/?part=g0～g3 → 熱門航線「每天最低價」：另一種查詢方式，補上 m 段沒有的日期
+ *   https://你的網址/?part=n0～n3 → 第二批 46 條航線（二線城市），平常只由排程抓進累積資料庫
  *   https://你的網址/?part=all    → 累積資料庫（選用，需要設定 KV＋排程，見下方），一次拿到所有累積的票
  *
  *   https://你的網址/?part=probe&o=KHH&d=SEL → 測試頁：比較不同市場／不同查詢方式各抓得到幾張票（不快取）
@@ -78,6 +79,17 @@ const HOT_ROUTES = {
   RMQ: ["OSA","OKA","SEL","BKK","DAD","HKG","CJU","FUK"],
 }; // 24 + 12 + 8 = 44 條
 
+// ---------- 第二批航線（只在累積資料庫的排程裡抓，不增加網頁載入量）----------
+const MORE_ROUTES = {
+  TPE: ["SDJ","HIJ","KMJ","KOJ","KIJ","TAK","OKJ","MYJ","ISG","UKB","KMQ","HKD","AOJ","IBR","SHI","FSZ","TOY","AKJ",
+        "NGS","OIT","YGJ","HSG","KCZ",                // 日本二線城市
+        "TAE","CJJ","MWX",                            // 韓國
+        "USM","KBV","UTP","CEI",                      // 泰國
+        "HPH","DLI","HUI","VDO",                      // 越南
+        "CKG","HGH","NKG","TAO","WUH","XIY"],         // 中國大陸
+  KHH: ["CJU","CXR","PQC","CNX","NGO","HKT"],
+}; // 40 + 6 = 46 條
+
 // 只留網頁用得到的欄位，傳輸量小一點
 const FIELDS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers","duration_to"];
 function slim(r) { const o = {}; for (const k of FIELDS) if (r[k] !== undefined) o[k] = r[k]; return o; }
@@ -136,7 +148,7 @@ function months() {
 }
 
 // ---------- 抓一段資料（網頁請求和排程共用）----------
-const PARTS = ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3"];
+const PARTS = ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3", "n0", "n1", "n2", "n3"];
 const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
 
 async function buildPart(part, token) {
@@ -170,6 +182,9 @@ async function buildPart(part, token) {
   } else if (/^m[0-3]$/.test(part)) {
     const m = months()[Number(part[1])];
     jobs = routes(HOT_ROUTES, (o, d) => get("prices_for_dates", `origin=${o}&destination=${d}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
+  } else if (/^n[0-3]$/.test(part)) {
+    const m = months()[Number(part[1])];
+    jobs = routes(MORE_ROUTES, (o, d) => get("prices_for_dates", `origin=${o}&destination=${d}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
   } else if (/^g[0-3]$/.test(part)) {
     const m = months()[Number(part[1])];
     jobs = routes(HOT_ROUTES, (o, d) => get("grouped_prices", `origin=${o}&destination=${d}&departure_at=${m}&group_by=departure_at`)
