@@ -22,6 +22,7 @@ const row = (o, d, oa, da, dep, ret, price, tr, rtr, airline) => ({
 const MAIN = { updated_at: new Date().toISOString(), rows: [
   row("TPE","TYO","TPE","NRT",day(10),day(14),6890,0,0,"IT"),
   row("TPE","OSA","TPE","KIX",day(12),day(16),5980,0,0,"MM"),
+  ...Array.from({ length: 24 }, (_, i) => row("TPE","OSA","TPE","KIX",day(13 + i),day(17 + i),6100 + i * 137,i % 3 ? 0 : 1,0,["MM","IT","JX","CI"][i % 4])),
   row("KHH","OKA","KHH","OKA",day(13),day(16),4590,0,0,"IT"),
   row("TPE","SEL","TPE","ICN",day(14),day(18),6100,0,0,"TW"),
   row("TPE","BKK","TPE","DMK",day(15),day(22),7350,1,1,"FD"),
@@ -252,6 +253,58 @@ try {
       console.log(`[${w}px ${tab}] 照片載入 ${ok} 張、使用漸層底 ${fb} 個${fb ? "（" + fbNames.join("、") + "）" : ""}、問題 ${issues.length} 個`);
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `layout-${w}-${tab}.png`), fullPage: true });
     }
+    // 價格日曆面板
+    await page.click('.tabs button[data-tab="flights"]');
+    let rb = await page.$("#flightList [data-route]");
+    for (const m of await page.$$eval("#months button", bs => bs.map(b => b.dataset.v))) { if (rb) break; await page.click(`#months button[data-v="${m}"]`); rb = await page.$("#flightList [data-route]"); }
+    if (!rb) all.push(`[${w}px] 找不到「看全部日期」`);
+    else {
+      await rb.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt");
+      await page.waitForTimeout(500);
+      const sheetIssues = await page.evaluate(() => {
+        const out = [], R = (e) => e.getBoundingClientRect();
+        const panel = document.querySelector(".sheet-panel");
+        if (panel.scrollWidth > panel.clientWidth + 1) out.push(`面板出現橫向捲動 ${panel.scrollWidth}>${panel.clientWidth}`);
+        const pr = R(panel); if (pr.left < -1 || pr.right > document.documentElement.clientWidth + 1) out.push("面板超出畫面");
+        for (const g of document.querySelectorAll(".cal-grid")) {
+          const cells = [...g.children].filter(c => c.classList.contains("day"));
+          const ws = new Set(cells.map(c => Math.round(R(c).width)));
+          if (ws.size > 1) out.push(`日曆格子寬度不一：${[...ws].join(",")}`);
+          const rows = {}; for (const c of cells) (rows[Math.round(R(c).top)] ||= []).push(Math.round(R(c).height));
+          for (const hs of Object.values(rows)) if (Math.max(...hs) - Math.min(...hs) > 1) out.push("日曆同一列格子高度不一");
+        }
+        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city")) {
+          if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
+          const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
+        }
+        const opts = [...document.querySelectorAll(".opt")];
+        const ls = new Set(opts.map(o => Math.round(R(o).left))), rs = new Set(opts.map(o => Math.round(R(o).right)));
+        if (ls.size > 1 || rs.size > 1) out.push("日期選項左右邊沒對齊");
+        const x = R(document.querySelector(".sheet-x")); if (x.right > pr.right || x.top < pr.top - 1) out.push("關閉按鈕超出面板");
+        return out;
+      });
+      sheetIssues.forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
+      if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `sheet-${w}.png`) });
+      await page.keyboard.press("Escape");
+    }
+    // 幫我選
+    await page.click("#luckyBtn");
+    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    await page.waitForTimeout(400);
+    (await measure(page)).forEach(i => all.push(`[${w}px 幫我選] ${i}`));
+    if (SHOTS && w <= 390) await page.screenshot({ path: path.join(SHOTS, `lucky-${w}.png`) });
+    await page.keyboard.press("Escape");
+    // 連假倒數：數字框與文字垂直置中
+    const cd = await page.evaluate(() => {
+      const b = document.querySelector("#countdown"); if (!b || b.classList.contains("hidden")) return "沒有顯示連假倒數";
+      const R = (e) => e.getBoundingClientRect(), a = R(b.querySelector(".num")), t = R(b.querySelector(".txt")), box = R(b);
+      if (Math.abs((a.top + a.bottom) / 2 - (box.top + box.bottom) / 2) > 2) return "倒數數字框沒有垂直置中";
+      if (t.right > box.right) return "倒數文字超出";
+      return "";
+    });
+    if (cd) all.push(`[${w}px] ${cd}`);
+
     // 篩選到國家後再量一次（版面最容易出問題的情境：只剩 1～2 張卡）
     await page.click('.tabs button[data-tab="flights"]');
     await page.click('#tiles .tile[data-v="HK"]');
