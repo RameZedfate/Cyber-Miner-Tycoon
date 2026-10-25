@@ -59,35 +59,48 @@ for (const part of ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3
   ok(j.count === 0 && Array.isArray(j.rows), "沒有 KV 時 ?part=all 應回傳空資料");
 }
 
-// 3. 有 KV：排程輪流抓、累積、清除
+// 3. 有 KV：排程輪流抓、累積、清除（資料庫是精簡格式：cols＋data）
 {
   const store = new Map();
-  const KV = { get: async (k, t) => { const v = store.get(k); return v == null ? null : t === "json" ? JSON.parse(v) : v; },
+  let kvReads = 0;
+  const KV = { get: async (k, t) => { kvReads++; const v = store.get(k); return v == null ? null : t === "json" ? JSON.parse(v) : v; },
                put: async (k, v) => { store.set(k, v); } };
   const env = { TP_TOKEN: "t", DEALS: KV };
   const first = await call("?part=all", env);
-  ok(first.count > 0, "有 KV 但資料庫是空的時，?part=all 應先抓一段");
+  ok(first.count > 0 && Array.isArray(first.cols) && Array.isArray(first.data), "有 KV 但資料庫是空的時，?part=all 應先抓一段，回傳 cols＋data");
+  const P = () => JSON.parse(store.get("pool_v2"));
   for (let i = 0; i < 14; i++) await worker.scheduled({}, env, ctx);
-  const pool = JSON.parse(store.get("pool_v1"));
-  console.log(`排程 14 次後資料庫：${pool.count} 筆，最後一段 ${pool.last_part}，下一段索引 ${store.get("cursor_v1")}`);
+  const pool = P(), C = Object.fromEntries(pool.cols.map((k, i) => [k, i]));
+  console.log(`排程 14 次後資料庫：${pool.count} 筆，最後一段 ${pool.last_part}，下一段索引 ${store.get("cursor_v1")}，大小 ${(store.get("pool_v2").length / 1024).toFixed(0)} KB`);
   ok(pool.count >= first.count, "資料庫沒有累積");
-  ok(new Set(pool.rows.map(r => r.destination)).size > 1, "資料庫只有一個目的地");
+  ok(new Set(pool.data.map(t => t[C.destination])).size > 1, "資料庫只有一個目的地");
+  ok(pool.data.every(t => /^\d{4}-\d{2}-\d{2}$/.test(t[C.departure_at]) && t[C.price] > 0 && t[C.seen] > 0), "資料庫有格式不對的列");
   // 價格變動：同一組日期要更新成新價格，不能變成兩筆
   priceBump = 100;
   for (let i = 0; i < 14; i++) await worker.scheduled({}, env, ctx);
-  const pool2 = JSON.parse(store.get("pool_v1"));
-  const keys = pool2.rows.map(r => [r.origin, r.destination, r.departure_at.slice(0, 10), (r.return_at || "").slice(0, 10), r.airline, r.transfers].join("|"));
+  const pool2 = P();
+  const keys = pool2.data.map(t => [t[C.origin], t[C.destination], t[C.departure_at], t[C.return_at], t[C.airline], t[C.transfers]].join("|"));
   ok(new Set(keys).size === keys.length, "同一組日期＋航空出現重複");
   // 加入一筆已出發、一筆太舊的票，下一次排程要清掉
-  pool2.rows.push({ origin: "TPE", destination: "TYO", price: 1, airline: "IT", departure_at: tw(-1) + "T08:00:00+08:00", seen: Date.now() });
-  pool2.rows.push({ origin: "TPE", destination: "OSA", price: 2, airline: "IT", departure_at: tw(30) + "T08:00:00+08:00", seen: Date.now() - 4 * 864e5 });
-  store.set("pool_v1", JSON.stringify(pool2));
+  const mk = (dest, price, dep, seen) => { const t = new Array(pool2.cols.length).fill(null); t[C.origin] = "TPE"; t[C.destination] = dest; t[C.price] = price; t[C.airline] = "IT"; t[C.departure_at] = dep; t[C.return_at] = ""; t[C.seen] = seen; return t; };
+  pool2.data.push(mk("TYO", 1, tw(-1), Date.now()), mk("OSA", 2, tw(30), Date.now() - 4 * 864e5));
+  store.set("pool_v2", JSON.stringify(pool2));
   await worker.scheduled({}, env, ctx);
-  const pool3 = JSON.parse(store.get("pool_v1"));
-  ok(!pool3.rows.some(r => r.price === 1), "已出發的票沒有被清掉");
-  ok(!pool3.rows.some(r => r.price === 2), "超過 3 天的票沒有被清掉");
+  const pool3 = P();
+  ok(!pool3.data.some(t => t[C.price] === 1), "已出發的票沒有被清掉");
+  ok(!pool3.data.some(t => t[C.price] === 2), "超過 3 天的票沒有被清掉");
   const all = await call("?part=all", env);
   ok(all.count === pool3.count, "?part=all 回傳的筆數跟資料庫不一致");
+  ok(store.get("pool_v2").length < 2 * 1024 * 1024, "資料庫超過 2 MB");
+  // 資料庫上限：塞 6000 筆（各自不同航線月份），排程後要剩 4000 筆以內，而且留下的是最便宜的
+  const big = P();
+  big.data = Array.from({ length: 6000 }, (_, i) => { const t = mk(["TYO","OSA","SEL","BKK","HKG","FUK"][i % 6], 1000 + i, tw(5 + (i % 100)), Date.now()); t[C.origin] = ["TPE","KHH","RMQ"][Math.floor(i / 6) % 3]; t[C.return_at] = tw(9 + (i % 100)); t[C.airline] = "A" + (i % 97); return t; });
+  store.set("pool_v2", JSON.stringify(big));
+  await worker.scheduled({}, env, ctx);
+  const capped = P();
+  ok(capped.count <= 4000, `資料庫上限沒生效：${capped.count} 筆`);
+  ok(capped.data.some(t => t[C.price] === 1000), "上限裁切把最便宜的票裁掉了");
+  console.log(`塞 6000 筆後排程：剩 ${capped.count} 筆`);
 }
 
 if (problems.length) { console.log("❌ 抓價程式問題：\n" + problems.join("\n")); process.exit(1); }

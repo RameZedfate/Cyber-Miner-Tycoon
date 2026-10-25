@@ -204,25 +204,35 @@ async function buildPart(part, token) {
 }
 
 // ---------- 累積資料庫（KV）----------
-const POOL_KEY = "pool_v1", CURSOR_KEY = "cursor_v1";
+// 存成精簡格式（欄位名稱只寫一次、日期不含時間），粉絲讀取時原封不動傳出去，不用重新解析（免費方案 CPU 時間很短）。
+// 網頁看到 cols＋data 會自己還原成一般格式。
+const POOL_KEY = "pool_v2", CURSOR_KEY = "cursor_v1";
 const POOL_MAX_AGE = 3 * 24 * 3600 * 1000;   // 票最多保留 3 天
-const POOL_PER_ROUTE_MONTH = 80;             // 每條航線每個月最多留 80 筆（最便宜的）
-const rowKey = (r) => [r.origin, r.destination, String(r.departure_at).slice(0, 10), String(r.return_at || "").slice(0, 10), r.airline || "", r.transfers ?? ""].join("|");
+const POOL_PER_ROUTE_MONTH = 60;             // 每條航線每個月（來回／單程分開）最多留最便宜的 60 筆
+const POOL_MAX_ROWS = 4000;                  // 整個資料庫最多 4000 筆（控制免費方案的 CPU 時間），超過只留最便宜的
+const POOL_COLS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers","duration_to","seen"];
+const C = Object.fromEntries(POOL_COLS.map((k, i) => [k, i]));
+const toTuple = (r, now) => [r.origin, r.destination, r.origin_airport || r.origin, r.destination_airport || r.destination, r.price, r.airline || "",
+  String(r.departure_at).slice(0, 10), r.return_at ? String(r.return_at).slice(0, 10) : "", r.transfers ?? null, r.return_transfers ?? null, r.duration_to ?? null, now];
+const tupleKey = (t) => [t[C.origin], t[C.destination], t[C.departure_at], t[C.return_at], t[C.airline], t[C.transfers]].join("|");
 
 function mergePool(pool, rows, now) {
-  const map = new Map((pool?.rows || []).map(r => [rowKey(r), r]));
-  for (const r of rows) map.set(rowKey(r), { ...r, seen: now }); // 同一組日期＋航空：用最新看到的價格
+  const map = new Map();
+  for (const t of (pool?.data || [])) map.set(tupleKey(t), t);
+  for (const r of rows) { const t = toTuple(r, now); map.set(tupleKey(t), t); } // 同一組日期＋航空：用最新看到的價格
   const today = new Date(now + 8 * 3600 * 1000).toISOString().slice(0, 10);
   const groups = new Map();
-  for (const r of map.values()) {
-    if (String(r.departure_at).slice(0, 10) <= today) continue;   // 已出發
-    if (!r.seen || now - r.seen > POOL_MAX_AGE) continue;         // 太舊
-    const g = `${r.origin}|${r.destination}|${String(r.departure_at).slice(0, 7)}|${r.return_at ? "rt" : "ow"}`;
-    (groups.get(g) || groups.set(g, []).get(g)).push(r);
+  for (const t of map.values()) {
+    if (t[C.departure_at] <= today) continue;                 // 已出發
+    if (!t[C.seen] || now - t[C.seen] > POOL_MAX_AGE) continue; // 太舊
+    const g = `${t[C.origin]}|${t[C.destination]}|${t[C.departure_at].slice(0, 7)}|${t[C.return_at] ? "rt" : "ow"}`;
+    let list = groups.get(g); if (!list) groups.set(g, list = []);
+    list.push(t);
   }
-  const out = [];
-  for (const list of groups.values()) out.push(...list.sort((a, b) => a.price - b.price).slice(0, POOL_PER_ROUTE_MONTH));
-  return { updated_at: new Date(now).toISOString(), count: out.length, rows: out };
+  let data = [];
+  for (const list of groups.values()) data.push(...list.sort((a, b) => a[C.price] - b[C.price]).slice(0, POOL_PER_ROUTE_MONTH));
+  if (data.length > POOL_MAX_ROWS) data = data.sort((a, b) => a[C.price] - b[C.price]).slice(0, POOL_MAX_ROWS);
+  return { part: "all", updated_at: new Date(now).toISOString(), count: data.length, cols: POOL_COLS, data };
 }
 
 async function refreshOnePart(env) {
@@ -232,9 +242,10 @@ async function refreshOnePart(env) {
   const pool = await env.DEALS.get(POOL_KEY, "json");
   const next = mergePool(pool, rows, Date.now());
   next.last_part = part;
-  await env.DEALS.put(POOL_KEY, JSON.stringify(next));
+  const text = JSON.stringify(next);
+  await env.DEALS.put(POOL_KEY, text);
   await env.DEALS.put(CURSOR_KEY, String((i + 1) % PARTS.length));
-  return next;
+  return text;
 }
 
 export default {
@@ -260,11 +271,18 @@ export default {
       return new Response(JSON.stringify(out, null, 1), { headers: { ...headers, "Cache-Control": "no-store" } });
     }
     if (p === "all") {
+      const h = { ...headers, "Cache-Control": "public, max-age=600" };
       // 累積資料庫：沒設定 KV 就回空的，網頁會自動改用分段抓法
-      if (!env.DEALS) return new Response(JSON.stringify({ part: "all", count: 0, rows: [], note: "尚未設定 KV（DEALS）" }), { headers: { ...headers, "Cache-Control": "public, max-age=600" } });
-      let pool = await env.DEALS.get(POOL_KEY, "json");
-      if (!pool || !pool.count) pool = await refreshOnePart(env); // 第一次：先抓一段
-      return new Response(JSON.stringify({ part: "all", ...pool }), { headers: { ...headers, "Cache-Control": "public, max-age=600" } });
+      if (!env.DEALS) return new Response(JSON.stringify({ part: "all", count: 0, rows: [], note: "尚未設定 KV（DEALS）" }), { headers: h });
+      // 邊緣快取 10 分鐘，減少 KV 讀取次數
+      const poolCache = new Request(`${url.origin}/_deals_pool_v2`);
+      const hitPool = await caches.default.match(poolCache);
+      if (hitPool) return hitPool;
+      let text = await env.DEALS.get(POOL_KEY);              // 直接拿存好的文字，不解析
+      if (!text || text.length < 80) text = await refreshOnePart(env); // 第一次：先抓一段
+      const res = new Response(text, { headers: h });
+      ctx.waitUntil(caches.default.put(poolCache, res.clone()));
+      return res;
     }
     const part = PARTS.includes(p) ? p : "main";
 

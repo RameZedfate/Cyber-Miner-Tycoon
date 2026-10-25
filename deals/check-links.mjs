@@ -234,8 +234,12 @@ try {
   // 累積資料庫有 300 筆以上：直接用，不再分段抓
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    const big = { part: "all", count: 320, rows: Array.from({ length: 320 }, (_, i) =>
-      row("TPE", ["TYO","OSA","SEL","BKK","HKG"][i % 5], "TPE", ["NRT","KIX","ICN","BKK","HKG"][i % 5], day(5 + (i % 90)), day(9 + (i % 90)), 3000 + i, 0, 0, "IT")) };
+    // 精簡格式（cols＋data），跟正式抓價程式一樣；長崎只出現在這裡
+    const cols = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers","duration_to","seen"];
+    const big = { part: "all", count: 320, cols, data: Array.from({ length: 320 }, (_, i) => {
+      const d = ["TYO","OSA","SEL","BKK","NGS"][i % 5];
+      return ["TPE", d, "TPE", d, 3000 + i, "IT", day(5 + (i % 90)), day(9 + (i % 90)), 0, 0, 180, Date.now()];
+    }) };
     let partCalls = 0;
     await page.route("**/*workers.dev/**", r => {
       const u = r.request().url();
@@ -246,6 +250,8 @@ try {
     await page.waitForSelector("#flightList .card");
     await page.waitForTimeout(800);
     if (partCalls) problems.push(`資料庫已有 320 筆，網頁仍分段抓了 ${partCalls} 次`);
+    const ngs = await page.evaluate(() => state.flights.filter(f => f.d === "NGS").length);
+    if (ngs !== 64) problems.push(`精簡格式的資料庫沒有正確還原（長崎應有 64 筆，實際 ${ngs}）`);
     console.log(`資料庫 320 筆時分段抓的次數：${partCalls}`);
     await page.close();
   }

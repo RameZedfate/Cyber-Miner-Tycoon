@@ -1308,10 +1308,16 @@ function mergeAndRender(rows){
   renderBrandTag();
   if (pendingRoute) openRouteFromUrl();
 }
+// 累積資料庫的精簡格式：{ cols:[欄位...], data:[[值...], ...] } → 一般格式
+function decodePool(p){
+  if (!Array.isArray(p.cols) || !Array.isArray(p.data)) return [];
+  const cols = p.cols;
+  return p.data.map(t => { const o = {}; for (let i = 0; i < cols.length; i++) if (t[i] !== null && t[i] !== "" && t[i] !== undefined) o[cols[i]] = t[i]; return o; });
+}
 async function loadExtras(){
   // 累積資料庫夠多就直接用；不夠（或沒設定）才分段抓
   const pool = CONFIG.poolUrl ? await getJSON(CONFIG.poolUrl).catch(() => null) : null;
-  const poolRows = (pool && Array.isArray(pool.rows)) ? pool.rows : [];
+  const poolRows = !pool ? [] : Array.isArray(pool.rows) ? pool.rows : decodePool(pool);
   mergeAndRender(poolRows);
   if (poolRows.length >= (CONFIG.poolEnough || 300)) return;
   for (const u of (CONFIG.extraUrls || [])){
