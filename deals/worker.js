@@ -5,6 +5,8 @@
  *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
  *   https://你的網址/?part=m0～m3 → 熱門航線細抓：每條熱門航線各抓一個月（m0＝本月、m1＝下個月…），日期選擇更多
  *
+ *   https://你的網址/?part=probe&o=KHH&d=SEL → 測試頁：比較不同市場／不同查詢方式各抓得到幾張票（不快取）
+ *
  * 為什麼要分段：Cloudflare 免費方案每次最多對外查 50 次，分成幾段各自有 50 次額度。
  *
  * 價格來源：Travelpayouts（Aviasales）低價快取。這是「預估最低價」，
@@ -73,6 +75,49 @@ const HOT_ROUTES = {
 const FIELDS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers"];
 function slim(r) { const o = {}; for (const k of FIELDS) if (r[k] !== undefined) o[k] = r[k]; return o; }
 
+// 測試頁：同一條航線用不同市場、不同查詢方式各查一次，看哪一種資料最多（共 18 次查詢）
+async function probe(token, o, d) {
+  const T = "https://api.travelpayouts.com";
+  const m1 = months()[1];
+  const pick = (r) => ({
+    dep: String(r.departure_at || r.depart_date || "").slice(0, 10),
+    ret: String(r.return_at || r.return_date || "").slice(0, 10),
+    price: r.price ?? r.value, airline: r.airline || "",
+  });
+  const toRows = (j) => {
+    const data = j?.data;
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object") {
+      // v1 / grouped 格式：{ 目的地: { 0: {...}, 1: {...} } } 或 { 日期: {...} }
+      return Object.values(data).flatMap(v => (v && typeof v === "object" && !("price" in v) && !("value" in v)) ? Object.values(v) : [v]);
+    }
+    return [];
+  };
+  const tests = [];
+  for (const mk of ["", "ru", "us", "kr", "jp", "th", "hk", "sg", "tw", "vn", "cn", "au"]) {
+    tests.push([`v3 prices_for_dates market=${mk || "(不指定)"}`,
+      `${T}/aviasales/v3/prices_for_dates?origin=${o}&destination=${d}&one_way=false&sorting=price&limit=1000&currency=twd${mk ? "&market=" + mk : ""}`]);
+  }
+  tests.push(["v3 grouped_prices（下個月每天最低）", `${T}/aviasales/v3/grouped_prices?origin=${o}&destination=${d}&group_by=departure_at&departure_at=${m1}&currency=twd`]);
+  tests.push(["v3 get_latest_prices（一年內）", `${T}/aviasales/v3/get_latest_prices?origin=${o}&destination=${d}&period_type=year&one_way=false&limit=1000&currency=twd`]);
+  tests.push(["v2 prices/latest（一年內）", `${T}/v2/prices/latest?origin=${o}&destination=${d}&period_type=year&one_way=false&limit=1000&show_to_affiliates=true&currency=twd`]);
+  tests.push(["v2 prices/month-matrix（下個月）", `${T}/v2/prices/month-matrix?origin=${o}&destination=${d}&month=${m1}-01&show_to_affiliates=true&currency=twd`]);
+  tests.push(["v1 prices/cheap", `${T}/v1/prices/cheap?origin=${o}&destination=${d}&currency=twd`]);
+  tests.push(["v1 prices/calendar（下個月）", `${T}/v1/prices/calendar?origin=${o}&destination=${d}&depart_date=${m1}&calendar_type=departure_date&currency=twd`]);
+  const results = await Promise.all(tests.map(async ([name, u]) => {
+    try {
+      const r = await fetch(`${u}&token=${token}`);
+      const j = await r.json();
+      const rows = toRows(j).filter(x => x && (x.price || x.value));
+      const prices = rows.map(x => Number(x.price ?? x.value)).filter(n => n > 0);
+      return { name, http: r.status, count: rows.length, min: prices.length ? Math.min(...prices) : null,
+        airlines: [...new Set(rows.map(x => x.airline).filter(Boolean))].join(","), sample: rows.slice(0, 3).map(pick),
+        error: j?.error || j?.message || undefined };
+    } catch (e) { return { name, error: String(e) }; }
+  }));
+  return { route: `${o}-${d}`, month_tested: m1, results };
+}
+
 function months() {
   const out = [];
   const now = new Date(Date.now() + 8 * 3600 * 1000); // 台灣時間
@@ -99,6 +144,11 @@ export default {
     }
 
     const url = new URL(request.url);
+    if (url.searchParams.get("part") === "probe") {
+      const code = (k, dflt) => (url.searchParams.get(k) || dflt).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
+      const out = await probe(token, code("o", "KHH"), code("d", "SEL"));
+      return new Response(JSON.stringify(out, null, 1), { headers: { ...headers, "Cache-Control": "no-store" } });
+    }
     const p = url.searchParams.get("part") || "";
     const monthIdx = /^m[0-3]$/.test(p) ? Number(p[1]) : -1;
     const part = p === "fsc" ? "fsc" : (monthIdx >= 0 ? p : "main");
