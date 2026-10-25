@@ -278,6 +278,11 @@
   .opt .pp span{font-size:12px;color:var(--blue);font-weight:700}
   .opt.hi{outline:2px solid var(--yellow)}
   .sh-actions{display:flex;gap:10px;margin-top:14px}
+  .hotel-x{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:14px;background:#FFF6D6;color:var(--navy);text-decoration:none}
+  .hotel-x > .ic{width:26px;height:26px;flex:0 0 auto}
+  .hotel-x span{flex:1 1 auto;min-width:0}
+  .hotel-x b{display:block;font-size:15px}
+  .hotel-x em{display:block;font-style:normal;font-size:12.5px;color:#7A5600;margin-top:2px;text-wrap:balance}
   .sh-actions .cta{flex:1 1 auto}
   .btn2{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 16px;border-radius:14px;
     border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:14.5px}
@@ -453,11 +458,14 @@
 <section id="hotels" class="hidden">
   <div class="hero" id="hotelHero"></div>
   <div class="wrap">
-    <h2 class="sec">便宜又不踩雷的酒店</h2>
-    <p class="sub">評分 8.0 以上・每晚含稅價</p>
+    <h2 class="sec" id="hTitle">便宜又不踩雷的酒店</h2>
+    <p class="sub" id="hSub">評分 8.0 以上・每晚含稅價</p>
     <div class="scroller" id="hCountries"></div>
     <div class="meta-row"><span id="hUpdated"></span><span id="hCount"></span></div>
     <div class="grid" id="hotelList"></div>
+    <h2 class="sec" id="hcTitle">熱門城市找酒店</h2>
+    <p class="sub" id="hcSub">點城市直接看 Trip.com 酒店，可改日期</p>
+    <div class="grid grid-sm" id="hotelCities"></div>
   </div>
 </section>
 
@@ -562,6 +570,9 @@ const POPULAR_ROUTES = {
   KHH: ["TYO","OSA","OKA","FUK","SEL","PUS","BKK","SGN","HAN","DAD","HKG","SHA"],
   RMQ: ["SEL","OKA","HKG"],
 };
+// Trip.com 酒店的城市代碼（從 Trip.com 網址確認過：例如 tokyo-hotels-list-228）。要加城市就在這裡補。
+const HOTEL_CITY = { TYO:228, OSA:219, FUK:248, OKA:92573, SPK:641, SEL:274, PUS:253, CJU:737,
+  BKK:359, CNX:623, DAD:1356, SGN:301, HKG:58, SHA:2 };
 // 機場代碼 → 城市代碼（照片用）
 const CITY_CANON = { NRT:"TYO", HND:"TYO", KIX:"OSA", ITM:"OSA", CTS:"SPK", ICN:"SEL", GMP:"SEL", DMK:"BKK",
   PVG:"SHA", PEK:"BJS", PKX:"BJS", TFU:"CTU" };
@@ -1198,9 +1209,44 @@ function renderHotelHero(){
   $("#hotelHero").innerHTML = `<div class="hero-track"><div class="slide ph g-JP" style="display:block">
       ${photoHTML("Fushimi Inari-taisha", "JP", "伏見稻荷大社", 1280, false)}
       <div class="in"><div class="wrap"><span class="eyebrow">${icon("bed")}便宜又不踩雷</span></div>
-        <div class="wrap"><h2>今晚住哪裡？</h2><div class="lm">評分 8.0 以上・每晚含稅價・Adam 親自挑過</div>
+        <div class="wrap"><h2>今晚住哪裡？</h2><div class="lm">日韓泰越・大陸港熱門城市，一鍵看 Trip.com 酒店</div>
           <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找酒店${ARROW()}</a></div></div>
     </div></div>`;
+}
+// Trip.com 酒店搜尋頁（含入住／退房日期、2 位成人、1 間房）
+function hotelCityUrl(code, checkin, checkout){
+  const id = HOTEL_CITY[canon(code)]; if (!id) return null;
+  const p = new URLSearchParams({ city: String(id), checkin, checkout, adult: "2", crn: "1", locale: "zh-TW", curr: "TWD" });
+  return affiliate("https://tw.trip.com/hotels/list?" + p.toString());
+}
+function nextWeekend(){
+  let d = addDays(todayTW(), 7);
+  while (wd(d) !== 5) d = addDays(d, 1);
+  return { checkin: d, checkout: addDays(d, 2) };
+}
+function renderHotelCities(){
+  const { checkin, checkout } = nextWeekend();
+  const cards = Object.keys(HOTEL_CITY).filter(c => !state.hCountry || countryOf(c) === state.hCountry).map(c => {
+    const url = hotelCityUrl(c, checkin, checkout); if (!url) return "";
+    const lm = LANDMARKS[c], co = countryOf(c);
+    return `<article class="card route">
+      <a class="ph g-${esc(co || "")}" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(cityName(c))}酒店">
+        ${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}
+        <div class="cap"><div class="city">${esc(cityName(c))}</div><div class="lm">${icon("bed")}${esc(COUNTRIES[co] || "")}酒店</div></div>
+      </a>
+      <div class="cb">
+        <div class="hint">建議日期<b>${esc(fmtDate(checkin))}–${esc(fmtDate(checkout))}</b>2 晚・2 位成人</div>
+        <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看酒店${ARROW()}</a>
+      </div>
+    </article>`;
+  }).join("");
+  $("#hotelCities").innerHTML = cards;
+  // 有精選酒店：上面精選、下面熱門城市；沒有：主標題直接是熱門城市
+  const curated = state.hotels.length > 0;
+  $("#hTitle").textContent = curated ? "便宜又不踩雷的酒店" : "熱門城市找酒店";
+  $("#hSub").textContent = curated ? "評分 8.0 以上・每晚含稅價" : "點城市直接看 Trip.com 酒店，可改日期";
+  $("#hcTitle").classList.toggle("hidden", !cards || !curated);
+  $("#hcSub").classList.toggle("hidden", !cards || !curated);
 }
 function renderHotels(){
   $("#hCountries").innerHTML = [["", "全部國家"], ...Object.entries(COUNTRIES)].map(([v,t]) =>
@@ -1208,8 +1254,10 @@ function renderHotels(){
   const list = state.hotels.filter(h => !state.hCountry || h.country === state.hCountry);
   $("#hUpdated").textContent = state.hotelsUpdated ? `更新於 ${fmtTime(state.hotelsUpdated)}` : "";
   $("#hCount").textContent = list.length ? `共 ${list.length} 間` : "";
-  $("#hotelList").innerHTML = list.length ? list.map(hotelCard).join("") :
-    `<div class="empty">酒店精選整理中，很快上線<br/><a class="btn" href="${esc(affiliate("https://tw.trip.com/hotels/"))}" target="_blank" rel="noopener sponsored">先去 Trip.com 看酒店</a></div>`;
+  // 還沒有精選酒店時，不顯示空白提示，直接讓「熱門城市找酒店」當主角
+  $("#hotelList").innerHTML = list.length ? list.map(hotelCard).join("") : "";
+  $("#hotelList").classList.toggle("hidden", !list.length);
+  renderHotelCities();
   queueImages();
 }
 async function loadHotels(){
@@ -1415,10 +1463,11 @@ function routeSheetHTML(o, d){
     const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 天` : "單程";
     return `<a class="opt" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div style="min-width:0"><div class="d1">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
-        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc(AIRLINE_NAMES[f.airline] || f.airline || "")}・${esc(days)}・${esc(f.direct ? "直飛" : "可能轉機")}</span></div></div>
+        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([AIRLINE_NAMES[f.airline] || (f.airline ? "其他航空" : ""), days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
       <div class="pp"><strong>${money(f.price)}</strong><span>訂這組 →</span></div></a>`;
   }).join("");
   const url = flightUrl(cheapest);
+  const hotelUrl = hotelCityUrl(d, cheapest.dep, cheapest.ret || addDays(cheapest.dep, 3));
   return `
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[c] || "")}</div></div></div>
@@ -1432,6 +1481,7 @@ function routeSheetHTML(o, d){
         <button class="btn2" data-share="${esc(o)}-${esc(d)}">${icon("share")}分享</button>
         <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看最便宜的 ${money(cheapest.price)}${ARROW()}</a>
       </div>
+      ${hotelUrl ? `<a class="hotel-x" href="${esc(hotelUrl)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(d))}的酒店</b><em>${esc(fmtDate(cheapest.dep))}–${esc(fmtDate(cheapest.ret || addDays(cheapest.dep, 3)))}・跟最便宜的機票同天</em></span>${ARROW()}</a>` : ""}
     </div>`;
 }
 function openRoute(o, d){

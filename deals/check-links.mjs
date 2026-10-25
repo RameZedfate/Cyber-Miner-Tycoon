@@ -174,6 +174,13 @@ try {
       await page.click("#sheet .day[data-day]");
       if (!(await page.$("#sheet .opt.hi"))) problems.push("點日曆日期沒有標出對應的選項");
       await checkLinks(page, "價格日曆", sub1);
+      const hx = await page.$eval("#sheet .hotel-x", a => a.href).catch(() => null);
+      if (!hx) problems.push("價格日曆沒有「順便看酒店」");
+      else {
+        const u = new URL(hx);
+        if (!u.pathname.startsWith("/hotels/list") || !/^\d+$/.test(u.searchParams.get("city") || "")) problems.push(`順便看酒店的網址不對：${hx}`);
+        if (!u.searchParams.get("checkin")) problems.push("順便看酒店沒有入住日期");
+      }
       await page.keyboard.press("Escape");
       if (await page.isVisible("#sheet")) problems.push("按 Esc 沒有關閉面板");
     }
@@ -199,6 +206,8 @@ try {
     await page.click('#budget button[data-v="0"]');
 
     await page.click('.tabs button[data-tab="hotels"]');
+    const nCity = await page.$$eval("#hotelCities .card", e => e.length);
+    if (nCity < 10) problems.push(`熱門城市酒店只有 ${nCity} 個`);
     const htext = await page.textContent("#hotelList");
     if (htext.includes("外部網址酒店")) problems.push("非 Trip.com 的酒店沒被擋掉");
     if (!htext.includes("測試酒店 A")) problems.push("酒店沒顯示");
