@@ -254,8 +254,32 @@ try {
       console.log(`[${w}px ${tab}] 照片載入 ${ok} 張、使用漸層底 ${fb} 個${fb ? "（" + fbNames.join("、") + "）" : ""}、問題 ${issues.length} 個`);
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `layout-${w}-${tab}.png`), fullPage: true });
     }
-    // 價格日曆面板
+    // 便宜票雷達：標籤不重疊、不超出、點了要開價格日曆
     await page.click('.tabs button[data-tab="flights"]');
+    const radar = await page.evaluate(() => {
+      const out = [], svg = document.querySelector("#radar");
+      if (!svg || document.querySelector("#radarSec").classList.contains("hidden")) return { out: ["雷達沒有顯示"], n: 0, labels: 0 };
+      const sb = svg.getBoundingClientRect();
+      const ts = [...svg.querySelectorAll(".pt text, .region, .home text, .ring-l")].map(t => ({ t: t.textContent, b: t.getBoundingClientRect() }));
+      for (const { t, b } of ts) if (b.left < sb.left - 1 || b.right > sb.right + 1 || b.top < sb.top - 1 || b.bottom > sb.bottom + 1) out.push(`雷達標籤超出：${t}`);
+      for (let i = 0; i < ts.length; i++) for (let j = i + 1; j < ts.length; j++) {
+        const a = ts[i].b, c = ts[j].b;
+        if (a.left < c.right - 1 && a.right > c.left + 1 && a.top < c.bottom - 1 && a.bottom > c.top + 1) out.push(`雷達標籤重疊：${ts[i].t}／${ts[j].t}`);
+      }
+      // 每個點都要露出來（不能被標籤蓋住）
+      const dots = [...svg.querySelectorAll(".pt .dot")].map(d => ({ d, b: d.getBoundingClientRect() }));
+      for (const { d, b } of dots) for (const { t, b: tb } of ts)
+        if (b.left < tb.right - 1 && b.right > tb.left + 1 && b.top < tb.bottom - 1 && b.bottom > tb.top + 1) out.push(`雷達的點被標籤蓋住：${d.parentElement.dataset.route}／${t}`);
+      return { out, n: svg.querySelectorAll(".pt").length, labels: svg.querySelectorAll(".pt text").length };
+    });
+    radar.out.forEach(i => all.push(`[${w}px 雷達] ${i}`));
+    console.log(`[${w}px] 雷達：${radar.n} 個城市，${radar.labels} 個有標籤`);
+    if (SHOTS) await (await page.$("#radarSec")).screenshot({ path: path.join(SHOTS, `radar-${w}.png`) });
+    await page.locator("#radar .pt").last().click(); // 最便宜的點畫在最上層
+    if (!(await page.isVisible("#sheet"))) all.push(`[${w}px] 點雷達的點沒有打開價格日曆`);
+    await page.keyboard.press("Escape");
+
+    // 價格日曆面板
     let rb = await page.$("#flightList [data-route]");
     for (const m of await page.$$eval("#months button", bs => bs.map(b => b.dataset.v))) { if (rb) break; await page.click(`#months button[data-v="${m}"]`); rb = await page.$("#flightList [data-route]"); }
     if (!rb) all.push(`[${w}px] 找不到「看全部日期」`);

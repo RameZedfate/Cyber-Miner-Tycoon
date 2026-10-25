@@ -192,6 +192,27 @@
   .countdown .t2{font-size:13px;color:#C9D6EA;margin-top:3px}
   .countdown .go-ic{flex:0 0 auto;width:20px;height:20px}
 
+  /* ---------- 便宜票雷達 ---------- */
+  .radar-wrap{background:radial-gradient(circle at 50% 50%,#12335F 0%,#0A1D38 62%,#071428 100%);border-radius:24px;padding:6px;box-shadow:var(--shadow);overflow:hidden}
+  #radar{display:block;width:100%;max-width:620px;margin:0 auto;aspect-ratio:1/1;font-family:var(--font)}
+  #radar .ring{fill:none;stroke:rgba(147,197,253,.22);stroke-width:1}
+  #radar .ring-l{fill:rgba(191,219,254,.55);font-size:9px}
+  #radar .axis{stroke:rgba(147,197,253,.12);stroke-width:1}
+  #radar .sweep{transform-origin:200px 200px;transform-box:view-box;animation:spin 6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #radar .pt{cursor:pointer;outline:none}
+  #radar .pt .hit{fill:transparent}
+  #radar .pt .dot{stroke:#071428;stroke-width:1.5}
+  #radar .pt:hover .dot, #radar .pt:focus .dot{stroke:#fff;stroke-width:2}
+  #radar .pt text{font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#071428;stroke-width:3px;stroke-linejoin:round}
+  #radar .pt text .pz{fill:#FDE68A;font-weight:900}
+  #radar .pulse{fill:none;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:pulse 2.2s ease-out infinite}
+  @keyframes pulse{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
+  #radar .home text{font-size:11px;font-weight:900;fill:var(--yellow)}
+  #radar .region{font-size:10px;fill:rgba(191,219,254,.6);letter-spacing:2px;font-weight:700;paint-order:stroke;stroke:#0A1D38;stroke-width:3px;pointer-events:none}
+  .radar-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+  .radar-legend i{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:4px;vertical-align:-1px}
+
   /* ---------- 幫我選 ---------- */
   .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
   .sec-head > div{min-width:0}
@@ -349,6 +370,13 @@
     </div>
     <div class="tiles" id="tiles"></div>
     <button class="countdown hidden" id="countdown"></button>
+
+    <section id="radarSec" class="hidden">
+      <h2 class="sec">便宜票雷達</h2>
+      <p class="sub" id="radarSub">以台灣為中心，點越大越綠越便宜，點一下看價格日曆</p>
+      <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
+      <div class="radar-legend"><span><i style="background:#22C55E"></i>便宜</span><span><i style="background:#FACC15"></i>普通</span><span><i style="background:#F87171"></i>偏貴</span><span>圈圈是飛行距離</span></div>
+    </section>
 
     <div id="picks" class="hidden">
       <h2 class="sec">Adam 今日精選</h2>
@@ -1070,6 +1098,7 @@ function renderFlights(){
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
   renderMoreRoutes(list);
   renderCountdown();
+  renderRadar();
   $("#moreBtn").classList.toggle("hidden", list.length <= state.shown);
   queueImages();
 }
@@ -1436,6 +1465,111 @@ function openRouteFromUrl(){
   const m = r.toUpperCase().match(/^([A-Z]{3})-([A-Z]{3})$/);
   if (m && ORIGIN_GROUP[m[1]] && CITIES[m[2]] && routeFlights(ORIGIN_GROUP[m[1]], m[2]).length) openRoute(ORIGIN_GROUP[m[1]], m[2]);
 }
+
+
+/* ====================================================================
+   ⑯ 便宜票雷達（以台灣為中心，方向＝真實方位，距離＝飛行距離）
+   ==================================================================== */
+// 城市座標（緯度, 經度）
+const COORDS = {
+  TYO:[35.68,139.69],  OSA:[34.69,135.5],  NGO:[35.18,136.91],  SPK:[43.06,141.35],  FUK:[33.59,130.4],  OKA:[26.21,127.68],
+  SDJ:[38.27,140.87],  HIJ:[34.39,132.46],  KMJ:[32.8,130.71],  KOJ:[31.6,130.56],  KIJ:[37.92,139.04],  TAK:[34.34,134.05],
+  OKJ:[34.66,133.92],  MYJ:[33.84,132.77],  ISG:[24.34,124.16],  UKB:[34.69,135.2],  KMQ:[36.56,136.65],  HKD:[41.77,140.73],
+  AOJ:[40.82,140.74],  IBR:[36.37,140.47],  SHI:[24.8,125.28],  FSZ:[34.98,138.38],  TOY:[36.7,137.21],  AKJ:[43.77,142.37],
+  NGS:[32.75,129.88],  OIT:[33.24,131.61],  YGJ:[35.43,133.33],  HSG:[33.26,130.3],  KCZ:[33.56,133.53],  SEL:[37.57,126.98],
+  PUS:[35.18,129.08],  CJU:[33.5,126.53],  TAE:[35.87,128.6],  CJJ:[36.64,127.49],  MWX:[34.81,126.39],  BKK:[13.75,100.5],
+  CNX:[18.79,98.98],  HKT:[7.88,98.39],  USM:[9.51,100.01],  KBV:[8.09,98.91],  UTP:[12.93,100.88],  CEI:[19.91,99.83],
+  SGN:[10.82,106.63],  HAN:[21.03,105.85],  DAD:[16.05,108.2],  CXR:[12.24,109.19],  PQC:[10.23,103.96],  HPH:[20.86,106.68],
+  DLI:[11.94,108.44],  VCA:[10.03,105.78],  HUI:[16.46,107.59],  VDO:[20.95,107.07],  HKG:[22.32,114.17],  SHA:[31.23,121.47],
+  BJS:[39.9,116.4],  CAN:[23.13,113.26],  SZX:[22.54,114.06],  CTU:[30.57,104.07],  CKG:[29.56,106.55],  XMN:[24.48,118.09],
+  HGH:[30.27,120.15],  NKG:[32.06,118.8],  TAO:[36.07,120.38],  WUH:[30.59,114.31],  XIY:[34.34,108.94],  KMG:[25.04,102.71],
+  DLC:[38.91,121.61],  FOC:[26.07,119.3],  TSN:[39.34,117.36],  CSX:[28.23,112.94],  SYX:[18.25,109.51],  CGO:[34.75,113.62],
+  SHE:[41.81,123.43],  NGB:[29.87,121.54],
+};
+const HOME = [24.4, 120.9]; // 台灣中心點
+function geo(lat2, lon2){
+  const rad = Math.PI / 180, [lat1, lon1] = HOME;
+  const p1 = lat1 * rad, p2 = lat2 * rad, dl = (lon2 - lon1) * rad;
+  const d = 2 * 6371 * Math.asin(Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2));
+  const b = Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl));
+  return { d, b };
+}
+const RADAR_MAX = 3300, RADAR_R = 178;
+const radarR = (km) => RADAR_R * Math.sqrt(Math.min(km, RADAR_MAX) / RADAR_MAX);
+function renderRadar(){
+  const sec = $("#radarSec");
+  const all = cheapestPerCity(modeFiltered()).filter(f => COORDS[canon(f.d)]);
+  const RADAR_MAX_PTS = 35; // 城市太多會擠，只畫最便宜的 35 個
+  const pts = all.slice(0, RADAR_MAX_PTS);
+  $("#radarSub").textContent = `以台灣為中心，點越大越綠越便宜，點一下看價格日曆${all.length > RADAR_MAX_PTS ? `（顯示最便宜的 ${RADAR_MAX_PTS} 個城市）` : ""}`;
+  if (!state.loaded || pts.length < 3){ sec.classList.add("hidden"); return; }
+  sec.classList.remove("hidden");
+  const sorted = pts.map(f => f.price).sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length / 3)], q2 = sorted[Math.floor(sorted.length * 2 / 3)];
+  const lv = (p) => p <= q1 ? 1 : p <= q2 ? 2 : 3;
+  const COLOR = { 1: "#22C55E", 2: "#FACC15", 3: "#F87171" }, SIZE = { 1: 7, 2: 5.5, 3: 4.5 };
+  const C = 200;
+  let svg = `<defs><linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#60A5FA" stop-opacity="0"/><stop offset="1" stop-color="#60A5FA" stop-opacity=".35"/></linearGradient></defs>`;
+  svg += `<line class="axis" x1="${C}" y1="${C - RADAR_R}" x2="${C}" y2="${C + RADAR_R}"/><line class="axis" x1="${C - RADAR_R}" y1="${C}" x2="${C + RADAR_R}" y2="${C}"/>`;
+  for (const km of [500, 1000, 2000, 3000]){
+    const r = radarR(km);
+    // 距離文字放在右下（太平洋方向，沒有城市）
+    svg += `<circle class="ring" cx="${C}" cy="${C}" r="${r.toFixed(1)}"/><text class="ring-l" x="${(C + r * 0.71 + 3).toFixed(1)}" y="${(C + r * 0.71 + 10).toFixed(1)}">${km} km</text>`;
+  }
+  svg += `<g class="sweep"><path d="M${C} ${C} L${C + RADAR_R} ${C} A${RADAR_R} ${RADAR_R} 0 0 0 ${(C + RADAR_R * Math.cos(-0.6)).toFixed(1)} ${(C + RADAR_R * Math.sin(-0.6)).toFixed(1)} Z" fill="url(#sw)"/></g>`;
+  // 位置
+  const items = pts.map(f => {
+    const [la, lo] = COORDS[canon(f.d)], g = geo(la, lo), r = radarR(g.d);
+    return { f, x: C + r * Math.sin(g.b), y: C - r * Math.cos(g.b), l: lv(f.price) };
+  });
+  const boxes = [[C - 24, C - 12, C + 24, C + 28]]; // 台灣的點與標籤
+  for (const km of [500, 1000, 2000, 3000]){ const r = radarR(km), x = C + r * 0.71 + 3, y = C + r * 0.71 + 10; boxes.push([x, y - 9, x + 40, y + 2]); }
+  const hit = (b) => b[0] < 2 || b[2] > 398 || b[1] < 2 || b[3] > 398 || boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  // 每個點都不能被標籤蓋住（蓋住就看不到也點不到）
+  for (const it of items) boxes.push([it.x - SIZE[it.l] - 1, it.y - SIZE[it.l] - 1, it.x + SIZE[it.l] + 1, it.y + SIZE[it.l] + 1]);
+  // 標籤：便宜的優先，放不下就只畫點
+  const textW = (t) => [...t].reduce((w, ch) => w + (/[　-鿿＀-￯]/.test(ch) ? 11 : 6.4), 0);
+  const top3 = new Set([...items].sort((a, b) => a.f.price - b.f.price).slice(0, 3).map(i => i.f));
+  let dots = "", nLabels = 0;
+  const MAX_LABELS = 20; // 從最便宜的開始標，最多 20 個
+  // 畫的順序：貴的先畫、便宜的後畫（便宜的在最上層）；標籤從便宜的開始分配
+  const labelOf = new Map();
+  for (const it of [...items].sort((a, b) => a.f.price - b.f.price)){ // 從最便宜的開始放
+    if (nLabels >= MAX_LABELS) break;
+    const { f, x, y, l } = it, name = cityName(f.d), price = Math.round(f.price).toLocaleString("en-US");
+    const w = textW(name + " " + price), s = SIZE[l];
+    const spots = [[x + s + 4, y + 4, "start"], [x - s - 4, y + 4, "end"], [x, y - s - 5, "middle"], [x, y + s + 13, "middle"],
+      [x + s + 2, y - s - 3, "start"], [x + s + 2, y + s + 11, "start"], [x - s - 2, y - s - 3, "end"], [x - s - 2, y + s + 11, "end"]];
+    for (const [lx, ly, anchor] of spots){
+      const x0 = anchor === "start" ? lx : anchor === "end" ? lx - w : lx - w / 2, b = [x0 - 2, ly - 12, x0 + w + 2, ly + 5];
+      if (!hit(b)){ boxes.push(b); nLabels++; labelOf.set(it, `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${esc(name)} <tspan class="pz">${price}</tspan></text>`); break; }
+    }
+  }
+  // 地區名稱（各國城市的平均位置往外推）：最後才放，要避開所有點和城市標籤
+  let regions = "";
+  for (const c of ["JP","KR","CN","HK","VN","TH"]){
+    const its = items.filter(it => it.f.country === c); if (!its.length) continue;
+    const ax = its.reduce((s, i) => s + i.x, 0) / its.length, ay = its.reduce((s, i) => s + i.y, 0) / its.length;
+    const dx = ax - C, dy = ay - C, len = Math.hypot(dx, dy) || 1;
+    const tx = C + dx / len * (len + 30), ty = C + dy / len * (len + 30);
+    const w = COUNTRIES[c].length * 12 + 8, b = [tx - w / 2, ty - 12, tx + w / 2, ty + 5];
+    if (!hit(b)){ boxes.push(b); regions += `<text class="region" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle">${esc(COUNTRIES[c])}</text>`; }
+  }
+  for (const it of [...items].sort((a, b) => b.f.price - a.f.price)){
+    const { f, x, y, l } = it, name = cityName(f.d), s = SIZE[l], label = labelOf.get(it) || "";
+    dots += `<g class="pt" data-route="${esc(f.o)}-${esc(f.d)}" tabindex="0" role="button" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(name)} ${money(f.price)} 起">
+      <circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14"/>
+      ${top3.has(f) ? `<circle class="pulse" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" stroke="${COLOR[l]}"/>` : ""}
+      <circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" fill="${COLOR[l]}"/>${label}</g>`;
+  }
+  svg += dots + regions; // 地區名稱畫在最上層
+  svg += `<g class="home"><circle cx="${C}" cy="${C}" r="5" fill="#FFC72C"/><circle cx="${C}" cy="${C}" r="9" fill="none" stroke="#FFC72C" stroke-opacity=".5"/><text x="${C}" y="${C + 22}" text-anchor="middle">台灣</text></g>`;
+  $("#radar").innerHTML = svg;
+}
+document.addEventListener("keydown", e => {
+  const g = e.target.closest && e.target.closest("#radar .pt");
+  if (g && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); const [o, d] = g.dataset.route.split("-"); openRoute(o, d); }
+});
 
 state.month = monthKeys()[0];
 renderChips(); renderMonths(); renderTiles(); renderHotelHero();
