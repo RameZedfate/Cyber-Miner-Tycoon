@@ -229,6 +229,24 @@
   @keyframes pulse{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
   #radar .home text{font-size:11px;font-weight:900;fill:var(--yellow)}
   #radar .region{font-size:10px;fill:rgba(191,219,254,.6);letter-spacing:2px;font-weight:700;paint-order:stroke;stroke:#0A1D38;stroke-width:3px;pointer-events:none}
+  .radar-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  @media (min-width:1000px){ .radar-grid{grid-template-columns:minmax(0,600px) minmax(0,1fr);align-items:stretch} }
+  .rank{list-style:none;margin:0;padding:6px;background:#fff;border-radius:20px;box-shadow:var(--shadow);display:grid;gap:2px;align-content:start}
+  .rank li{min-width:0}
+  .rank button{width:100%;display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:10px;border:0;background:none;
+    padding:10px 10px;border-radius:14px;text-align:left}
+  .rank button:hover{background:var(--soft)}
+  .rank .no{width:28px;height:28px;border-radius:999px;background:var(--soft);color:var(--navy);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .rank li:nth-child(-n+3) .no{background:var(--yellow)}
+  .rank .nm{font-weight:900;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .sb{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .pz{font-weight:900;color:var(--red);font-size:16px;white-space:nowrap}
+  .rank-h{font-size:13px;font-weight:700;color:var(--muted);padding:8px 10px 2px}
+  @media (max-width:999px){ .rank li:nth-child(n+7){display:none} } /* 手機只顯示前 5 名 */
+  @media (min-width:1000px){
+    .wk-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible;margin:0;padding:4px 0 12px}
+    .wk-row .mini{flex:none}
+  }
   .radar-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
   .radar-legend i{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:4px;vertical-align:-1px}
 
@@ -404,7 +422,10 @@
     <section id="radarSec" class="hidden">
       <h2 class="sec">便宜票雷達</h2>
       <p class="sub" id="radarSub">以台灣為中心，點越大越綠越便宜，點一下看價格日曆</p>
-      <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
+      <div class="radar-grid">
+        <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
+        <ol class="rank" id="radarRank" aria-label="最便宜城市排行"></ol>
+      </div>
       <div class="radar-legend"><span><i style="background:#22C55E"></i>便宜</span><span><i style="background:#FACC15"></i>普通</span><span><i style="background:#F87171"></i>偏貴</span><span>圈圈是飛行距離</span></div>
     </section>
 
@@ -1698,6 +1719,11 @@ function renderRadar(){
   svg += dots + regions; // 地區名稱畫在最上層
   svg += `<g class="home"><circle cx="${C}" cy="${C}" r="5" fill="#FFC72C"/><circle cx="${C}" cy="${C}" r="9" fill="none" stroke="#FFC72C" stroke-opacity=".5"/><text x="${C}" y="${C + 22}" text-anchor="middle">台灣</text></g>`;
   $("#radar").innerHTML = svg;
+  // 排行榜：最便宜的 8 個城市（點了開價格日曆）
+  $("#radarRank").innerHTML = `<li class="rank-h">最便宜的城市</li>` + all.slice(0, 8).map((f, i) =>
+    `<li><button data-route="${esc(f.o)}-${esc(f.d)}"><span class="no">${i + 1}</span>
+      <span style="min-width:0"><div class="nm">${esc(cityName(f.d))}</div><div class="sb">${esc(ORIGIN_NAME[f.o])}出發・${esc(fmtDate(f.dep))}${f.ret ? "・" + (diffDays(f.dep, f.ret) + 1) + " 天" : ""}</div></span>
+      <span class="pz">${money(f.price)}</span></button></li>`).join("");
 }
 document.addEventListener("keydown", e => {
   const g = e.target.closest && e.target.closest("#radar .pt");

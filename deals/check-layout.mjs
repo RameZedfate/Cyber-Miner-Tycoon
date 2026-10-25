@@ -180,7 +180,7 @@ async function measure(page) {
       if (Math.max(...dt) - Math.min(...dt) > 1) out.push("去程／回程日期沒對齊");
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span"]) {
+    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".rank .nm", ".rank .pz"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
@@ -222,7 +222,7 @@ async function measure(page) {
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
     // 11. 篩選列每顆按鈕高度一致、垂直置中
-    for (const sc of document.querySelectorAll(".scroller")) {
+    for (const sc of [...document.querySelectorAll(".scroller")].filter(e => getComputedStyle(e).display === "flex")) {
       const bs = [...sc.children].filter(vis);
       const tops = bs.map(b => Math.round(R(b).top)), hs = bs.map(b => Math.round(R(b).height));
       if (bs.length && (Math.max(...tops) - Math.min(...tops) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`#${sc.id} 按鈕沒對齊`);
