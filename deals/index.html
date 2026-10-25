@@ -41,8 +41,11 @@
   .brandbar .wrap{display:flex;align-items:center;justify-content:space-between;height:52px}
   .brand{font-weight:900;font-size:18px;letter-spacing:.6px;white-space:nowrap}
   .brand b{color:var(--yellow)}
-  .brand-tag{font-size:12.5px;color:#C9D6EA;white-space:nowrap;margin-left:12px}
-  @media (max-width:479px){ .brand-tag{display:none} }
+  .brand{flex:0 0 auto}
+  .brand-tag{font-size:12.5px;color:#C9D6EA;white-space:nowrap;margin-left:12px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .brand-tag b{color:var(--yellow);font-weight:900}
+  @media (max-width:419px){ .brand-tag .bt-l{display:none} }
+  @media (max-width:329px){ .brand-tag{display:none} }
   .tabbar{position:sticky;top:0;z-index:30;background:rgba(243,245,249,.92);backdrop-filter:saturate(1.4) blur(10px);
     -webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid rgba(15,23,42,.06)}
   .tabs{display:flex;gap:4px;background:#fff;border-radius:999px;padding:4px;margin:8px auto;max-width:520px;box-shadow:var(--shadow)}
@@ -365,7 +368,7 @@
 <div class="brandbar">
   <div class="wrap">
     <div class="brand">HOWTRAVLE <b>便宜票雷達</b></div>
-    <div class="brand-tag">台灣出發・每天自動更新</div>
+    <div class="brand-tag" id="brandTag">台灣出發・每天自動更新</div>
   </div>
 </div>
 <nav class="tabbar">
@@ -566,8 +569,11 @@ const CITIES = {
 // 「更多熱門航線」：資料來源沒有預估價時，仍列出這些航線讓粉絲點進 Trip.com 看即時價。要增減就改這裡。
 const POPULAR_ROUTES = {
   TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","CJU","BKK","CNX","HKT","SGN","HAN","DAD","CXR","PQC",
-        "HKG","SHA","BJS","CAN","SZX","XMN","CTU"],
-  KHH: ["TYO","OSA","OKA","FUK","SEL","PUS","BKK","SGN","HAN","DAD","HKG","SHA"],
+        "HKG","SHA","BJS","CAN","SZX","XMN","CTU",
+        // 二線城市
+        "SDJ","HIJ","KMJ","KOJ","TAK","OKJ","HKD","ISG","KMQ","AOJ","SHI","FSZ","IBR","TAE","CJJ","USM","KBV",
+        "HGH","NKG","TAO","WUH","XIY","CKG"],
+  KHH: ["TYO","OSA","OKA","FUK","SEL","PUS","BKK","SGN","HAN","DAD","HKG","SHA","CJU","CXR","PQC","CNX","NGO","HKT"],
   RMQ: ["SEL","OKA","HKG"],
 };
 // Trip.com 酒店的城市代碼（從 Trip.com 網址確認過：例如 tokyo-hotels-list-228）。要加城市就在這裡補。
@@ -1287,6 +1293,11 @@ function addRows(raw){
   return added;
 }
 // 細抓資料：先顯示主要資料，這些到了再補進去（不讓粉絲等）
+// 頂部：今天整理了幾張低價機票（未出發的）
+function renderBrandTag(){
+  const t = todayTW(), n = state.flights.filter(f => f.dep > t).length;
+  if (n) $("#brandTag").innerHTML = `<span class="bt-l">今天整理 </span><b>${n.toLocaleString("en-US")}</b> 張低價票`;
+}
 let pendingRoute = true;
 function mergeAndRender(rows){
   if (!state.loaded || !addRows(rows || [])) return;
@@ -1294,6 +1305,7 @@ function mergeAndRender(rows){
   if (!baseFiltered().some(f => f.dep.startsWith(state.month))) state.month = bestMonth();
   if (!$("#updated").textContent) $("#updated").textContent = "預估價・今天更新";
   if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); }
+  renderBrandTag();
   if (pendingRoute) openRouteFromUrl();
 }
 async function loadExtras(){
@@ -1321,6 +1333,7 @@ async function loadFlights(){
   state.month = bestMonth();
   renderHero();
   renderFlights();
+  renderBrandTag();
   openRouteFromUrl();
   loadExtras();
 }
