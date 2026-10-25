@@ -110,6 +110,7 @@ async function measure(page) {
     const near = (a, b, t = 1.01) => Math.abs(a - b) <= t;
     const W = document.documentElement.clientWidth;
 
+    if (/\$\{|undefined|NaN|\[object/.test(document.body.innerText)) out.push("畫面上出現程式碼殘字（${、undefined、NaN）");
     if (document.documentElement.scrollWidth > W + 1) out.push(`整頁出現橫向捲軸：內容寬 ${document.documentElement.scrollWidth} > 畫面 ${W}`);
 
     // 1. 照片要剛好填滿照片框
