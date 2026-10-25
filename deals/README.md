@@ -28,6 +28,13 @@
 - 備援：舊版 Worker `cold-union-5668`。舊版網頁 `cheap-flights/` 還在用它，不要刪。
 - 改了 `worker.js` 之後，要把新內容貼回 Cloudflare 的 `howtravle-deals` 再按 Deploy 才會生效。
 
+## 更多熱門航線（沒有預估價的航線）
+
+資料來源只記錄有人在 Aviasales 搜尋過的票，台灣出發的航線常常沒有資料（例如台中→首爾）。
+`index.html` 的 `POPULAR_ROUTES` 列出熱門航線，目前畫面上沒有價格的就放在「更多熱門航線」區，
+點了用建議日期（所選月份第一個週五出發、週一回來）開 Trip.com 搜尋頁，粉絲可以在 Trip.com 改日期。
+連結一樣經過 `affiliate()`。
+
 ## 分辨哪篇貼文帶來訂單
 
 分享網址後面加 `?src=名稱`，例如：

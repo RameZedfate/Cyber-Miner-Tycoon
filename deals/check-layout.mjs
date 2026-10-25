@@ -161,7 +161,8 @@ async function measure(page) {
       const lefts = new Set(cards.map(c => Math.round(R(c).left)));
       const gridR = R(grid);
       for (const c of cards) { const r = R(c); if (r.right > gridR.right + 1 || r.left < gridR.left - 1) out.push("卡片超出格線"); }
-      if (cards.length && lefts.size > 3) out.push(`卡片左邊界有 ${lefts.size} 種位置（欄位沒對齊）`);
+      const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+      if (cards.length && lefts.size > cols) out.push(`卡片左邊界有 ${lefts.size} 種位置，但只有 ${cols} 欄（欄位沒對齊）`);
     }
     // 5. 去程／回程：標籤、日期、直飛三欄在同一張卡片內要對齊
     for (const legs of document.querySelectorAll(".legs")) {

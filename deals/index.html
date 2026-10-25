@@ -191,6 +191,17 @@
   .memo{font-size:14px;color:#334155}
   .checked{font-size:12.5px;color:var(--green);font-weight:700}
 
+  .grid-sm{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  @media (min-width:760px){ .grid-sm{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (min-width:1000px){ .grid-sm{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px} }
+  .card.route .cap{left:12px;right:12px;bottom:10px}
+  .card.route .cap .city{font-size:21px}
+  .card.route .cap .lm{font-size:12px}
+  .card.route .cb{gap:8px;padding:10px 12px 12px}
+  .card.route .hint{font-size:12px;color:var(--muted);line-height:1.6}
+  .card.route .hint b{display:block;font-size:13px;color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #flights > .wrap, #hotels > .wrap{padding-bottom:32px}
+  .card.route .cta{height:40px;font-size:14px;border-radius:12px}
   .more{display:block;width:100%;max-width:420px;margin:18px auto 4px;border:1.5px solid #CBD5E1;background:#fff;border-radius:999px;height:48px;font-weight:700}
   .empty{grid-column:1/-1;background:#fff;border-radius:var(--radius);padding:28px 20px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
   .empty a.btn{display:inline-flex;align-items:center;height:46px;margin-top:14px;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;padding:0 22px;border-radius:999px}
@@ -272,6 +283,13 @@
       <div class="skel"><div class="a"></div><div class="b"></div></div>
     </div>
     <button class="more hidden" id="moreBtn">查看更多航線</button>
+
+    <section id="moreRoutes" class="hidden">
+      <h2 class="sec">更多熱門航線</h2>
+      <p class="sub">這些航線目前沒有預估價，點進去直接看 Trip.com 的即時價格</p>
+      <div class="grid grid-sm" id="routeList"></div>
+      <button class="more hidden" id="routesMore">顯示全部熱門航線</button>
+    </section>
   </div>
 </section>
 
@@ -359,6 +377,13 @@ const CITIES = {
   XMN:["廈門","CN"], HGH:["杭州","CN"], NKG:["南京","CN"], TAO:["青島","CN"], WUH:["武漢","CN"],
   XIY:["西安","CN"], KMG:["昆明","CN"], DLC:["大連","CN"], FOC:["福州","CN"], TSN:["天津","CN"],
   CSX:["長沙","CN"], SYX:["三亞","CN"], CGO:["鄭州","CN"], SHE:["瀋陽","CN"], NGB:["寧波","CN"],
+};
+// 「更多熱門航線」：資料來源沒有預估價時，仍列出這些航線讓粉絲點進 Trip.com 看即時價。要增減就改這裡。
+const POPULAR_ROUTES = {
+  TPE: ["TYO","OSA","NGO","FUK","OKA","SPK","SEL","PUS","CJU","BKK","CNX","HKT","SGN","HAN","DAD","CXR","PQC",
+        "HKG","SHA","BJS","CAN","SZX","XMN","CTU"],
+  KHH: ["TYO","OSA","OKA","FUK","SEL","PUS","BKK","SGN","HAN","DAD","HKG","SHA"],
+  RMQ: ["SEL","OKA","HKG"],
 };
 // 機場代碼 → 城市代碼（照片用）
 const CITY_CANON = { NRT:"TYO", HND:"TYO", KIX:"OSA", ITM:"OSA", CTS:"SPK", ICN:"SEL", GMP:"SEL", DMK:"BKK",
@@ -800,6 +825,47 @@ function renderChips(){
   $("#filters").innerHTML = FILTERS.map(x =>
     `<button class="chip" aria-pressed="${x.v === state.filter}" data-v="${x.v}">${x.t}</button>`).join("");
 }
+// 建議日期：所選月份中（至少一週後）第一個星期五出發、星期一回來
+function suggestDates(){
+  const minDay = addDays(todayTW(), 7);
+  let d = state.month + "-01";
+  if (d < minDay) d = minDay;
+  while (wd(d) !== 5) d = addDays(d, 1);
+  return { dep: d, ret: state.type === "rt" ? addDays(d, 3) : null };
+}
+function renderMoreRoutes(shown){
+  const box = $("#moreRoutes");
+  if (state.mode === "fsc" || !state.loaded){ box.classList.add("hidden"); return; }
+  const have = new Set(shown.map(f => f.o + "-" + canon(f.d)));
+  const { dep, ret } = suggestDates();
+  const cards = [];
+  for (const [o, dests] of Object.entries(POPULAR_ROUTES)){
+    if (state.origin && state.origin !== o) continue;
+    for (const d of dests){
+      const c = countryOf(d);
+      if (state.country && state.country !== c) continue;
+      if (have.has(o + "-" + canon(d))) continue;
+      const url = flightUrl({ o, d, dep, ret, direct: false });
+      if (!url) continue;
+      const lm = landmarkOf(d);
+      cards.push(`
+      <article class="card route">
+        <a class="ph g-${esc(c || "")}" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[o])}飛${esc(cityName(d))}">
+          ${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 640, false)}
+          <div class="cap"><div class="city">${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(ORIGIN_NAME[o])}出發</div></div>
+        </a>
+        <div class="cb">
+          <div class="hint">建議日期<b>${esc(fmtDate(dep))}${ret ? "–" + esc(fmtDate(ret)) : ""}</b>到 Trip.com 可改日期</div>
+          <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看即時價${ARROW()}</a>
+        </div>
+      </article>`);
+    }
+  }
+  $("#routeList").innerHTML = cards.slice(0, state.routesAll ? cards.length : 8).join("");
+  $("#routesMore").classList.toggle("hidden", state.routesAll || cards.length <= 8);
+  $("#routesMore").textContent = `顯示全部熱門航線（${cards.length}）`;
+  box.classList.toggle("hidden", !cards.length);
+}
 function renderFlights(){
   renderMonths(); renderChips(); renderTiles();
   const m = state.month.split("-")[1];
@@ -826,6 +892,7 @@ function renderFlights(){
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
   }
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
+  renderMoreRoutes(list);
   $("#moreBtn").classList.toggle("hidden", list.length <= state.shown);
   queueImages();
 }
@@ -1007,6 +1074,7 @@ $("#tiles").addEventListener("click", e => {
   renderFlights(); scrollToList();
 });
 $("#filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.v; resetPage(); renderFlights(); });
+$("#routesMore").addEventListener("click", () => { state.routesAll = true; renderFlights(); });
 $("#moreBtn").addEventListener("click", () => { state.shown += CONFIG.pageSize; renderFlights(); });
 $("#hCountries").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.hCountry = b.dataset.v; renderHotels(); });
 
