@@ -256,6 +256,28 @@ try {
     await page.close();
   }
 
+  // 收藏：點愛心 → 出現「我收藏的航線」；重新整理後還在；取消後消失
+  {
+    const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await ctx2.newPage();
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card [data-fav]");
+    if (await page.isVisible("#favSec")) problems.push("還沒收藏就出現收藏區");
+    const key = await page.$eval("#flightList .card [data-fav]", b => b.dataset.fav);
+    await page.click("#flightList .card [data-fav]");
+    if (!(await page.isVisible("#favSec"))) problems.push("收藏後沒有出現「我收藏的航線」");
+    if ((await page.$eval(`#flightList [data-fav="${key}"]`, b => b.getAttribute("aria-pressed"))) !== "true") problems.push("收藏後愛心沒有變成已收藏");
+    await checkLinks(page, "收藏區");
+    await page.reload();
+    await page.waitForSelector("#flightList .card");
+    if (!(await page.isVisible("#favSec"))) problems.push("重新整理後收藏不見了");
+    await page.click(`#flightList [data-fav="${key}"]`);
+    if (await page.isVisible("#favSec")) problems.push("取消收藏後收藏區沒有消失");
+    await ctx2.close();
+  }
+
   // 分享連結 ?route=TPE-OSA：要直接打開那條航線的價格日曆
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });

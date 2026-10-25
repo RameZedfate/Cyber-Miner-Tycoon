@@ -207,7 +207,7 @@ async function measure(page) {
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
-    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"]]) {
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"]]) {
       const els = [...document.querySelectorAll(sel)].filter(vis);
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
@@ -241,6 +241,9 @@ try {
     await setup(page);
     await page.goto(base);
     await page.waitForSelector("#flightList .card");
+    // 先收藏兩條航線，讓「我收藏的航線」也一起量
+    for (const b of (await page.$$("#flightList .card [data-fav]")).slice(0, 2)) await b.click();
+    await page.waitForTimeout(200);
     for (const tab of ["flights", "fsc", "hotels"]) {
       await page.click(`.tabs button[data-tab="${tab}"]`);
       // 捲動整頁讓延遲載入的照片都載入

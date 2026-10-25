@@ -182,6 +182,9 @@
   .link-btn{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:6px 2px;font-size:13.5px;font-weight:700;color:var(--blue)}
   .link-btn .ic{width:16px;height:16px}
   .share-btn{color:var(--muted)}
+  .acts{display:inline-flex;align-items:center;gap:10px}
+  .fav-btn{color:var(--muted)}
+  .fav-btn[aria-pressed="true"]{color:var(--red)}
 
   /* ---------- 連假倒數 ---------- */
   .countdown{display:flex;align-items:center;gap:14px;margin-top:18px;padding:14px 16px;border-radius:var(--radius);
@@ -411,6 +414,12 @@
       <button class="lucky" id="luckyBtn">幫我選！</button>
     </div>
     <div class="tiles" id="tiles"></div>
+    <section id="favSec" class="hidden">
+      <h2 class="sec">我收藏的航線</h2>
+      <p class="sub">每次打開都會顯示現在最便宜的價格</p>
+      <div class="scroller wk-row" id="favList"></div>
+    </section>
+
     <button class="countdown hidden" id="countdown"></button>
 
     <section id="weekendSec" class="hidden">
@@ -696,6 +705,8 @@ const ICONS = {
   dice: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/>',
   share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  heart: '<path d="M12 20.5s-7.5-4.4-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.2 5 3 1.5-1.8 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/>',
+  heartF: 'F<path d="M12 20.5s-7.5-4.4-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.2 5 3 1.5-1.8 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   grid: '<rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9.5h18M9 9.5V21M15 9.5V21M3 15h18"/>',
   down: 'F<path d="M12 3c.6 0 1 .4 1 1v12.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 1.4-1.4l4.3 4.3V4c0-.6.4-1 1-1z"/>',
@@ -994,7 +1005,7 @@ function flightCard(f, opt = {}){
       </div>
       ${nDates > 1 || !opt.pick ? `<div class="sub-actions">
         ${nDates > 1 ? `<button class="link-btn" data-route="${esc(f.o)}-${esc(f.d)}">${icon("grid")}看全部 ${nDates} 組日期</button>` : "<span></span>"}
-        ${opt.pick ? "" : `<button class="link-btn share-btn" data-share="${esc(f.o)}-${esc(f.d)}" aria-label="分享 ${esc(cityName(f.d))} 機票">${icon("share")}分享</button>`}
+        ${opt.pick ? "" : `<span class="acts">${favBtn(f.o, f.d)}<button class="link-btn share-btn" data-share="${esc(f.o)}-${esc(f.d)}" aria-label="分享 ${esc(cityName(f.d))} 機票">${icon("share")}分享</button></span>`}
       </div>` : ""}
       <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">${opt.pick ? "去 Trip.com 訂這張" : "去 Trip.com 看這些日期"}${ARROW()}</a>
     </div>
@@ -1171,6 +1182,7 @@ function renderFlights(){
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
   renderMoreRoutes(list);
   renderCountdown();
+  renderFavs();
   renderWeekend();
   renderRadar();
   $("#moreBtn").classList.toggle("hidden", list.length <= state.shown);
@@ -1598,6 +1610,55 @@ function openRouteFromUrl(){
 }
 
 
+
+
+/* ====================================================================
+   ⑱ 收藏航線（只存在這台裝置的瀏覽器）
+   ==================================================================== */
+const FAV_KEY = "howtravle_fav_v1";
+let favs = [];
+try { favs = JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); if (!Array.isArray(favs)) favs = []; } catch(e) { favs = []; }
+favs = favs.filter(k => /^[A-Z]{3}-[A-Z]{3}$/.test(k)).slice(0, 30);
+const favKey = (o, d) => `${o}-${canon(d)}`;
+function isFav(o, d){ return favs.includes(favKey(o, d)); }
+function favBtn(o, d){
+  const on = isFav(o, d);
+  return `<button class="link-btn fav-btn" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}${on ? "已收藏" : "收藏"}</button>`;
+}
+function toggleFav(o, d){
+  const k = favKey(o, d);
+  favs = isFav(o, d) ? favs.filter(x => x !== k) : [k, ...favs].slice(0, 30);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e) {}
+  toast(isFav(o, d) ? `已收藏${cityName(d)}，下次打開會在最上面` : `已取消收藏${cityName(d)}`);
+  for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.outerHTML = favBtn(o, d);
+  renderFavs();
+}
+function renderFavs(){
+  const sec = $("#favSec");
+  if (!state.loaded || !favs.length){ sec.classList.add("hidden"); return; }
+  const cards = favs.map(k => {
+    const [o, d] = k.split("-");
+    const list = routeFlights(o, d);
+    if (!list.length) return "";
+    const f = list.reduce((a, b) => b.price < a.price ? b : a);
+    const url = flightUrl(f); if (!url) return "";
+    const lm = landmarkOf(d);
+    return `<a class="mini" href="${esc(url)}" target="_blank" rel="noopener sponsored">
+      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(d), 640, false)}
+        <div class="cap"><div class="city">${esc(cityName(d))}</div><div class="lm">${icon("heartF")}${esc(ORIGIN_NAME[o])}出發</div></div></div>
+      <div class="mb"><div class="md">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
+        <div class="mp"><strong>${money(f.price)}</strong><span>最便宜・${list.length} 組</span></div>
+        <div class="go2">去 Trip.com 訂${ARROW()}</div></div></a>`;
+  }).join("");
+  $("#favList").innerHTML = cards;
+  sec.classList.toggle("hidden", !cards);
+  queueImages();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-fav]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const [o, d] = b.dataset.fav.split("-"); toggleFav(o, d);
+}, true);
 
 /* ====================================================================
    ⑰ 說走就走：近 3 週的週末
