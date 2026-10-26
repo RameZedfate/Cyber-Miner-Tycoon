@@ -4,6 +4,9 @@
  *   https://你的網址/            → 一般低價：日韓泰越＋中國大陸＋香港，所有航空公司
  *   https://你的網址/?part=fsc   → 傳統航空：台灣有飛的傳統航空，日韓泰越＋中國大陸＋香港
  *   https://你的網址/?part=m0～m3 → 熱門航線細抓：每條熱門航線各抓一個月（m0＝本月、m1＝下個月…），日期選擇更多
+ *   https://你的網址/?part=g0～g3 → 熱門航線「每天最低價」：另一種查詢方式，補上 m 段沒有的日期
+ *   https://你的網址/?part=n0～n3 → 第二批 46 條航線（二線城市），平常只由排程抓進累積資料庫
+ *   https://你的網址/?part=all    → 累積資料庫（選用，需要設定 KV＋排程，見下方），一次拿到所有累積的票
  *
  *   https://你的網址/?part=probe&o=KHH&d=SEL → 測試頁：比較不同市場／不同查詢方式各抓得到幾張票（不快取）
  *
@@ -14,6 +17,11 @@
  *
  * 更新方式：Cloudflare → howtravle-deals → 編輯代碼 → 全選刪掉 → 貼上這整份 → 部署
  * 需要的 Secret：TP_TOKEN（Travelpayouts token）
+ *
+ * 累積資料庫（選用，設定後航線會越來越多）：
+ *   1) KV：Workers & Pages → KV → 建立命名空間（名稱隨意）→ 回到 howtravle-deals → 設定 → 繫結 → 新增 KV，變數名稱填 DEALS
+ *   2) 排程：howtravle-deals → 設定 → 觸發事件 → Cron 觸發器 → 新增「每 10 分鐘」（Cron 寫法見 deals/README.md）
+ *   之後每 10 分鐘輪流抓一段，把看到的票存起來；票保留 3 天、出發日過了就刪。沒設定也照常運作。
  *
  * 回傳：{ updated_at, part, count, stats, rows: [ 機票列（只留網頁需要的欄位）] }
  */
@@ -71,8 +79,19 @@ const HOT_ROUTES = {
   RMQ: ["OSA","OKA","SEL","BKK","DAD","HKG","CJU","FUK"],
 }; // 24 + 12 + 8 = 44 條
 
+// ---------- 第二批航線（只在累積資料庫的排程裡抓，不增加網頁載入量）----------
+const MORE_ROUTES = {
+  TPE: ["SDJ","HIJ","KMJ","KOJ","KIJ","TAK","OKJ","MYJ","ISG","UKB","KMQ","HKD","AOJ","IBR","SHI","FSZ","TOY","AKJ",
+        "NGS","OIT","YGJ","HSG","KCZ",                // 日本二線城市
+        "TAE","CJJ","MWX",                            // 韓國
+        "USM","KBV","UTP","CEI",                      // 泰國
+        "HPH","DLI","HUI","VDO",                      // 越南
+        "CKG","HGH","NKG","TAO","WUH","XIY"],         // 中國大陸
+  KHH: ["CJU","CXR","PQC","CNX","NGO","HKT"],
+}; // 40 + 6 = 46 條
+
 // 只留網頁用得到的欄位，傳輸量小一點
-const FIELDS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers"];
+const FIELDS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers","duration_to"];
 function slim(r) { const o = {}; for (const k of FIELDS) if (r[k] !== undefined) o[k] = r[k]; return o; }
 
 // 測試頁：同一條航線用不同市場、不同查詢方式各查一次，看哪一種資料最多（共 18 次查詢）
@@ -128,6 +147,107 @@ function months() {
   return out;
 }
 
+// ---------- 抓一段資料（網頁請求和排程共用）----------
+const PARTS = ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3", "n0", "n1", "n2", "n3"];
+const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
+
+async function buildPart(part, token) {
+  const base = "https://api.travelpayouts.com/aviasales/v3";
+  const get = async (path, q, limit = LIMIT) => {
+    try {
+      const r = await fetch(`${base}/${path}?${q}&currency=${CURRENCY}&sorting=price&limit=${limit}&token=${token}`);
+      const j = await r.json();
+      const d = j?.data;
+      if (Array.isArray(d)) return d;
+      if (d && typeof d === "object") return Object.values(d).filter(x => x && typeof x === "object"); // grouped_prices：{ 日期: 票 }
+      return [];
+    } catch { return []; }
+  };
+  const routes = (obj, fn) => { const jobs = []; for (const [o, ds] of Object.entries(obj)) for (const d of ds) jobs.push(fn(o, d)); return jobs; };
+
+  let jobs = [];
+  const stats = {};
+  if (part === "main") {
+    // 每個出發地 × 每個月：來回（不限轉機＋只限直飛）、單程。共 3×4×3 = 36 次。
+    for (const origin of ORIGINS) for (const m of months()) {
+      const q = `origin=${origin}&departure_at=${m}`;
+      jobs.push(get("prices_for_dates", `${q}&one_way=false&direct=false`));
+      jobs.push(get("prices_for_dates", `${q}&one_way=false&direct=true`));
+      jobs.push(get("prices_for_dates", `${q}&one_way=true&direct=false`));
+    }
+  } else if (part === "fsc") {
+    // 指定航線抓來回，才抓得到傳統航空（不指定航線時多半只剩廉航）
+    jobs = routes(FSC_ROUTES, (o, d) => get("prices_for_dates", `origin=${o}&destination=${d}&one_way=false&direct=false`)
+      .then(list => { for (const r of list) { const s = (stats[`${o}-${d}`] ||= { total: 0, fsc: 0 }); s.total++; if (isFsc(r)) s.fsc++; } return list; }));
+  } else if (/^m[0-3]$/.test(part)) {
+    const m = months()[Number(part[1])];
+    jobs = routes(HOT_ROUTES, (o, d) => get("prices_for_dates", `origin=${o}&destination=${d}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
+  } else if (/^n[0-3]$/.test(part)) {
+    const m = months()[Number(part[1])];
+    jobs = routes(MORE_ROUTES, (o, d) => get("prices_for_dates", `origin=${o}&destination=${d}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
+  } else if (/^g[0-3]$/.test(part)) {
+    const m = months()[Number(part[1])];
+    jobs = routes(HOT_ROUTES, (o, d) => get("grouped_prices", `origin=${o}&destination=${d}&departure_at=${m}&group_by=departure_at`)
+      .then(list => list.map(r => ({ origin: o, destination: d, ...r }))));
+  }
+  const all = (await Promise.all(jobs)).flat();
+  const keep = (r) => part === "fsc" ? isFsc(r) : MAIN_KEEP.has(r.destination);
+  const seen = new Set(), rows = [];
+  for (const r of all) {
+    if (!r || !r.price || !r.departure_at || !keep(r)) continue;
+    const key = [r.origin, r.destination, r.departure_at, r.return_at || "", r.price, r.transfers, r.airline].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(slim(r)); // 只留需要的欄位（Aviasales 的連結不是你的聯盟連結，不會外流）
+  }
+  return { rows, stats };
+}
+
+// ---------- 累積資料庫（KV）----------
+// 存成精簡格式（欄位名稱只寫一次、日期不含時間），粉絲讀取時原封不動傳出去，不用重新解析（免費方案 CPU 時間很短）。
+// 網頁看到 cols＋data 會自己還原成一般格式。
+const POOL_KEY = "pool_v2", CURSOR_KEY = "cursor_v1";
+const POOL_MAX_AGE = 3 * 24 * 3600 * 1000;   // 票最多保留 3 天
+const POOL_PER_ROUTE_MONTH = 60;             // 每條航線每個月（來回／單程分開）最多留最便宜的 60 筆
+const POOL_MAX_ROWS = 4000;                  // 整個資料庫最多 4000 筆（控制免費方案的 CPU 時間），超過只留最便宜的
+const POOL_COLS = ["origin","destination","origin_airport","destination_airport","price","airline","departure_at","return_at","transfers","return_transfers","duration_to","seen"];
+const C = Object.fromEntries(POOL_COLS.map((k, i) => [k, i]));
+const toTuple = (r, now) => [r.origin, r.destination, r.origin_airport || r.origin, r.destination_airport || r.destination, r.price, r.airline || "",
+  String(r.departure_at).slice(0, 10), r.return_at ? String(r.return_at).slice(0, 10) : "", r.transfers ?? null, r.return_transfers ?? null, r.duration_to ?? null, now];
+const tupleKey = (t) => [t[C.origin], t[C.destination], t[C.departure_at], t[C.return_at], t[C.airline], t[C.transfers]].join("|");
+
+function mergePool(pool, rows, now) {
+  const map = new Map();
+  for (const t of (pool?.data || [])) map.set(tupleKey(t), t);
+  for (const r of rows) { const t = toTuple(r, now); map.set(tupleKey(t), t); } // 同一組日期＋航空：用最新看到的價格
+  const today = new Date(now + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  const groups = new Map();
+  for (const t of map.values()) {
+    if (t[C.departure_at] <= today) continue;                 // 已出發
+    if (!t[C.seen] || now - t[C.seen] > POOL_MAX_AGE) continue; // 太舊
+    const g = `${t[C.origin]}|${t[C.destination]}|${t[C.departure_at].slice(0, 7)}|${t[C.return_at] ? "rt" : "ow"}`;
+    let list = groups.get(g); if (!list) groups.set(g, list = []);
+    list.push(t);
+  }
+  let data = [];
+  for (const list of groups.values()) data.push(...list.sort((a, b) => a[C.price] - b[C.price]).slice(0, POOL_PER_ROUTE_MONTH));
+  if (data.length > POOL_MAX_ROWS) data = data.sort((a, b) => a[C.price] - b[C.price]).slice(0, POOL_MAX_ROWS);
+  return { part: "all", updated_at: new Date(now).toISOString(), count: data.length, cols: POOL_COLS, data };
+}
+
+async function refreshOnePart(env) {
+  const i = Number(await env.DEALS.get(CURSOR_KEY)) || 0;
+  const part = PARTS[i % PARTS.length];
+  const { rows } = await buildPart(part, env.TP_TOKEN);
+  const pool = await env.DEALS.get(POOL_KEY, "json");
+  const next = mergePool(pool, rows, Date.now());
+  next.last_part = part;
+  const text = JSON.stringify(next);
+  await env.DEALS.put(POOL_KEY, text);
+  await env.DEALS.put(CURSOR_KEY, String((i + 1) % PARTS.length));
+  return text;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const headers = {
@@ -144,87 +264,42 @@ export default {
     }
 
     const url = new URL(request.url);
-    if (url.searchParams.get("part") === "probe") {
+    const p = url.searchParams.get("part") || "";
+    if (p === "probe") {
       const code = (k, dflt) => (url.searchParams.get(k) || dflt).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
       const out = await probe(token, code("o", "KHH"), code("d", "SEL"));
       return new Response(JSON.stringify(out, null, 1), { headers: { ...headers, "Cache-Control": "no-store" } });
     }
-    const p = url.searchParams.get("part") || "";
-    const monthIdx = /^m[0-3]$/.test(p) ? Number(p[1]) : -1;
-    const part = p === "fsc" ? "fsc" : (monthIdx >= 0 ? p : "main");
+    if (p === "all") {
+      const h = { ...headers, "Cache-Control": "public, max-age=600" };
+      // 累積資料庫：沒設定 KV 就回空的，網頁會自動改用分段抓法
+      if (!env.DEALS) return new Response(JSON.stringify({ part: "all", count: 0, rows: [], note: "尚未設定 KV（DEALS）" }), { headers: h });
+      // 邊緣快取 10 分鐘，減少 KV 讀取次數
+      const poolCache = new Request(`${url.origin}/_deals_pool_v2`);
+      const hitPool = await caches.default.match(poolCache);
+      if (hitPool) return hitPool;
+      let text = await env.DEALS.get(POOL_KEY);              // 直接拿存好的文字，不解析
+      if (!text || text.length < 80) text = await refreshOnePart(env); // 第一次：先抓一段
+      const res = new Response(text, { headers: h });
+      ctx.waitUntil(caches.default.put(poolCache, res.clone()));
+      return res;
+    }
+    const part = PARTS.includes(p) ? p : "main";
 
     const cache = caches.default;
-    const cacheKey = new Request(`${url.origin}/_deals_cache_v5_${part}`);
+    const cacheKey = new Request(`${url.origin}/_deals_cache_v6_${part}`);
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
-    const base = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates";
-    const get = async (q, limit = LIMIT) => {
-      try {
-        const r = await fetch(`${base}?${q}&currency=${CURRENCY}&sorting=price&limit=${limit}&token=${token}`);
-        const j = await r.json();
-        return Array.isArray(j?.data) ? j.data : [];
-      } catch { return []; }
-    };
-
-    const jobs = [];
-    if (part === "main") {
-      // 每個出發地 × 每個月：來回（不限轉機＋只限直飛）、單程。共 3×4×3 = 36 次。
-      for (const origin of ORIGINS) {
-        for (const m of months()) {
-          const q = `origin=${origin}&departure_at=${m}`;
-          jobs.push(get(`${q}&one_way=false&direct=false`));
-          jobs.push(get(`${q}&one_way=false&direct=true`));
-          jobs.push(get(`${q}&one_way=true&direct=false`));
-        }
-      }
-    } else if (monthIdx >= 0) {
-      // 熱門航線 × 指定月份：來回，不限轉機
-      const m = months()[monthIdx];
-      for (const [origin, dests] of Object.entries(HOT_ROUTES)) {
-        for (const dest of dests) {
-          jobs.push(get(`origin=${origin}&destination=${dest}&departure_at=${m}&one_way=false&direct=false`, ROUTE_LIMIT));
-        }
-      }
-    } else {
-      // 指定航線抓來回，才抓得到傳統航空（不指定航線時多半只剩廉航）
-      for (const [origin, dests] of Object.entries(FSC_ROUTES)) {
-        for (const dest of dests) {
-          jobs.push(get(`origin=${origin}&destination=${dest}&one_way=false&direct=false`)
-            .then(list => { list.forEach(r => { r._route = `${origin}-${dest}`; }); return list; }));
-        }
-      }
-    }
-    const all = (await Promise.all(jobs)).flat();
-
-    const isFsc = (r) => FSC_AIRLINES.has(String(r.airline || "").toUpperCase());
-    // 一般低價也順便留下「傳統航空飛大陸／香港」的票，讓傳統航空分頁每個月都更完整
-    const keep = (r) => part === "fsc" ? isFsc(r) : MAIN_KEEP.has(r.destination);
-
-    // 傳統航空：每條航線抓到幾筆、其中幾筆是傳統航空、出現哪些航空公司（用來檢查資料夠不夠）
-    const stats = {};
-    if (part === "fsc") {
-      for (const r of all) {
-        const s = (stats[r._route] ||= { total: 0, fsc: 0, airlines: {} });
-        s.total++;
-        if (isFsc(r)) s.fsc++;
-        const a = String(r.airline || "?").toUpperCase();
-        s.airlines[a] = (s.airlines[a] || 0) + 1;
-      }
-    }
-
-    const seen = new Set();
-    const rows = [];
-    for (const r of all) {
-      if (!keep(r)) continue;
-      const key = [r.origin, r.destination, r.departure_at, r.return_at || "", r.price, r.transfers, r.airline].join("|");
-      if (seen.has(key)) continue;
-      seen.add(key);
-      rows.push(slim(r)); // 只留需要的欄位（Aviasales 的連結不是你的聯盟連結，不會外流）
-    }
-
+    const { rows, stats } = await buildPart(part, token);
     const res = new Response(JSON.stringify({ updated_at: new Date().toISOString(), part, count: rows.length, stats, rows }), { headers });
     ctx.waitUntil(cache.put(cacheKey, res.clone()));
     return res;
+  },
+
+  // 排程（Cron 觸發器）：每次輪流抓一段，存進累積資料庫
+  async scheduled(event, env, ctx) {
+    if (!env.DEALS || !env.TP_TOKEN) return;
+    await refreshOnePart(env);
   },
 };
