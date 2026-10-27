@@ -184,6 +184,20 @@ try {
       }
       await page.keyboard.press("Escape");
       if (await page.isVisible("#sheet")) problems.push("按 Esc 沒有關閉面板");
+      // 手機按「返回」：要關面板、留在網站上
+      const before = page.url();
+      await routeBtn.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt");
+      await page.goBack();
+      await page.waitForTimeout(300);
+      if (await page.isVisible("#sheet")) problems.push("按返回沒有關閉面板");
+      if (page.url() !== before || !(await page.$("#flightList"))) problems.push(`按返回離開了網站：${page.url()}`);
+      // 關掉面板後再按返回不應該又出現面板
+      await routeBtn.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt");
+      await page.click("#sheet .sheet-x");
+      await page.waitForTimeout(300);
+      if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板（返回鍵版本）");
     }
     await page.click("#luckyBtn");
     await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));

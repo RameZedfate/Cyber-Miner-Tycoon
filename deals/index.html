@@ -181,10 +181,10 @@
   .dur{display:inline-flex;align-items:center;gap:3px;margin-left:8px;white-space:nowrap}
   .dur .ic{width:12px;height:12px}
   .sub-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-4px 0 -6px;border-top:1px solid var(--line);padding-top:4px}
-  .link-btn{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:6px 2px;font-size:13.5px;font-weight:700;color:var(--blue)}
+  .link-btn{display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:6px 2px;min-height:38px;font-size:13.5px;font-weight:700;color:var(--blue)}
   .link-btn .ic{width:16px;height:16px}
   .share-btn{color:var(--muted)}
-  .acts{display:inline-flex;align-items:center;gap:10px}
+  .acts{display:inline-flex;align-items:center;gap:14px}
   .fav-btn{color:var(--muted)}
   .fav-btn[aria-pressed="true"]{color:var(--red)}
 
@@ -1631,9 +1631,12 @@ function renderCountdown(){
 /* ====================================================================
    ⑮ 彈出面板：價格日曆、幫我選、分享
    ==================================================================== */
-let sheetReturnFocus = null;
+let sheetReturnFocus = null, sheetInHistory = false;
 function openSheet(html){
-  sheetReturnFocus = document.activeElement;
+  const wasOpen = !$("#sheet").classList.contains("hidden");
+  if (!wasOpen) sheetReturnFocus = document.activeElement;
+  // 手機按「返回」時先關面板，不要直接離開網站
+  if (!wasOpen && !sheetInHistory){ try { history.pushState({ howSheet: 1 }, ""); sheetInHistory = true; } catch(e) {} }
   $("#sheetBody").innerHTML = html;
   $("#sheet").classList.remove("hidden");
   document.body.classList.add("lock");
@@ -1641,12 +1644,15 @@ function openSheet(html){
   $("#sheet .sheet-x").focus({ preventScroll: true });
   queueImages();
 }
-function closeSheet(){
-  clearInterval(slotTimer);
+function closeSheet(fromBack){
+  clearTimeout(slotTimer);
+  if ($("#sheet").classList.contains("hidden")) return;
   $("#sheet").classList.add("hidden");
   document.body.classList.remove("lock");
+  if (sheetInHistory){ sheetInHistory = false; if (!fromBack) try { history.back(); } catch(e) {} }
   if (sheetReturnFocus && sheetReturnFocus.focus) sheetReturnFocus.focus({ preventScroll: true });
 }
+window.addEventListener("popstate", () => { if (sheetInHistory) closeSheet(true); });
 function toast(msg){
   const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
