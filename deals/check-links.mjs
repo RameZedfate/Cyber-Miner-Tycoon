@@ -342,7 +342,7 @@ try {
     }
     if (!(await page.isVisible("#moreRoutes"))) problems.push("沒有顯示熱門航線");
     // 連假篩選時，熱門航線要帶入連假日期
-    const hol = await page.evaluate(() => { const h = HOLIDAYS.find(x => x.start >= addDays(todayTW(), 2) && monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
+    const hol = await page.evaluate(() => { const h = upcomingHolidays().find(x => monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
     if (hol) {
       await page.click(`#months button[data-v="${hol.slice(0, 7)}"]`);
       await page.click('#filters button[data-v="holiday"]');
@@ -356,6 +356,22 @@ try {
     const shareUrl = await page.$eval(".share-url", i => i.value).catch(() => null);
     if (!shareUrl || !/route=[A-Z]{3}-[A-Z]{3}&src=share/.test(shareUrl)) problems.push(`分享失敗時沒有跳出連結：${shareUrl}`);
     await page.keyboard.press("Escape");
+    await page.close();
+  }
+
+  // 傳統航空＋單程的分享連結：朋友打開要在傳統航空分頁、單程，並打開那條航線
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const ow = { updated_at: new Date().toISOString(), part: "fsc", rows: [...FSC.rows, row("TPE", "HKG", "TPE", "HKG", day(20), null, 3210, 0, 0, "CX")] };
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? ow : MOCK) }));
+    await page.goto(base + "?route=TPE-HKG&m=fsc&t=ow&src=share");
+    await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 5000 }).catch(() => problems.push("傳統航空單程的分享連結沒有打開航線面板"));
+    const st = await page.evaluate(() => ({ mode: state.mode, type: state.type, tab: document.querySelector('.tabs [aria-selected="true"]').dataset.tab }));
+    if (st.mode !== "fsc" || st.type !== "ow" || st.tab !== "fsc") problems.push(`分享連結的分頁／單程沒套用：${JSON.stringify(st)}`);
+    const price = await page.textContent("#sheet .opt .pp strong").catch(() => "");
+    if (!price.includes("3,210")) problems.push(`傳統航空單程分享連結的價格不對：${price}`);
+    await checkLinks(page, "傳統航空單程分享", "howtravle_share");
     await page.close();
   }
 

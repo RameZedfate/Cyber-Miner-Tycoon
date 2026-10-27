@@ -358,7 +358,12 @@ try {
 
     // 篩選到國家後再量一次（版面最容易出問題的情境：只剩 1～2 張卡）
     await page.click('.tabs button[data-tab="flights"]');
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForFunction(() => [...document.querySelectorAll("#tiles img.bgimg")].every(i => i.classList.contains("ok")), null, { timeout: 5000 }).catch(() => {});
     await page.click('#tiles .tile[data-v="HK"]');
+    // 點地區後重畫的磚塊：載入過的照片要馬上顯示（不能先變空白再淡入）
+    const blank = await page.$$eval("#tiles img.bgimg", els => els.filter(i => !i.classList.contains("ok")).length);
+    if (blank) all.push(`[${w}px] 點地區後有 ${blank} 張磚塊照片重新變空白（會閃）`);
     await page.waitForTimeout(300);
     (await measure(page)).forEach(i => all.push(`[${w}px 香港] ${i}`));
     await page.close();

@@ -810,8 +810,13 @@ let imgTimer = null;
 function commonsUrl(file, size){
   return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file.replace(/^File:/, "").replace(/ /g, "_")) + "?width=" + (size || 800);
 }
+const loadedImg = new Set(); // 這次瀏覽已經載入過的照片網址
 function photoHTML(wiki, country, label, size, eager){
   const lazy = eager ? "" : ' loading="lazy"';
+  // 已經載入過：直接放網址並顯示（重畫時不會再淡入一次）
+  const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + (size || 800)] || {}).u;
+  if (known && loadedImg.has(known))
+    return `<div class="fb">${esc(label || "")}</div><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><div class="shade"></div>`;
   const img = !wiki ? "" : /^File:/.test(wiki)
     ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${lazy} decoding="async" />`
     : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size || 800}"${lazy} decoding="async" />`;
@@ -821,7 +826,7 @@ function queueImages(){ clearTimeout(imgTimer); imgTimer = setTimeout(loadImages
 function applyImg(im, src){
   im.dataset.done = "1";
   if (!src) return;
-  im.addEventListener("load", () => im.classList.add("ok"), { once: true });
+  im.addEventListener("load", () => { im.classList.add("ok"); loadedImg.add(src); }, { once: true });
   im.addEventListener("error", () => im.remove(), { once: true });
   im.src = src;
 }
@@ -930,20 +935,18 @@ function monthKeys(){
   return out;
 }
 // 目前分頁可用的票（只看分頁＋來回／單程＋出發地，不看國家、月份、篩選）
-// 記住最近幾種組合的結果（分頁、來回／單程、出發地），切換時不用重算
-const modeCache = new Map();
-let modeMemo = { key: "", list: [] };
-function modeFiltered(){
-  const memoKey = [flightsVersion, state.mode, state.type, state.origin, todayTW()].join("|");
-  if (modeMemo.key === memoKey) return modeMemo.list;
-  let list = modeCache.get(memoKey);
-  if (!list){
-    list = modeFilteredRaw(); modeCache.set(memoKey, list);
-    if (modeCache.size > 8) modeCache.delete(modeCache.keys().next().value);
+// 算過的結果先記住（分頁、來回／單程、出發地的組合），有新資料進來就全部清掉
+const memoStore = new Map(); let memoVer = -1;
+function memo(key, fn){
+  if (memoVer !== flightsVersion){ memoStore.clear(); memoVer = flightsVersion; }
+  if (!memoStore.has(key)){
+    memoStore.set(key, fn());
+    if (memoStore.size > 40) memoStore.delete(memoStore.keys().next().value);
   }
-  modeMemo = { key: memoKey, list };
-  return list;
+  return memoStore.get(key);
 }
+function modeKey(){ return [state.mode, state.type, state.origin, todayTW()].join("|"); }
+function modeFiltered(){ return memo("mode|" + modeKey(), modeFilteredRaw); }
 function modeFilteredRaw(){
   const fsc = state.mode === "fsc";
   const countries = fsc ? FSC_COUNTRIES : MAIN_COUNTRIES;
@@ -970,37 +973,33 @@ function baseFiltered(){
 function budgetOptions(){ return state.type === "rt" ? [0, 5000, 8000, 12000] : [0, 3000, 5000, 8000]; }
 
 // 「比平常便宜 X%」：同一條航線（同來回／單程）所有日期的中位數
-let flightsVersion = 0, medianCache = { v: -1, map: new Map() };
+let flightsVersion = 0;
 function routeKey(f){ return `${f.o}-${canon(f.d)}-${f.ret ? "rt" : "ow"}`; }
 function routeMedian(f){
-  if (medianCache.v !== flightsVersion){
+  const map = memo("median", () => {
     const groups = new Map(), today = todayTW();
     for (const x of state.flights){ if (x.dep <= today) continue; const k = routeKey(x); (groups.get(k) || groups.set(k, []).get(k)).push(x.price); }
-    const map = new Map();
-    for (const [k, ps] of groups){ if (ps.length < 8) continue; ps.sort((a, b) => a - b); map.set(k, ps[Math.floor(ps.length / 2)]); }
-    medianCache = { v: flightsVersion, map };
-  }
-  return medianCache.map.get(routeKey(f)) || null;
+    const out = new Map();
+    for (const [k, ps] of groups){ if (ps.length < 8) continue; ps.sort((a, b) => a - b); out.set(k, ps[Math.floor(ps.length / 2)]); }
+    return out;
+  });
+  return map.get(routeKey(f)) || null;
 }
 function savingPct(f){ const m = routeMedian(f); if (!m) return 0; const pct = Math.round((1 - f.price / m) * 100); return pct >= 15 ? pct : 0; }
-// 同一條航線的所有日期（目前分頁＋來回／單程＋出發地）；依航線分組的結果記住，不用每張卡都掃全部資料
-const routeCache = new Map();
+// 同一條航線的所有日期（目前分頁＋來回／單程＋出發地），依航線分組後記住
 function routeFlights(o, d){
-  modeFiltered();
-  let map = routeCache.get(modeMemo.key);
-  if (!map){
+  const map = memo("route|" + modeKey(), () => {
     const groups = new Map();
-    for (const f of modeMemo.list){
+    for (const f of modeFiltered()){
       const rk = f.o + "-" + canon(f.d);
       let best = groups.get(rk); if (!best) groups.set(rk, best = new Map());
       const k = f.dep + "|" + (f.ret || ""), cur = best.get(k);
       if (!cur || f.price < cur.price) best.set(k, f);
     }
-    map = new Map();
-    for (const [rk, best] of groups) map.set(rk, [...best.values()].sort((a, b) => a.dep.localeCompare(b.dep) || a.price - b.price));
-    routeCache.set(modeMemo.key, map);
-    if (routeCache.size > 8) routeCache.delete(routeCache.keys().next().value);
-  }
+    const out = new Map();
+    for (const [rk, best] of groups) out.set(rk, [...best.values()].sort((a, b) => a.dep.localeCompare(b.dep) || a.price - b.price));
+    return out;
+  });
   return map.get(o + "-" + canon(d)) || [];
 }
 // 同一條航線（出發地＋目的地）只留最便宜的一組日期
@@ -1088,12 +1087,13 @@ function miniCard(f, o = {}){
 /* ====================================================================
    ⑦ 大圖輪播
    ==================================================================== */
-let heroTimer = null, heroTouched = false;
+let heroTimer = null, heroTouched = false, heroFirstCity = null; // 大圖第一張目前顯示的城市
 function renderHero(){
   const box = $("#hero");
   clearInterval(heroTimer);
   if (!state.loaded){ box.innerHTML = '<div class="hero-skel"></div>'; return; }
   const top = cheapestPerCity(modeFiltered()).slice(0, CONFIG.heroSlides);
+  heroFirstCity = top[0] ? canon(top[0].d) : null;
   const fsc = state.mode === "fsc";
   let slides;
   if (!top.length){
@@ -1193,9 +1193,9 @@ function renderChips(){
 // 熱門航線的建議日期：
 // 選「連假」→ 那個月的連假；選「週末」→ 週五去週日回；其他 → 所選月份（至少一週後）第一個週五去、週一回
 function suggestDates(){
-  const rt = state.type === "rt", minDay = addDays(todayTW(), 2);
+  const rt = state.type === "rt";
   if (state.filter === "holiday"){
-    const h = HOLIDAYS.find(x => x.start >= minDay && (x.start.startsWith(state.month) || x.end.startsWith(state.month)));
+    const h = upcomingHolidays().find(x => x.start.startsWith(state.month) || x.end.startsWith(state.month));
     if (h) return { dep: h.start, ret: rt ? h.end : null, why: h.name, holiday: true };
   }
   let d = state.month + "-01";
@@ -1304,25 +1304,21 @@ async function loadPicks(){
 }
 // 自動挑：比平常便宜最多的優先，其次直飛、週末或連假出發，再來看價格；同一個城市只挑一次，
 // 而且盡量不跟大圖第一名重複
-let picksMemo = { key: "", list: [] };
 function autoPicks(){
-  modeFiltered();
-  if (picksMemo.key === modeMemo.key) return picksMemo.list;
-  const t = todayTW(), from = addDays(t, 2), until = addDays(t, 120);
-  const cands = cheapestPerRoute(modeFiltered().filter(f => f.dep > from && f.dep <= until))
-    .map(f => ({ f, s: [-savingPct(f), f.direct ? 0 : 1, (holidayOf(f) || isWeekend(f)) ? 0 : 1, f.price] }));
-  cands.sort((a, b) => { for (let i = 0; i < a.s.length; i++) if (a.s[i] !== b.s[i]) return a.s[i] - b.s[i]; return 0; });
-  const heroTop = cheapestPerCity(modeFiltered())[0];
-  const heroCity = heroTop ? canon(heroTop.d) : null;
-  const otherCities = new Set(cands.map(x => canon(x.f.d)).filter(c => c !== heroCity));
-  const avoid = otherCities.size >= 2 ? heroCity : null; // 別的城市夠 2 個，才避開大圖第一名
-  const out = [], cities = new Set();
-  for (const { f } of cands){
-    const c = canon(f.d); if (cities.has(c) || c === avoid) continue;
-    cities.add(c); out.push(f); if (out.length === 2) break;
-  }
-  picksMemo = { key: modeMemo.key, list: out };
-  return out;
+  return memo("picks|" + modeKey() + "|" + heroFirstCity, () => {
+    const t = todayTW(), from = addDays(t, 2), until = addDays(t, 120);
+    const cands = cheapestPerRoute(modeFiltered().filter(f => f.dep > from && f.dep <= until))
+      .map(f => ({ f, s: [-savingPct(f), f.direct ? 0 : 1, (holidayOf(f) || isWeekend(f)) ? 0 : 1, f.price] }));
+    cands.sort((a, b) => { for (let i = 0; i < a.s.length; i++) if (a.s[i] !== b.s[i]) return a.s[i] - b.s[i]; return 0; });
+    const otherCities = new Set(cands.map(x => canon(x.f.d)).filter(c => c !== heroFirstCity));
+    const avoid = otherCities.size >= 2 ? heroFirstCity : null; // 別的城市夠 2 個，才避開大圖第一張
+    const out = [], cities = new Set();
+    for (const { f } of cands){
+      const c = canon(f.d); if (cities.has(c) || c === avoid) continue;
+      cities.add(c); out.push(f); if (out.length === 2) break;
+    }
+    return out;
+  });
 }
 function pickReason(f){
   const save = savingPct(f), hol = holidayOf(f);
@@ -1424,9 +1420,15 @@ function nextWeekend(skip = 0){
 // 入住日期選項：這個週末、下個週末、下一個連假
 function hotelDateOptions(){
   const opts = [{ ...nextWeekend(0), t: "週末" }, { ...nextWeekend(1), t: "下個週末" }];
-  const h = HOLIDAYS.find(x => x.start > addDays(todayTW(), 2));
+  const h = nextHoliday();
   if (h) opts.push({ checkin: h.start, checkout: h.end, t: h.name });
   return opts;
+}
+// 酒店城市沒有預估機票價時：用同一組日期開 Trip.com 機票搜尋（出發地用粉絲選的，沒選就台北）
+function hotelFlightLink(c, checkin, checkout){
+  const o = state.origin || "TPE";
+  const url = flightUrl({ o, d: c, dep: checkin, ret: checkout, direct: false });
+  return url ? `<a class="fl" href="${esc(url)}" target="_blank" rel="noopener sponsored">${icon("plane")}查${esc(ORIGIN_NAME[o])}出發機票</a>` : "";
 }
 function renderHotelCities(){
   const opts = hotelDateOptions();
@@ -1449,14 +1451,13 @@ function renderHotelCities(){
       </a>
       <div class="cb">
         ${ref ? `<div class="ref">平價住宿每晚約<b>${money(ref[0])}–${Math.round(ref[1]).toLocaleString("en-US")}</b></div>` : ""}
-        ${f ? `<button class="fl" data-hroute="${esc(f.o)}-${esc(f.d)}">${icon("plane")}機票 ${money(f.price)} 起</button>`
-            : (() => { const fu = flightUrl({ o: state.origin || "TPE", d: c, dep: checkin, ret: checkout, direct: false });
-                return fu ? `<a class="fl" href="${esc(fu)}" target="_blank" rel="noopener sponsored">${icon("plane")}查同天機票</a>` : ""; })()}
+        ${f ? `<button class="fl" data-hroute="${esc(f.o)}-${esc(f.d)}">${icon("plane")}機票 ${money(f.price)} 起</button>` : hotelFlightLink(c, checkin, checkout)}
         <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored" style="margin-top:auto">看 ${nights} 晚房價${ARROW()}</a>
       </div>
     </article>`;
   }).join("");
   setHTML($("#hotelCities"), cards);
+  queueImages();
 }
 function renderHotels(){
   $("#hCountries").innerHTML = [["", "全部國家"], ...Object.entries(COUNTRIES)].map(([v,t]) =>
@@ -1610,7 +1611,9 @@ $("#hDates").addEventListener("click", e => { const b = e.target.closest("button
 /* ====================================================================
    ⑭ 連假倒數
    ==================================================================== */
-function nextHoliday(){ const t = todayTW(); return HOLIDAYS.find(h => h.start > t) || null; }
+// 「下一個連假」＝明天以後才開始的連假（倒數、熱門航線日期、酒店日期都用這個規則）
+function upcomingHolidays(){ const t = todayTW(); return HOLIDAYS.filter(h => h.start > t); }
+function nextHoliday(){ return upcomingHolidays()[0] || null; }
 function renderCountdown(){
   const box = $("#countdown"), h = nextHoliday();
   if (!h || !state.loaded){ box.classList.add("hidden"); return; }
@@ -1688,7 +1691,7 @@ function routeSheetHTML(o, d){
     const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 天` : "單程";
     return `<a class="opt" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div style="min-width:0"><div class="d1">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
-        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([AIRLINE_NAMES[f.airline] || (f.airline ? "其他航空" : ""), days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
+        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([f.airline ? airlineLabel(f.airline) : "", days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
       <div class="pp"><strong>${money(f.price)}</strong><span>訂這組 →</span></div></a>`;
   }).join("");
   const url = flightUrl(cheapest);
@@ -1721,9 +1724,10 @@ function withMode(mode, type, fn){
 }
 async function shareRoute(o, d, mode, type){
   // 從酒店頁打開的價格日曆用「便宜機票・來回」，分享文字要跟畫面一樣
-  const calc = () => ({ min: routeFlights(o, d).reduce((m, x) => Math.min(m, x.price), Infinity), rt: state.type === "rt" });
-  const { min, rt } = mode ? withMode(mode, type || state.type, calc) : calc();
-  const url = `${location.origin}${location.pathname}?route=${encodeURIComponent(o + "-" + d)}&src=share`;
+  const calc = () => ({ min: routeFlights(o, d).reduce((m, x) => Math.min(m, x.price), Infinity), rt: state.type === "rt", fsc: state.mode === "fsc" });
+  const { min, rt, fsc } = mode ? withMode(mode, type || state.type, calc) : calc();
+  // 網址帶上分頁（傳統航空）和單程，朋友打開看到的是同一種票
+  const url = `${location.origin}${location.pathname}?route=${encodeURIComponent(o + "-" + d)}${fsc ? "&m=fsc" : ""}${rt ? "" : "&t=ow"}&src=share`;
   const text = `${ORIGIN_NAME[o]}飛${cityName(d)}${isFinite(min) ? ` ${rt ? "來回" : "單程"} ${money(min)} 起` : ""}！HOWTRAVLE 便宜票雷達`;
   try {
     if (navigator.share){ await navigator.share({ title: "HOWTRAVLE 便宜票雷達", text, url }); return; }
@@ -1974,6 +1978,18 @@ document.addEventListener("keydown", e => {
   if (g && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); const [o, d] = g.dataset.route.split("-"); openRoute(o, d); }
 });
 
+// 分享連結帶的分頁／單程（?m=fsc、?t=ow）
+(function applyUrlMode(){
+  let q; try { q = new URLSearchParams(location.search); } catch(e) { return; }
+  if (q.get("m") === "fsc"){
+    state.mode = "fsc"; state.tab = "fsc";
+    document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab === "fsc"));
+  }
+  if (q.get("t") === "ow"){
+    state.type = "ow";
+    $("#tripType").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === "ow"));
+  }
+})();
 state.month = monthKeys()[0];
 renderChips(); renderMonths(); renderTiles(); renderHotelHero();
 loadFlights(); loadPicks(); loadHotels();
