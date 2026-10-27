@@ -323,6 +323,15 @@ try {
     const fscCities = await page.$$eval("#pickList .mini .ma", e => e.map(x => x.textContent));
     if (fscCities.some(t => /台灣虎航|樂桃/.test(t))) problems.push(`傳統航空的自動精選出現廉航：${fscCities.join(",")}`);
     await page.click('.tabs button[data-tab="flights"]');
+    // 換篩選時，地區磚塊和今天最划算的照片不能重畫（重畫會閃一下）
+    await page.evaluate(() => { document.querySelector("#tiles .tile").__mark = 1; document.querySelector("#pickList .mini").__mark = 1; });
+    await page.click('#filters button[data-v="direct"]');
+    await page.click('#budget button[data-v="8000"]');
+    const kept = await page.evaluate(() => [document.querySelector("#tiles .tile").__mark, document.querySelector("#pickList .mini").__mark]);
+    if (!kept[0]) problems.push("換篩選時地區磚塊被重畫（照片會閃）");
+    if (!kept[1]) problems.push("換篩選時今天最划算被重畫（照片會閃）");
+    await page.click('#filters button[data-v="cheap"]');
+    await page.click('#budget button[data-v="0"]');
     // 預算最低＋直飛＋越南 → 沒票 → 按「看全部最便宜的票」要恢復
     await page.click('#countries button[data-v="VN"]');
     await page.click('#filters button[data-v="holiday"]');
@@ -333,7 +342,7 @@ try {
     }
     if (!(await page.isVisible("#moreRoutes"))) problems.push("沒有顯示熱門航線");
     // 連假篩選時，熱門航線要帶入連假日期
-    const hol = await page.evaluate(() => { const h = HOLIDAYS.find(x => x.start > todayTW() && monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
+    const hol = await page.evaluate(() => { const h = HOLIDAYS.find(x => x.start >= addDays(todayTW(), 2) && monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
     if (hol) {
       await page.click(`#months button[data-v="${hol.slice(0, 7)}"]`);
       await page.click('#filters button[data-v="holiday"]');
