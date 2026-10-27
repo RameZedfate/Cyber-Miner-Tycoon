@@ -358,8 +358,8 @@ try {
     // 連假篩選時，熱門航線要帶入連假日期
     const hol = await page.evaluate(() => { const h = upcomingHolidays().find(x => monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
     if (hol) {
-      await page.click(`#months button[data-v="${hol.slice(0, 7)}"]`);
       await page.click('#filters button[data-v="holiday"]');
+      await page.click(`#months button[data-v="${hol.slice(0, 7)}"]`);
       const href = await page.$eval("#routeList a", a => a.href).catch(() => null);
       if (!href || new URL(href).searchParams.get("ddate") !== hol) problems.push(`連假篩選時熱門航線沒帶入連假日期（${hol}）：${href}`);
       await page.click('#filters button[data-v="cheap"]');
@@ -409,15 +409,22 @@ try {
     if (!(await page.isVisible("#intro"))) problems.push("第一次來沒有顯示說明條");
     await page.click("#introX");
     if (await page.isVisible("#intro")) problems.push("按 × 後說明條沒關掉");
-    // 收藏降價
+    // 收藏降價（要等資料齊全才比較）
+    await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => problems.push("資料一直沒有齊全"));
     const favBadge = await page.textContent("#favList").catch(() => "");
     if (!favBadge.includes("比你上次看便宜")) problems.push("收藏的航線降價了卻沒有顯示「比你上次看便宜」");
-    // 快速入口
+    // 快速入口：取消收藏後「我的收藏」要消失
+    await page.click('#flightList [data-fav="TPE-OSA"]').catch(() => {});
+    if ((await page.textContent("#quick")).includes("我的收藏")) problems.push("取消收藏後快速入口還有「我的收藏」");
+    await page.click('#flightList [data-fav="TPE-OSA"]').catch(() => {});
     const quick = await page.textContent("#quick");
     for (const w of ["幫我選", "我的收藏", "比平常便宜"]) if (!quick.includes(w)) problems.push(`快速入口缺少：${w}`);
     await page.click('#quick [data-q="deal"]');
     const f = await page.$eval('#filters button[aria-pressed="true"]', b => b.dataset.v);
     if (f !== "deal") problems.push("點快速入口的「比平常便宜」沒有切到那個篩選");
+    const qn = Number(((await page.textContent('#quick [data-q="deal"]')).match(/(\d+)\s*條/) || [])[1]);
+    const ln = Number(((await page.textContent("#count")).match(/\d+/) || [])[0]);
+    if (qn !== ln) problems.push(`快速入口寫 ${qn} 條，點進去清單是 ${ln} 條`);
     const cards = await page.$$eval("#flightList .card", cs => cs.map(c => !!c.querySelector(".badge.save")));
     if (!cards.length || cards.some(x => !x)) problems.push(`「比平常便宜」篩選出現沒有特價標籤的卡片：${JSON.stringify(cards)}`);
     await checkLinks(page, "比平常便宜");
@@ -440,6 +447,12 @@ try {
       const top = await page.$eval("#listTop", e => e.getBoundingClientRect().top);
       if (top < 0 || top > 200) problems.push(`點「篩選」沒有回到篩選區（位置 ${Math.round(top)}）`);
     }
+    // 「篩選」按鈕在酒店頁不能出現
+    await page.evaluate(() => { const c = document.querySelectorAll("#flightList .card"); c[c.length - 1].scrollIntoView(); });
+    await page.waitForTimeout(300);
+    await page.click('.tabs button[data-tab="hotels"]');
+    if (await page.$eval("#toFilter", b => b.classList.contains("on"))) problems.push("切到酒店頁後「篩選」按鈕還在");
+    await page.click('.tabs button[data-tab="flights"]');
     // 分享網站
     await page.evaluate(() => { try { delete Navigator.prototype.share; } catch(e) {} Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("no")) }, configurable: true }); });
     await page.click("#shareSite");
@@ -448,6 +461,7 @@ try {
     await page.keyboard.press("Escape");
     // 重新打開：說明條不再出現、收藏不再顯示降價（已經記住新價格）
     await page.reload(); await page.waitForSelector("#flightList .card");
+    await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => {});
     if (await page.isVisible("#intro")) problems.push("關掉後重新打開，說明條又出現");
     if ((await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("同樣價格重新打開，還顯示降價");
     await ctx3.close();

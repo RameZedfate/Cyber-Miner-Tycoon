@@ -967,7 +967,10 @@ const FILTERS = [
   { v:"cheap", t:"最便宜" }, { v:"deal", t:"比平常便宜" }, { v:"direct", t:"直飛" }, { v:"weekend", t:"週末" }, { v:"holiday", t:"連假" },
 ];
 // 目前分頁裡有沒有「比平常便宜」的票（沒有就不顯示那個篩選）
-function hasDeals(){ return memo("hasDeals|" + modeKey(), () => modeFiltered().some(f => savingPct(f) > 0)); }
+function dealFlights(){ return memo("deals|" + modeKey(), () => modeFiltered().filter(f => savingPct(f) > 0)); }
+function hasDeals(){ return dealFlights().length > 0; }
+// 目前分頁沒有特價時，「比平常便宜」篩選自動換回「最便宜」（要在算月份之前做）
+function fixFilter(){ if (state.filter === "deal" && state.loaded && !hasDeals()) state.filter = "cheap"; }
 
 // 顯示的月份：這個月剩不到 7 天、又沒有票時，直接從下個月開始
 function monthKeys(){
@@ -1098,7 +1101,7 @@ function flightCard(f, opt = {}){
     </a>
     <div class="cb">
       <div class="air">${logoHTML(f.airline)}<span class="an">${esc(airName)}</span><span class="from">${esc(days)}</span></div>
-      <div class="legs${f.ret ? "" : " one"}${nDates > 1 ? ` tap" data-route="${esc(f.o)}-${esc(f.d)}" role="button" tabindex="0" aria-label="${esc(cityName(f.d))}：看全部 ${nDates} 組日期` : ""}">${leg("去程", f.dep, f.oAp, f.dAp, f.tr)}${f.ret ? leg("回程", f.ret, f.dAp, f.oAp, f.rtr) : ""}</div>
+      <div class="legs${f.ret ? "" : " one"}${nDates > 1 ? ` tap" data-route="${esc(f.o)}-${esc(f.d)}` : ""}">${leg("去程", f.dep, f.oAp, f.dAp, f.tr)}${f.ret ? leg("回程", f.ret, f.dAp, f.oAp, f.rtr) : ""}</div>
       ${opt.pick && (opt.note || opt.checkedAt) ? `<div>${opt.note ? `<div class="memo">${esc(opt.note)}</div>` : ""}${opt.checkedAt ? `<div class="checked">${icon("check")}${esc(fmtTime(opt.checkedAt))} 已在 Trip.com 核對</div>` : ""}</div>` : ""}
       <div class="buy">
         <div class="v"><small>${f.ret ? "來回" : "單程"}・${opt.pick ? "核對價" : "預估價"}</small><strong>${money(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></div>
@@ -1229,7 +1232,6 @@ function renderChips(){
   const cs = state.mode === "fsc" ? FSC_COUNTRIES : MAIN_COUNTRIES;
   $("#countries").innerHTML = [["", "全部地區"], ...cs.map(c => [c, COUNTRIES[c]])].map(([v,t]) =>
     `<button class="chip" aria-pressed="${v === state.country}" data-v="${v}">${t}</button>`).join("");
-  if (state.filter === "deal" && state.loaded && !hasDeals()) state.filter = "cheap";
   $("#filters").innerHTML = FILTERS.filter(x => x.v !== "deal" || hasDeals()).map(x =>
     `<button class="chip" aria-pressed="${x.v === state.filter}" data-v="${x.v}">${x.v === "deal" ? icon("down") : ""}${x.t}</button>`).join("");
   if (!budgetOptions().includes(state.budget)) state.budget = 0;
@@ -1294,6 +1296,7 @@ function clearFilters(){
   renderFlights(); scrollToList();
 }
 function renderFlights(){
+  fixFilter();
   if (!monthKeys().includes(state.month)) state.month = monthKeys()[0];
   renderMonths(); renderChips(); renderTiles();
   const m = state.month.split("-")[1];
@@ -1331,6 +1334,7 @@ function renderFlights(){
   renderWeekend();
   renderRadar();
   renderQuick();
+  requestAnimationFrame(updateFab);
   const rest = list.length - state.shown;
   $("#moreBtn").classList.toggle("hidden", rest <= 0);
   $("#moreBtn").textContent = `再看 ${Math.min(rest, CONFIG.pageSize())} 條航線（還有 ${rest} 條）`;
@@ -1567,15 +1571,17 @@ function decodePool(p){
   const cols = p.cols;
   return p.data.map(t => { const o = {}; for (let i = 0; i < cols.length; i++) if (t[i] !== null && t[i] !== "" && t[i] !== undefined) o[cols[i]] = t[i]; return o; });
 }
+// 細抓資料都到了（或等超過 10 秒）才算「資料齊全」：收藏的降價比較要等資料齊全，避免拿不完整的價格比
+let dataSettled = false;
+function settleData(){ if (dataSettled) return; dataSettled = true; if (state.tab !== "hotels") renderFavs(); renderQuick(); }
 async function loadExtras(){
   // 累積資料庫夠多就直接用；不夠（或沒設定）才分段抓
   const pool = CONFIG.poolUrl ? await getJSON(CONFIG.poolUrl).catch(() => null) : null;
   const poolRows = !pool ? [] : Array.isArray(pool.rows) ? pool.rows : decodePool(pool);
   mergeAndRender(poolRows);
-  if (poolRows.length >= (CONFIG.poolEnough || 300)) return;
-  for (const u of (CONFIG.extraUrls || [])){
-    getJSON(u).then(j => mergeAndRender(j && j.rows)).catch(() => {});
-  }
+  if (poolRows.length >= (CONFIG.poolEnough || 300)) return settleData();
+  const parts = (CONFIG.extraUrls || []).map(u => getJSON(u).then(j => mergeAndRender(j && j.rows)).catch(() => {}));
+  Promise.race([Promise.allSettled(parts), new Promise(r => setTimeout(r, 10000))]).then(settleData);
 }
 async function loadFlights(){
   const fscP = CONFIG.fscUrl ? getJSON(CONFIG.fscUrl).catch(() => null) : Promise.resolve(null);
@@ -1599,6 +1605,7 @@ async function loadFlights(){
 }
 // 預設選「有票、而且最便宜」的月份
 function bestMonth(){
+  fixFilter();
   const keys = monthKeys();
   const base = baseFiltered();
   let best = keys[0], bestPrice = Infinity;
@@ -1613,9 +1620,17 @@ function bestMonth(){
    ⑬ 互動
    ==================================================================== */
 function resetPage(){ state.shown = CONFIG.pageSize(); }
-function scrollToList(){
-  const y = $("#listTop").getBoundingClientRect().top + window.scrollY - 64;
+function scrollToEl(el){
+  if (!el || !el.offsetParent) return; // 看不到的區塊不捲
+  const y = el.getBoundingClientRect().top + window.scrollY - 64; // 64＝上方固定的分頁列
   window.scrollTo({ top: y, behavior: "smooth" });
+}
+function scrollToList(){ scrollToEl($("#listTop")); }
+// 跳到某個連假：篩選「連假」、那個月份，捲到清單
+function jumpToHoliday(h){
+  if (!h) return;
+  state.filter = "holiday"; state.month = h.start.slice(0, 7); state.country = ""; state.budget = 0;
+  resetPage(); renderFlights(); scrollToList();
 }
 document.querySelector(".tabs").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return;
@@ -1624,7 +1639,7 @@ document.querySelector(".tabs").addEventListener("click", e => {
   $("#flights").classList.toggle("hidden", state.tab === "hotels");
   $("#hotels").classList.toggle("hidden", state.tab !== "hotels");
   $("#howto").classList.toggle("hidden", state.tab === "hotels");
-  if (state.tab === "hotels"){ clearInterval(heroTimer); renderHotelCities(); queueImages(); return; }
+  if (state.tab === "hotels"){ clearInterval(heroTimer); renderHotelCities(); queueImages(); updateFab(); return; }
   const mode = state.tab === "fsc" ? "fsc" : "all";
   if (mode !== state.mode){
     state.mode = mode; state.country = ""; resetPage();
@@ -1648,7 +1663,12 @@ $("#tiles").addEventListener("click", e => {
   if (state.flights.length) state.month = bestMonth();
   renderFlights(); scrollToList();
 });
-$("#filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.v; resetPage(); renderFlights(); });
+// 換條件後這個月沒有票、別的月有：自動跳到有票而且最便宜的月份
+function monthWithResults(){
+  const has = (m) => baseFiltered().some(f => f.dep.startsWith(m));
+  if (!has(state.month)){ const m = bestMonth(); if (has(m)) state.month = m; }
+}
+$("#filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.v; resetPage(); monthWithResults(); renderFlights(); });
 $("#routesMore").addEventListener("click", () => { state.routesAll = true; renderFlights(); });
 $("#moreBtn").addEventListener("click", () => { state.shown += CONFIG.pageSize(); renderFlights(); });
 $("#hCountries").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.hCountry = b.dataset.v; renderHotels(); });
@@ -1852,12 +1872,11 @@ document.addEventListener("click", e => {
   }
   const cd = t.closest("#countdown");
   if (cd){
-    const h = HOLIDAYS.find(x => x.start === cd.dataset.holiday);
-    if (h){ state.filter = "holiday"; state.month = h.start.slice(0, 7); state.country = ""; state.budget = 0; resetPage(); renderFlights(); scrollToList(); }
+    jumpToHoliday(HOLIDAYS.find(x => x.start === cd.dataset.holiday));
   }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheet").classList.contains("hidden")) closeSheet(); });
-$("#budget").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.budget = Number(b.dataset.v); resetPage(); renderFlights(); });
+$("#budget").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.budget = Number(b.dataset.v); resetPage(); monthWithResults(); renderFlights(); });
 $("#luckyBtn").innerHTML = icon("dice") + "幫我選！";
 $("#sheet .sheet-x").innerHTML = icon("close");
 // 分享連結 ?route=KHH-SEL：資料載入後直接打開那條航線
@@ -1880,10 +1899,14 @@ function renderQuick(){
   const vis = (id) => !$(id).classList.contains("hidden");
   const items = [];
   if (hasDeals()){
-    const n = cheapestPerRoute(modeFiltered().filter(f => savingPct(f) > 0)).length;
-    items.push(`<button class="qk hot" data-q="deal">${icon("down")}比平常便宜 <b>${n}</b> 條</button>`);
+    // 數字＝點了之後那個月（有特價、最便宜的月份）會看到幾條
+    const byMonth = {};
+    for (const f of dealFlights()){ const m = f.dep.slice(0, 7); if (!byMonth[m] || f.price < byMonth[m]) byMonth[m] = f.price; }
+    const m = monthKeys().filter(k => byMonth[k]).sort((a, b) => byMonth[a] - byMonth[b])[0];
+    const n = m ? cheapestPerRoute(dealFlights().filter(f => f.dep.startsWith(m))).length : 0;
+    if (n) items.push(`<button class="qk hot" data-q="deal">${icon("down")}比平常便宜 <b>${n}</b> 條</button>`);
   }
-  if (vis("#favSec")) items.push(`<button class="qk" data-q="#favSec">${icon("heartF")}我的收藏 <b>${favs.length}</b></button>`);
+  if (vis("#favSec")) items.push(`<button class="qk" data-q="#favSec">${icon("heartF")}我的收藏 <b>${favShown}</b></button>`);
   if (vis("#weekendSec")) items.push(`<button class="qk" data-q="#weekendSec">${icon("bolt")}說走就走</button>`);
   const h = nextHoliday();
   if (h) items.push(`<button class="qk" data-q="holiday">${icon("cal")}${esc(h.name.replace("連假", ""))}連假 <b>${diffDays(todayTW(), h.start)}</b> 天後</button>`);
@@ -1892,17 +1915,13 @@ function renderQuick(){
   setHTML(box, items.join(""));
   box.classList.remove("hidden");
 }
-function scrollToEl(el){
-  const y = el.getBoundingClientRect().top + window.scrollY - 64;
-  window.scrollTo({ top: y, behavior: "smooth" });
-}
 $("#quick").addEventListener("click", e => {
   const b = e.target.closest("[data-q]"); if (!b) return;
   const q = b.dataset.q;
   if (q === "lucky") return lucky();
   if (q === "deal"){ state.filter = "deal"; state.country = ""; state.budget = 0; resetPage(); state.month = bestMonth(); renderFlights(); return scrollToList(); }
-  if (q === "holiday"){ const h = nextHoliday(); if (h){ state.filter = "holiday"; state.month = h.start.slice(0, 7); state.country = ""; state.budget = 0; resetPage(); renderFlights(); scrollToList(); } return; }
-  const el = $(q); if (el) scrollToEl(el);
+  if (q === "holiday") return jumpToHoliday(nextHoliday());
+  scrollToEl($(q));
 });
 
 // 第一次來的說明（按 × 之後就不再出現）
@@ -1948,7 +1967,7 @@ const FAVP_KEY = "howtravle_favprice_v1";
 let favPrice = {};
 try { favPrice = JSON.parse(localStorage.getItem(FAVP_KEY) || "{}") || {}; } catch(e) { favPrice = {}; }
 const favPriceAtLoad = { ...favPrice }; // 這次打開前的紀錄（整次瀏覽都跟它比）
-let favDropToasted = false;
+let favDropToasted = false, favShown = 0;
 // 同一條航線的「來回／單程」「便宜機票／傳統航空」價格差很多，要分開記
 const favPK = (k) => `${k}|${state.mode}|${state.type}`;
 function saveFavPrice(k, p){
@@ -1971,21 +1990,24 @@ function toggleFav(o, d){
   toast(isFav(o, d) ? `已收藏${cityName(d)}，下次打開會在最上面` : `已取消收藏${cityName(d)}`);
   for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.outerHTML = favBtn(o, d);
   renderFavs();
+  renderQuick();
 }
 function renderFavs(){
   const sec = $("#favSec");
   if (!state.loaded || !favs.length){ sec.classList.add("hidden"); return; }
   const drops = [];
+  favShown = 0;
   const cards = favs.map(k => {
     const [o, d] = k.split("-");
     const list = routeFlights(o, d);
     if (!list.length) return "";
     const f = list.reduce((a, b) => b.price < a.price ? b : a);
-    const prev = favPriceAtLoad[favPK(k)], diff = prev ? Math.round(f.price - prev.p) : 0;
+    favShown++;
+    const prev = favPriceAtLoad[favPK(k)], diff = prev && dataSettled ? Math.round(f.price - prev.p) : 0;
     let badge = "";
     if (diff <= -100){ badge = `<span class="badge save">${icon("down")}比你上次看便宜 ${money(-diff)}</span>`; drops.push([d, -diff]); }
     else if (diff >= 100) badge = `<span class="badge">${icon("up")}比上次貴 ${money(diff)}</span>`;
-    saveFavPrice(k, Math.round(f.price));
+    if (dataSettled) saveFavPrice(k, Math.round(f.price));
     return miniCard(f, { capIcon: "heartF", mp: `最便宜・${list.length} 組`, badge });
   }).join("");
   if (drops.length && !favDropToasted){
@@ -2122,7 +2144,7 @@ function renderRadar(){
       <span class="pz">${money(f.price)}</span></button></li>`).join("");
 }
 document.addEventListener("keydown", e => {
-  const g = e.target.closest && e.target.closest("#radar .pt, [role=button][data-route]");
+  const g = e.target.closest && e.target.closest("#radar .pt");
   if (g && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); const [o, d] = g.dataset.route.split("-"); openRoute(o, d); }
 });
 
