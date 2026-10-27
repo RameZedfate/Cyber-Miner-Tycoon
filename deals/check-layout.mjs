@@ -262,6 +262,9 @@ try {
     await setup(page);
     await page.goto(base);
     await page.waitForSelector("#flightList .card");
+    // 減少動態：連 ::after（品牌雷達點）都不能動
+    const pingAnim = await page.$eval(".brand .ping", e => getComputedStyle(e, "::after").animationName);
+    if (pingAnim !== "none") all.push(`[${w}] 減少動態時品牌雷達點還在動（${pingAnim}）`);
     // 先收藏兩條航線，讓「我收藏的航線」也一起量
     for (const b of (await page.$$("#flightList .card [data-fav]")).slice(0, 2)) await b.click();
     await page.waitForTimeout(200);
@@ -392,6 +395,15 @@ try {
     });
     if (!hero.act || hero.op !== "1") all.push(`[動畫 ${w}] 大圖文字沒有出現（act=${hero.act} opacity=${hero.op}）`);
     if (!hero.fp) all.push(`[動畫 ${w}] 大圖沒有航線動畫`);
+    // 航線圖的比例要跟畫面一樣（飛機不會被拉長）
+    const asp = await page.$eval("#hero .fp", s => { const vb = s.viewBox.baseVal, r = s.getBoundingClientRect(); return [vb.width / vb.height, r.width / r.height]; });
+    if (Math.abs(asp[0] / asp[1] - 1) > 0.06) all.push(`[動畫 ${w}] 大圖航線被拉長變形（${asp.map(x => x.toFixed(2)).join(" vs ")}）`);
+    // 新資料進來但最便宜的 5 個城市沒變：大圖不能重畫（會閃、價格會重新跳）
+    const kept = await page.evaluate(() => { const sl = document.querySelector("#hero .slide"); sl.__m = 1;
+      mergeAndRender([{ origin: "TPE", destination: "SGN", origin_airport: "TPE", destination_airport: "SGN", price: 99999, airline: "VJ",
+        departure_at: new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10) + "T08:00:00+08:00", transfers: 0 }]);
+      return document.querySelector("#hero .slide").__m === 1; });
+    if (!kept) all.push(`[動畫 ${w}] 新資料進來時大圖整個重畫（會閃一下、價格重跳）`);
     if (hero.price !== hero.want) all.push(`[動畫 ${w}] 大圖價格跳數字後不是正確價格：${hero.price} ≠ ${hero.want}`);
     // 慢慢捲到底：每個浮上來的元素都要真的出現
     await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 250) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
@@ -407,6 +419,9 @@ try {
     await page.click("#luckyBtn");
     await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
     if (!(await page.$("#sheet .confetti i"))) all.push(`[動畫 ${w}] 幫我選沒有彩帶`);
+    await page.waitForTimeout(1800);
+    const sx = await page.$eval(".sheet-panel", p => p.scrollWidth - p.clientWidth);
+    if (sx > 1) all.push(`[動畫 ${w}] 彩帶讓面板可以左右滑（多 ${sx}px）`);
     await page.keyboard.press("Escape");
     // 酒店頁：大圖文字要看得到
     await page.click('.tabs button[data-tab="hotels"]');

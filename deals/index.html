@@ -446,13 +446,14 @@
   /* 區塊標題左邊的品牌色小條 */
   h2.sec::before{content:"";display:inline-block;width:6px;height:.85em;border-radius:3px;background:linear-gradient(180deg,var(--yellow),#FF9F1C);margin-right:9px;vertical-align:-.06em}
   /* 最低價那張卡：金色外框 */
-  .card.best{box-shadow:0 0 0 2px var(--yellow),0 10px 28px rgba(255,159,28,.25)}
-  .anim .card.best{animation:bestglow 2.8s ease-in-out infinite}
-  @keyframes bestglow{0%,100%{box-shadow:0 0 0 2px var(--yellow),0 10px 28px rgba(255,159,28,.18)}50%{box-shadow:0 0 0 2px var(--yellow),0 12px 34px rgba(255,159,28,.45)}}
+  .card.best{position:relative;box-shadow:0 0 0 2px var(--yellow),0 10px 28px rgba(255,159,28,.22)}
+  .anim .card.best::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px #FFC72C,inset 0 0 22px rgba(255,199,44,.55);opacity:0;animation:glowop 2.8s ease-in-out infinite;pointer-events:none;z-index:3}
   /* 連假倒數：光澤慢慢掃過 */
   .countdown{position:relative;overflow:hidden}
-  .anim .countdown::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.12) 50%,transparent 70%);background-size:250% 100%;animation:sweep 4.5s ease-in-out infinite;pointer-events:none}
-  @keyframes sweep{0%,40%{background-position:160% 0}100%{background-position:-60% 0}}
+  .anim .countdown::after{content:"";position:absolute;top:0;bottom:0;left:0;width:60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.13),transparent);transform:translateX(-120%);animation:sweep 4.5s ease-in-out infinite;pointer-events:none}
+  @keyframes sweep{0%,40%{transform:translateX(-120%)}100%{transform:translateX(220%)}}
+  /* 看不到大圖時，大圖的動畫暫停 */
+  .hero.off .fp-glow,.hero.off .bgimg.ok{animation-play-state:paused}
   /* 酒店大圖：星星閃 */
   .stars{position:absolute;inset:0 0 45% 0;z-index:2;pointer-events:none}
   .stars i{position:absolute;width:3px;height:3px;border-radius:999px;background:#fff;box-shadow:0 0 6px 1px rgba(255,255,255,.8);animation:tw 2.6s ease-in-out infinite}
@@ -479,12 +480,10 @@
   /* 大圖：航線＋小飛機、文字依序浮上來 */
   .fp{position:absolute;left:0;right:0;top:0;height:42%;width:100%;z-index:2;pointer-events:none;overflow:visible}
   .fp .fp-line{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.6;stroke-dasharray:4 7;stroke-linecap:round}
+  .hero.off .fp{visibility:hidden}
   .fp .fp-glow{fill:none;stroke:rgba(255,199,44,.35);stroke-width:5;stroke-linecap:round;stroke-dasharray:60 900;animation:trail 7s linear infinite}
   .fp .fp-plane{fill:var(--yellow);filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
-  .fp .dot0,.fp .dot1{fill:#fff}
-  .fp .ring{fill:none;stroke:#fff;stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:ringp 2.4s ease-out infinite}
   @keyframes trail{from{stroke-dashoffset:960}to{stroke-dashoffset:0}}
-  @keyframes ringp{from{transform:scale(1);opacity:.9}to{transform:scale(3.4);opacity:0}}
   .anim .slide .in .wrap:last-child > *{opacity:0;transform:translateY(14px);transition:opacity .5s ease, transform .5s ease}
   .anim .slide.act .in .wrap:last-child > *{opacity:1;transform:none}
   .anim .slide.act .in .wrap:last-child > *:nth-child(2){transition-delay:.06s}
@@ -499,20 +498,20 @@
   .brand .ping::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--yellow);animation:ping 2s ease-out infinite}
   @keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(3);opacity:0}}
   /* 捲到才浮上來 */
-  .rv{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
-  .rv.in{opacity:1;transform:none}
-  h2.sec.rv{transform:translateX(-10px)}
-  h2.sec.rv.in{transform:none}
+  .anim .rv{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .5s ease, transform .5s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+  .anim .rv.in{opacity:1;transform:none}
+  .anim h2.sec.rv:not(.in){transform:translateX(-10px)}
   /* 標籤閃光 */
   /* 閃光用背景掃過去（不會撐出外框） */
-  .badge.top,.badge.save,.qk.hot,.badge.pick{background-image:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);
-    background-size:250% 100%;background-repeat:no-repeat;background-position:160% 0;animation:shine 3.6s ease-in-out infinite}
-  .badge.save{animation-delay:1.2s}
-  .qk.hot{animation:shine 3.6s ease-in-out infinite .6s, glow 2.4s ease-in-out infinite}
+  /* 只有少數幾個標籤閃（最低價、精選、快速入口），而且閃 6 次就停，省電 */
+  .badge.top,.qk.hot,.badge.pick{background-image:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);
+    background-size:250% 100%;background-repeat:no-repeat;background-position:160% 0;animation:shine 3.6s ease-in-out 6}
+  .qk.hot{animation-delay:.6s;position:relative}
   @keyframes shine{0%,55%{background-position:160% 0}85%,100%{background-position:-60% 0}}
+  .qk.hot::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 6px 22px rgba(15,123,78,.6);opacity:0;animation:glowop 2.4s ease-in-out infinite;pointer-events:none}
+  @keyframes glowop{0%,100%{opacity:0}50%{opacity:1}}
   .badge.top .ic{animation:flick 1.2s ease-in-out infinite alternate;transform-origin:50% 90%}
   @keyframes flick{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
-  @keyframes glow{0%,100%{box-shadow:0 1px 2px rgba(15,23,42,.06),0 6px 16px rgba(15,123,78,.25)}50%{box-shadow:0 1px 2px rgba(15,23,42,.06),0 6px 22px rgba(15,123,78,.55)}}
   /* 按下去的回饋 */
   .tile,.mini,.qk,.chip,.month,.cta,.hero-cta,.lucky{transition:transform .15s ease}
   .tile:active,.mini:active,.qk:active,.chip:active,.month:active,.lucky:active{transform:scale(.96)}
@@ -524,10 +523,10 @@
   @keyframes heart{0%{transform:scale(.6)}50%{transform:scale(1.45)}100%{transform:scale(1)}}
   @keyframes burst{from{transform:scale(.6);opacity:1}to{transform:scale(2.2);opacity:0}}
   /* 幫我選：彩帶 */
-  .confetti{position:absolute;left:0;right:0;top:0;height:0;z-index:5;pointer-events:none}
+  .confetti{position:absolute;left:0;right:0;top:0;height:420px;overflow:hidden;z-index:5;pointer-events:none}
   .confetti i{position:absolute;top:-10px;width:8px;height:12px;border-radius:2px;opacity:0;animation:fall 1.6s cubic-bezier(.25,.6,.45,1) forwards;animation-delay:var(--dl)}
   @keyframes fall{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),340px) rotate(var(--r))}}
-  .slot .s2{animation:slotpop .25s ease}
+  .slot .s2.tk{animation:slotpop .22s ease}
   @keyframes slotpop{from{transform:translateY(-8px);opacity:.4}to{transform:none;opacity:1}}
   /* 價格日曆：一格一格出現 */
   .anim .cal .day{animation:dayin .4s ease both;animation-delay:calc(var(--i,0) * 10ms)}
@@ -538,7 +537,7 @@
   @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
   /* 連假倒數數字翻牌 */
-  .countdown.in .num b{display:inline-block;animation:flip .7s cubic-bezier(.2,.8,.2,1) both .15s}
+  .anim .countdown .num b{display:inline-block;animation:flip .7s cubic-bezier(.2,.8,.2,1) both .35s}
   @keyframes flip{0%{transform:perspective(200px) rotateX(-90deg);opacity:0}100%{transform:none;opacity:1}}
   /* 切換分頁淡入、提示訊息滑上來 */
   .anim .tabfade{animation:tabin .35s ease both}
@@ -547,7 +546,7 @@
   @keyframes toastin{from{transform:translate(-50%,16px);opacity:0}to{transform:translateX(-50%);opacity:1}}
   .share-site button .ic{animation:wig 3s ease-in-out infinite}
   @keyframes wig{0%,80%,100%{transform:none}85%{transform:rotate(-14deg)}90%{transform:rotate(12deg)}95%{transform:rotate(-6deg)}}
-  @media (prefers-reduced-motion:reduce){ *{animation:none !important;transition:none !important} .rv{opacity:1 !important;transform:none !important} }
+  @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} .rv{opacity:1 !important;transform:none !important} }
 </style>
 </head>
 <body>
@@ -926,20 +925,32 @@ function countUp(el, to){
     el.textContent = money(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
-// 捲到才浮上來：卡片、小卡、磚塊、標題…（面板裡的不用）
+// 捲到才浮上來：卡片、小卡、磚塊、標題…（面板裡、左右滑的列不用）
+// 新內容放進畫面的同一刻就加上 rv（不會先出現再消失）；進入畫面時依「這一批」的順序錯開浮上來；
+// 浮完就把 rv 拿掉，卡片恢復原本的滑鼠效果
 let revealObs = null;
+const revealWatched = new Set();
 function revealify(){
   if (!MOTION || !("IntersectionObserver" in window)) return;
-  if (!revealObs) revealObs = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting){ e.target.classList.add("in"); revealObs.unobserve(e.target); } }, { rootMargin: "0px 0px -6% 0px" });
+  if (!revealObs) revealObs = new IntersectionObserver(es => {
+    let i = 0;
+    for (const e of es){
+      if (!e.isIntersecting) continue;
+      const el = e.target; revealObs.unobserve(el); revealWatched.delete(el);
+      const d = Math.min(i++, 5) * 60;
+      el.style.setProperty("--d", d + "ms");
+      el.classList.add("in");
+      setTimeout(() => { el.classList.remove("rv", "in"); el.style.removeProperty("--d"); }, 560 + d);
+    }
+  }, { rootMargin: "0px 0px -4% 0px" });
+  // 已經不在頁面上的（被重畫掉的）不再追蹤
+  for (const el of revealWatched) if (!el.isConnected){ revealObs.unobserve(el); revealWatched.delete(el); }
   const els = document.querySelectorAll(".card:not([data-rv]), .mini:not([data-rv]), .tile:not([data-rv]), h2.sec:not([data-rv]), .countdown:not([data-rv]), .share-site:not([data-rv]), .how > div:not([data-rv]), .rank li:not([data-rv]), .radar-wrap:not([data-rv])");
-  const seen = new Map();
   for (const el of els){
     el.dataset.rv = "1";
-    if (el.closest("#sheet, .scroller")) continue; // 面板裡、左右滑的列不用（左右滑的看不到就永遠不會出現）
-    const parent = el.parentElement, i = seen.get(parent) || 0; seen.set(parent, i + 1);
-    el.style.setProperty("--d", `${Math.min(i, 5) * 70}ms`);
+    if (el.closest("#sheet, .scroller")) continue;
     el.classList.add("rv");
-    revealObs.observe(el);
+    revealObs.observe(el); revealWatched.add(el);
   }
 }
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -995,7 +1006,7 @@ function photoHTML(wiki, country, label, size, eager){
     : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size || 800}"${lazy} decoding="async" />`;
   return `<div class="fb">${esc(label || "")}</div>${img}<div class="shade"></div>`;
 }
-function queueImages(){ clearTimeout(imgTimer); imgTimer = setTimeout(() => { revealify(); loadImages(); }, 30); }
+function queueImages(){ revealify(); clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
 function applyImg(im, src){
   im.dataset.done = "1";
   if (!src) return;
@@ -1268,11 +1279,16 @@ function miniCard(f, o = {}){
    ⑦ 大圖輪播
    ==================================================================== */
 let heroTimer = null, heroTouched = false, heroFirstCity = null; // 大圖第一張目前顯示的城市
+let heroSig = null, heroCounted = false; // 大圖內容沒變就不重畫；價格跳數字只在第一次出現時做
 function renderHero(){
   const box = $("#hero");
-  clearInterval(heroTimer);
-  if (!state.loaded){ box.innerHTML = heroLoading(); return; }
+  if (!state.loaded){ clearInterval(heroTimer); heroSig = null; box.innerHTML = heroLoading(); return; }
   const top = cheapestPerCity(modeFiltered()).slice(0, CONFIG.heroSlides);
+  const sig = [state.mode, innerWidth, ...top.map(f => [f.o, f.d, f.dep, f.ret, f.price, f.airline].join(","))].join("|");
+  if (sig === heroSig) return; // 一樣就不動（不會閃、不會重新跳數字）
+  const again = heroSig !== null && heroCounted; // 不是第一次：直接顯示，不再跳數字
+  heroSig = sig;
+  clearInterval(heroTimer);
   heroFirstCity = top[0] ? canon(top[0].d) : null;
   const fsc = state.mode === "fsc";
   let slides;
@@ -1309,23 +1325,28 @@ function renderHero(){
     });
   }
   // 台灣 → 目的地的虛線航線，小飛機沿著飛（只在可以有動畫時）
-  const fp = !MOTION ? "" : `<svg class="fp" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true">
-      <path id="fpPath" class="fp-line" d="M-20 150 C 110 135, 210 40, 420 22"/><path class="fp-glow" d="M-20 150 C 110 135, 210 40, 420 22"/>
-      <g class="fp-plane"><g transform="rotate(90) scale(.75) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
-        <animateMotion dur="7s" repeatCount="indefinite" rotate="auto"><mpath href="#fpPath"/></animateMotion></g></svg>`;
+  // 用實際的寬高畫，飛機不會被拉長變形
+  const W = Math.max(320, box.clientWidth || innerWidth), Hh = Math.round((innerWidth >= 760 ? 470 : 400) * 0.42);
+  const P = (x, y) => `${Math.round(x * W)} ${Math.round(y * Hh)}`;
+  const d = `M${P(-0.05, 0.75)} C ${P(0.27, 0.68)}, ${P(0.52, 0.2)}, ${P(1.05, 0.11)}`;
+  const fp = !MOTION ? "" : `<svg class="fp" viewBox="0 0 ${W} ${Hh}" aria-hidden="true">
+      <path id="fpPath" class="fp-line" d="${d}"/><path class="fp-glow" d="${d}"/>
+      <g class="fp-plane"><g transform="rotate(90) scale(${innerWidth >= 760 ? 1 : .8}) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
+        <animateMotion dur="${innerWidth >= 760 ? 9 : 7}s" repeatCount="indefinite" rotate="auto"><mpath href="#fpPath"/></animateMotion></g></svg>`;
   box.innerHTML = `<div class="hero-track" id="heroTrack">${slides.join("")}</div>` + fp +
     (slides.length > 1 ? `<div class="hero-dots" id="heroDots">${slides.map((_, i) => `<button aria-label="第 ${i+1} 張" aria-current="${i === 0}" data-i="${i}"></button>`).join("")}</div>` : "");
   queueImages();
   // 目前這張：文字依序浮上來、價格跳數字
   const slideEls = [...box.querySelectorAll(".slide")];
   let actIdx = -1;
-  const activate = (i) => {
+  const activate = (i, quiet) => {
     if (i === actIdx) return; actIdx = i;
     slideEls.forEach((el, k) => el.classList.toggle("act", k === i));
     const st = slideEls[i] && slideEls[i].querySelector(".pricebig strong[data-v]");
-    if (st) countUp(st, Number(st.dataset.v));
+    if (st && !quiet){ countUp(st, Number(st.dataset.v)); heroCounted = true; }
   };
-  requestAnimationFrame(() => activate(0));
+  if (again) activate(0, true); // 資料更新後重畫：直接顯示
+  else requestAnimationFrame(() => activate(0));
   if (slides.length < 2) return;
   const track = $("#heroTrack"), dots = [...document.querySelectorAll("#heroDots button")];
   let paused = false;
@@ -1990,17 +2011,19 @@ function lucky(){
   const pick = pool[Math.floor(Math.random() * pool.length)];
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const show = () => openSheet(`<div class="sh-body" style="padding-top:56px">
+  const show = () => { openSheet(`<div class="sh-body" style="padding-top:56px">
       <h3 style="margin:0 0 4px;font-size:20px">就決定是${esc(cityName(pick.d))}了！</h3>
       <p class="sub" style="margin-bottom:12px">從現在最便宜的 ${pool.length} 個地方幫你抽的</p>
       <div class="grid">${flightCard(pick, { noMore: false })}</div>
       <div class="sh-actions"><button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button></div></div>${confettiHTML()}`);
+    setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
   openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div>`);
   let i = 0, delay = 60, t0 = Date.now();
   const tick = () => {
     const el = $("#slotName"); if (!el) return;
     el.textContent = names[i++ % names.length];
+    if (MOTION){ el.classList.remove("tk"); void el.offsetWidth; el.classList.add("tk"); }
     if (Date.now() - t0 > 1500){ el.textContent = cityName(pick.d); slotTimer = setTimeout(show, 450); return; }
     delay *= 1.12; slotTimer = setTimeout(tick, delay);
   };
@@ -2324,6 +2347,11 @@ document.addEventListener("keydown", e => {
 })();
 state.month = monthKeys()[0];
 $("#hero").innerHTML = heroLoading();
+// 大圖捲出畫面時暫停它的動畫（省電）
+if (MOTION && "IntersectionObserver" in window){
+  new IntersectionObserver(es => { for (const e of es){ e.target.classList.toggle("off", !e.isIntersecting);
+    const svg = e.target.querySelector(".fp"); if (svg && svg.pauseAnimations) e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations(); } }).observe($("#hero"));
+}
 renderChips(); renderMonths(); renderTiles(); renderHotelHero();
 loadFlights(); loadPicks(); loadHotels();
 </script>
