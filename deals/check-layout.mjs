@@ -35,6 +35,11 @@ const MAIN = { updated_at: new Date().toISOString(), rows: [
   row("TPE","VDO","TPE","VDO",day(22),day(27),9900,1,0,"QQ"),        // 不在名單的航空公司
   row("TPE","FUK","TPE","FUK",day(15),null,2399,0,0,"IT"),
   row("TPE","CJU","TPE","CJU","2027-02-04","2027-02-09",8900,0,0,"KE"),
+  // 說走就走：不管今天星期幾，都放幾張近 3 週週五出發、週日回來的票
+  ...[0, 1, 2].flatMap(w => [["FUK", 3999], ["OKA", 4299], ["HKG", 3199]].map(([d, p], i) => {
+    const fri = day(((5 - today.getUTCDay() + 7) % 7 || 7) + 7 * w); const sun = new Date(fri); sun.setUTCDate(sun.getUTCDate() + 2);
+    return row("TPE", d, "TPE", d, fri, sun.toISOString().slice(0, 10), p + w * 50 + i, 0, 0, "IT");
+  })),
 ] };
 const FSC = { updated_at: new Date().toISOString(), part: "fsc", rows: [
   row("TPE","HKG","TPE","HKG",day(18),day(21),5111,0,0,"CX"),
@@ -123,11 +128,11 @@ async function measure(page) {
         out.push(`照片沒填滿框：${img.alt}（照片 ${img.offsetWidth}x${img.offsetHeight}，框 ${pe.clientWidth}x${pe.clientHeight}）`);
       if (getComputedStyle(img).objectFit !== "cover") out.push(`照片不是 cover：${img.alt}`);
     }
-    // 2. 卡片照片框比例一致（16:10）
+    // 2. 卡片照片框比例一致（機票卡 16:7、熱門航線／城市小卡 16:10）
     for (const ph of document.querySelectorAll(".card .ph")) {
       if (!vis(ph)) continue;
-      const r = R(ph);
-      if (Math.abs(r.width / r.height - 1.6) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}`);
+      const r = R(ph), want = ph.closest(".card.route") ? 1.6 : 16 / 7;
+      if (Math.abs(r.width / r.height - want) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}（應為 ${want.toFixed(2)}）`);
     }
     // 3. 航空公司標誌：框大小一致、圖在框內、跟文字垂直置中
     for (const lg of document.querySelectorAll(".card .logo")) {
@@ -166,25 +171,32 @@ async function measure(page) {
       const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
       if (cards.length && lefts.size > cols) out.push(`卡片左邊界有 ${lefts.size} 種位置，但只有 ${cols} 欄（欄位沒對齊）`);
     }
-    // 5. 去程／回程：標籤、日期、直飛三欄在同一張卡片內要對齊
+    // 5. 去程／回程兩格並排：同高、同寬、上緣對齊，格子裡的標籤／日期／航線上緣也對齊
     for (const legs of document.querySelectorAll(".legs")) {
       if (!vis(legs)) continue;
       const ls = [...legs.querySelectorAll(".lg")];
+      const lr = R(legs);
+      for (const l of ls) { const r = R(l); if (r.left < lr.left - 1 || r.right > lr.right + 1) out.push("去程／回程格子超出"); }
       if (ls.length < 2) continue;
-      const col = (sel, side) => ls.map(l => R(l.querySelector(sel))[side]);
-      for (const [sel, side, name] of [[".lbl", "left", "去程／回程標籤"], [".lbl", "right", "標籤右緣"], [".st", "right", "直飛／轉機"]]) {
-        const v = col(sel, side);
+      for (const [get, name] of [[l => R(l).top, "去程／回程格子上緣"], [l => R(l).height, "去程／回程格子高度"], [l => R(l).width, "去程／回程格子寬度"],
+        [l => R(l.querySelector(".lbl")).top, "去程／回程標籤"], [l => R(l.querySelector(".dt")).top, "去程／回程日期"], [l => R(l.querySelector(".rt")).top, "去程／回程航線"]]) {
+        const v = ls.map(get);
         if (Math.max(...v) - Math.min(...v) > 1) out.push(`${name}沒對齊`);
       }
-      const dt = ls.map(l => R(l.querySelector(".dt")).left);
-      if (Math.max(...dt) - Math.min(...dt) > 1) out.push("去程／回程日期沒對齊");
+    }
+    // 5b. 價格和按鈕在同一排：垂直置中、按鈕不超出卡片
+    for (const b of document.querySelectorAll(".buy")) {
+      if (!vis(b)) continue;
+      const v = R(b.querySelector(".v")), c = R(b.querySelector(".cta")), card = R(b.closest(".card"));
+      if (v.right > c.left + 1) out.push(`價格壓到按鈕：${b.querySelector(".v").textContent.trim()}`);
+      if (c.right > card.right - 8) out.push("按鈕太貼卡片右邊或超出");
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".rank .nm", ".rank .pz"]) {
+    for (const sel of [".cap .city", ".air .an", ".pr .v", ".buy .v", ".buy .cta", ".lg .dt", ".lg .rt", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".mini .why", ".rank .nm", ".rank .pz", ".hc .ref b", ".hc .fl", ".chip"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.lg");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
@@ -207,7 +219,7 @@ async function measure(page) {
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
-    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"]]) {
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"], ["#pickList .mini", "今天最划算小卡"]]) {
       const els = [...document.querySelectorAll(sel)].filter(vis);
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
@@ -302,6 +314,16 @@ try {
           if (ws.size > 1) out.push(`日曆格子寬度不一：${[...ws].join(",")}`);
           const rows = {}; for (const c of cells) (rows[Math.round(R(c).top)] ||= []).push(Math.round(R(c).height));
           for (const hs of Object.values(rows)) if (Math.max(...hs) - Math.min(...hs) > 1) out.push("日曆同一列格子高度不一");
+        }
+        // 日曆每一天要在正確的星期欄（1 號對到那天的星期幾）
+        for (const cal of document.querySelectorAll(".cal")) {
+          const [y, m] = cal.querySelector("h4").textContent.match(/\d+/g).map(Number);
+          const wds = [...cal.querySelectorAll(".wd")].map(w => Math.round(R(w).left));
+          const days = [...cal.querySelectorAll(".day:not(.blank)")];
+          for (const [i, d] of days.entries()) {
+            const want = new Date(Date.UTC(y, m - 1, i + 1)).getUTCDay();
+            if (Math.abs(Math.round(R(d).left) - wds[want]) > 1) { out.push(`日曆 ${m}/${i + 1} 不在星期${"日一二三四五六"[want]}那一欄`); break; }
+          }
         }
         for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city")) {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);

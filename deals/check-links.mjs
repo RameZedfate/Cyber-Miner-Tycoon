@@ -103,6 +103,7 @@ async function collect(page) {
       const months = await page.$$eval("#months button", bs => bs.map(b => b.dataset.v));
       for (const m of months) {
         await page.click(`#months button[data-v="${m}"]`);
+        while (await page.isVisible("#moreBtn")) await page.click("#moreBtn"); // 展開全部
         text += await page.textContent("#flightList");
         await checkLinks(page, `${type}/${f}/${m}`, CURRENT_SUB1);
       }
@@ -143,13 +144,13 @@ try {
     await page.click('.tabs button[data-tab="fsc"]');
     await page.click('#filters button[data-v="cheap"]');
     await page.click('#tripType button[data-v="rt"]');
-    if (await page.isVisible("#picks")) problems.push("傳統航空分頁不該顯示精選");
+    if ((await page.textContent("#picks")).includes("Adam 精選") && await page.isVisible("#picks")) problems.push("傳統航空分頁不該顯示 Adam 手動精選");
     if (SHOTS && !src) await page.screenshot({ path: path.join(SHOTS, "fsc.png"), fullPage: true });
     const fscText = await collect(page);
     for (const want of ["國泰航空", "中華航空", "星宇航空", "大韓航空", "南方航空", "廈門航空", "富國太陽航空", "香港", "上海", "北京", "廣州", "廈門"]) if (!fscText.includes(want)) problems.push(`傳統航空缺少：${want}`);
     for (const bad of ["NT$1,234", "NT$2,345", "NT$6,890"]) if (fscText.includes(bad)) problems.push(`傳統航空出現不該有的票：${bad}`);
     await page.click('.tabs button[data-tab="flights"]');
-    if (!(await page.isVisible("#picks"))) problems.push("回到便宜機票後精選不見了");
+    if (!(await page.isVisible("#picks")) || !(await page.textContent("#picks")).includes("Adam 精選")) problems.push("回到便宜機票後精選不見了");
     // 春節連假應在 2 月出現（若 2 月在顯示範圍內）
     await page.click('#tripType button[data-v="rt"]');
     await page.click('#filters button[data-v="holiday"]');
@@ -208,6 +209,22 @@ try {
     await page.click('.tabs button[data-tab="hotels"]');
     const nCity = await page.$$eval("#hotelCities .card", e => e.length);
     if (nCity < 10) problems.push(`熱門城市酒店只有 ${nCity} 個`);
+    // 參考價由便宜到貴
+    const refs = await page.$$eval("#hotelCities .ref b", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
+    if (refs.some((v, i) => i && v < refs[i - 1])) problems.push(`熱門城市酒店沒有由便宜到貴：${refs.join(",")}`);
+    // 入住日期選項：換日期後連結的入住日要跟著換
+    const ci = async () => new URL(await page.$eval("#hotelCities .cta", a => a.href)).searchParams.get("checkin");
+    const ci0 = await ci();
+    const nDates = await page.$$eval("#hDates button", b => b.length);
+    if (nDates < 2) problems.push("酒店入住日期選項不足");
+    else { await page.click('#hDates button[data-v="1"]'); if ((await ci()) === ci0) problems.push("換入住日期後酒店連結沒跟著換"); await page.click('#hDates button[data-v="0"]'); }
+    // 城市卡片上的機票價格：點了要開價格日曆
+    if (await page.$("#hotelCities [data-hroute]")) {
+      await page.click("#hotelCities [data-hroute]");
+      await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("酒店頁點機票價格沒有打開價格日曆"));
+      await checkLinks(page, "酒店頁機票", sub1);
+      await page.keyboard.press("Escape");
+    } else problems.push("酒店城市卡片沒有顯示機票價格");
     const htext = await page.textContent("#hotelList");
     if (htext.includes("外部網址酒店")) problems.push("非 Trip.com 的酒店沒被擋掉");
     if (!htext.includes("測試酒店 A")) problems.push("酒店沒顯示");
@@ -286,6 +303,50 @@ try {
     await page.goto(base + "?route=TPE-TYO&src=share");
     await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 5000 }).catch(() => problems.push("分享連結沒有打開航線面板"));
     await checkLinks(page, "分享連結", "howtravle_share");
+    await page.close();
+  }
+
+  // 沒有手動精選：自動挑 2 張「今天最划算」；篩選到沒票時有「看全部最便宜的票」；分享失敗時跳出可複製的連結
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify({ items: [] }) }));
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    const n = await page.$$eval("#pickList .mini", e => e.length);
+    if (n !== 2) problems.push(`沒有手動精選時，自動挑的「今天最划算」應有 2 張，實際 ${n}`);
+    const cities = await page.$$eval("#pickList .mini .city", e => e.map(x => x.textContent));
+    if (new Set(cities).size !== cities.length) problems.push(`自動精選挑到重複城市：${cities.join(",")}`);
+    await checkLinks(page, "自動精選");
+    await page.click('.tabs button[data-tab="fsc"]');
+    const fscCities = await page.$$eval("#pickList .mini .ma", e => e.map(x => x.textContent));
+    if (fscCities.some(t => /台灣虎航|樂桃/.test(t))) problems.push(`傳統航空的自動精選出現廉航：${fscCities.join(",")}`);
+    await page.click('.tabs button[data-tab="flights"]');
+    // 預算最低＋直飛＋越南 → 沒票 → 按「看全部最便宜的票」要恢復
+    await page.click('#countries button[data-v="VN"]');
+    await page.click('#filters button[data-v="holiday"]');
+    if (!(await page.$("#flightList [data-clear]"))) problems.push("篩選到沒票時沒有「看全部最便宜的票」");
+    else {
+      await page.click("#flightList [data-clear]");
+      if (!(await page.$("#flightList .card"))) problems.push("按「看全部最便宜的票」後沒有恢復");
+    }
+    if (!(await page.isVisible("#moreRoutes"))) problems.push("沒有顯示熱門航線");
+    // 連假篩選時，熱門航線要帶入連假日期
+    const hol = await page.evaluate(() => { const h = HOLIDAYS.find(x => x.start > todayTW() && monthKeys().includes(x.start.slice(0, 7))); return h ? h.start : null; });
+    if (hol) {
+      await page.click(`#months button[data-v="${hol.slice(0, 7)}"]`);
+      await page.click('#filters button[data-v="holiday"]');
+      const href = await page.$eval("#routeList a", a => a.href).catch(() => null);
+      if (!href || new URL(href).searchParams.get("ddate") !== hol) problems.push(`連假篩選時熱門航線沒帶入連假日期（${hol}）：${href}`);
+      await page.click('#filters button[data-v="cheap"]');
+    }
+    // 分享：沒有系統分享、也不能自動複製時，要跳出連結
+    await page.evaluate(() => { try { delete Navigator.prototype.share; } catch(e) {} Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("no")) }, configurable: true }); });
+    await page.click("#flightList [data-share]");
+    const shareUrl = await page.$eval(".share-url", i => i.value).catch(() => null);
+    if (!shareUrl || !/route=[A-Z]{3}-[A-Z]{3}&src=share/.test(shareUrl)) problems.push(`分享失敗時沒有跳出連結：${shareUrl}`);
+    await page.keyboard.press("Escape");
     await page.close();
   }
 
