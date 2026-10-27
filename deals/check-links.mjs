@@ -389,6 +389,70 @@ try {
     await page.close();
   }
 
+  // 新功能：第一次來的說明、快速入口、比平常便宜、收藏降價、點日期開日曆、回到篩選、分享網站
+  {
+    const ctx3 = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    // 收藏大阪，而且「上次看」是 9,999（這次一定比較便宜）
+    await ctx3.addInitScript(() => {
+      if (sessionStorage.getItem("seeded")) return; sessionStorage.setItem("seeded", "1");
+      localStorage.setItem("howtravle_fav_v1", JSON.stringify(["TPE-OSA"]));
+      localStorage.setItem("howtravle_favprice_v1", JSON.stringify({ "TPE-OSA|all|rt": { p: 9999, t: 1 } }));
+    });
+    const page = await ctx3.newPage();
+    // 大阪 12 組日期，價格有高有低 → 會有「比平常便宜」
+    const deals = { updated_at: new Date().toISOString(), rows: [...MOCK.rows,
+      ...Array.from({ length: 12 }, (_, i) => row("TPE", "OSA", "TPE", "KIX", day(30 + i * 3), day(34 + i * 3), [9000, 8800, 9200, 9100, 8900, 9300, 9050, 8950, 9150, 6200, 6100, 9000][i]))] };
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : deals) }));
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    if (!(await page.isVisible("#intro"))) problems.push("第一次來沒有顯示說明條");
+    await page.click("#introX");
+    if (await page.isVisible("#intro")) problems.push("按 × 後說明條沒關掉");
+    // 收藏降價
+    const favBadge = await page.textContent("#favList").catch(() => "");
+    if (!favBadge.includes("比你上次看便宜")) problems.push("收藏的航線降價了卻沒有顯示「比你上次看便宜」");
+    // 快速入口
+    const quick = await page.textContent("#quick");
+    for (const w of ["幫我選", "我的收藏", "比平常便宜"]) if (!quick.includes(w)) problems.push(`快速入口缺少：${w}`);
+    await page.click('#quick [data-q="deal"]');
+    const f = await page.$eval('#filters button[aria-pressed="true"]', b => b.dataset.v);
+    if (f !== "deal") problems.push("點快速入口的「比平常便宜」沒有切到那個篩選");
+    const cards = await page.$$eval("#flightList .card", cs => cs.map(c => !!c.querySelector(".badge.save")));
+    if (!cards.length || cards.some(x => !x)) problems.push(`「比平常便宜」篩選出現沒有特價標籤的卡片：${JSON.stringify(cards)}`);
+    await checkLinks(page, "比平常便宜");
+    await page.click('#filters button[data-v="cheap"]');
+    // 點日期開價格日曆
+    const legs = await page.$("#flightList .legs.tap");
+    if (!legs) problems.push("卡片的日期區不能點");
+    else {
+      await legs.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("點卡片日期沒有打開價格日曆"));
+      await page.keyboard.press("Escape");
+    }
+    // 回到篩選：滑到清單下面才出現，點了回到篩選
+    if (await page.$eval("#toFilter", b => b.classList.contains("on"))) problems.push("還沒滑到清單就出現「篩選」按鈕");
+    await page.evaluate(() => { const c = document.querySelectorAll("#flightList .card"); c[c.length - 1].scrollIntoView(); });
+    await page.waitForTimeout(400);
+    if (!(await page.$eval("#toFilter", b => b.classList.contains("on")))) problems.push("滑到清單下面沒有出現「篩選」按鈕");
+    else {
+      await page.click("#toFilter"); await page.waitForTimeout(900);
+      const top = await page.$eval("#listTop", e => e.getBoundingClientRect().top);
+      if (top < 0 || top > 200) problems.push(`點「篩選」沒有回到篩選區（位置 ${Math.round(top)}）`);
+    }
+    // 分享網站
+    await page.evaluate(() => { try { delete Navigator.prototype.share; } catch(e) {} Object.defineProperty(navigator, "clipboard", { value: { writeText: () => Promise.reject(new Error("no")) }, configurable: true }); });
+    await page.click("#shareSite");
+    const su = await page.$eval(".share-url", i => i.value).catch(() => "");
+    if (!/src=share_site/.test(su)) problems.push(`分享網站的連結不對：${su}`);
+    await page.keyboard.press("Escape");
+    // 重新打開：說明條不再出現、收藏不再顯示降價（已經記住新價格）
+    await page.reload(); await page.waitForSelector("#flightList .card");
+    if (await page.isVisible("#intro")) problems.push("關掉後重新打開，說明條又出現");
+    if ((await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("同樣價格重新打開，還顯示降價");
+    await ctx3.close();
+  }
+
   // 資料抓不到時：不可以顯示假價格
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.route("**/*workers.dev/**", r => r.fulfill({ status: 500, body: "" }));
