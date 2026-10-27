@@ -256,7 +256,8 @@ const all = [];
 const browser = await chromium.launch();
 try {
   for (const [w, h] of VIEWPORTS) {
-    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: w < 700 ? 2 : 1 });
+    // 量版面時把動畫關掉（量到動畫中途的位置會誤判）；動畫另外在最後測
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: w < 700 ? 2 : 1, reducedMotion: "reduce" });
     page.on("pageerror", e => all.push(`[${w}] 網頁錯誤：${e.message}`));
     await setup(page);
     await page.goto(base);
@@ -374,6 +375,50 @@ try {
     if (blank) all.push(`[${w}px] 點地區後有 ${blank} 張磚塊照片重新變空白（會閃）`);
     await page.waitForTimeout(300);
     (await measure(page)).forEach(i => all.push(`[${w}px 香港] ${i}`));
+    await page.close();
+  }
+  // ---------- 動畫開著：不能有東西一直隱形、動畫結束後版面一樣要對齊 ----------
+  for (const [w, h] of [[390, 844], [1280, 900]]) {
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "no-preference" });
+    page.on("pageerror", e => all.push(`[動畫 ${w}] 網頁錯誤：${e.message}`));
+    await setup(page);
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    await page.waitForTimeout(1200);
+    const hero = await page.evaluate(() => {
+      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pricebig strong");
+      return { act: s && s.classList.contains("act"), op: h2 ? getComputedStyle(h2).opacity : "0", fp: !!document.querySelector("#hero .fp"),
+        price: st ? st.textContent : "", want: st ? "NT$" + Number(st.dataset.v).toLocaleString("en-US") : "" };
+    });
+    if (!hero.act || hero.op !== "1") all.push(`[動畫 ${w}] 大圖文字沒有出現（act=${hero.act} opacity=${hero.op}）`);
+    if (!hero.fp) all.push(`[動畫 ${w}] 大圖沒有航線動畫`);
+    if (hero.price !== hero.want) all.push(`[動畫 ${w}] 大圖價格跳數字後不是正確價格：${hero.price} ≠ ${hero.want}`);
+    // 慢慢捲到底：每個浮上來的元素都要真的出現
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 250) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
+    await page.waitForTimeout(900);
+    const stuck = await page.$$eval(".rv:not(.in)", els => els.filter(e => e.offsetParent && !e.closest(".hidden")).map(e => e.className + "｜" + e.textContent.trim().slice(0, 12)));
+    if (stuck.length) all.push(`[動畫 ${w}] 捲過了還沒出現：${stuck.slice(0, 5).join("、")}（共 ${stuck.length}）`);
+    await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(600);
+    (await measure(page)).filter(x => !/輪播|照片沒填滿/.test(x)).forEach(i => all.push(`[動畫 ${w}] ${i}`));
+    // 收藏愛心彈跳
+    await page.click("#flightList .card [data-fav]");
+    if (!(await page.$("#flightList .fav-btn.pop"))) all.push(`[動畫 ${w}] 收藏沒有愛心動畫`);
+    // 幫我選：彩帶
+    await page.click("#luckyBtn");
+    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    if (!(await page.$("#sheet .confetti i"))) all.push(`[動畫 ${w}] 幫我選沒有彩帶`);
+    await page.keyboard.press("Escape");
+    // 酒店頁：大圖文字要看得到
+    await page.click('.tabs button[data-tab="hotels"]');
+    await page.waitForTimeout(700);
+    const hop = await page.$eval("#hotelHero h2", e => getComputedStyle(e).opacity);
+    if (hop !== "1") all.push(`[動畫 ${w}] 酒店大圖文字看不到（opacity=${hop}）`);
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 250) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
+    await page.waitForTimeout(900);
+    const stuckH = await page.$$eval("#hotels .rv:not(.in)", els => els.filter(e => e.offsetParent).length);
+    if (stuckH) all.push(`[動畫 ${w}] 酒店頁有 ${stuckH} 個捲過了還沒出現`);
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `motion-${w}-hotels.png`) });
+    console.log(`[動畫 ${w}] 檢查完成`);
     await page.close();
   }
 } finally {

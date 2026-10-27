@@ -116,6 +116,10 @@ async function collect(page) {
 let CURRENT_SUB1 = "howtravle";
 
 const browser = await chromium.launch();
+// 動畫關掉再測（點擊位置、數量才穩定）；動畫另外在 check-layout.mjs 測
+{ const np = browser.newPage.bind(browser), nc = browser.newContext.bind(browser);
+  browser.newPage = (o = {}) => np({ reducedMotion: "reduce", ...o });
+  browser.newContext = (o = {}) => nc({ reducedMotion: "reduce", ...o }); }
 try {
   for (const src of [null, "ig_day9"]) {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
