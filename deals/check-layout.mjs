@@ -35,6 +35,11 @@ const MAIN = { updated_at: new Date().toISOString(), rows: [
   row("TPE","VDO","TPE","VDO",day(22),day(27),9900,1,0,"QQ"),        // 不在名單的航空公司
   row("TPE","FUK","TPE","FUK",day(15),null,2399,0,0,"IT"),
   row("TPE","CJU","TPE","CJU","2027-02-04","2027-02-09",8900,0,0,"KE"),
+  // 說走就走：不管今天星期幾，都放幾張近 3 週週五出發、週日回來的票
+  ...[0, 1, 2].flatMap(w => [["FUK", 3999], ["OKA", 4299], ["HKG", 3199]].map(([d, p], i) => {
+    const fri = day(((5 - today.getUTCDay() + 7) % 7 || 7) + 7 * w); const sun = new Date(fri); sun.setUTCDate(sun.getUTCDate() + 2);
+    return row("TPE", d, "TPE", d, fri, sun.toISOString().slice(0, 10), p + w * 50 + i, 0, 0, "IT");
+  })),
 ] };
 const FSC = { updated_at: new Date().toISOString(), part: "fsc", rows: [
   row("TPE","HKG","TPE","HKG",day(18),day(21),5111,0,0,"CX"),
@@ -123,11 +128,11 @@ async function measure(page) {
         out.push(`照片沒填滿框：${img.alt}（照片 ${img.offsetWidth}x${img.offsetHeight}，框 ${pe.clientWidth}x${pe.clientHeight}）`);
       if (getComputedStyle(img).objectFit !== "cover") out.push(`照片不是 cover：${img.alt}`);
     }
-    // 2. 卡片照片框比例一致（16:10）
+    // 2. 卡片照片框比例一致（機票卡 16:7、熱門航線／城市小卡 16:10）
     for (const ph of document.querySelectorAll(".card .ph")) {
       if (!vis(ph)) continue;
-      const r = R(ph);
-      if (Math.abs(r.width / r.height - 1.6) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}`);
+      const r = R(ph), want = ph.closest(".card.route") ? 1.6 : 16 / 7;
+      if (Math.abs(r.width / r.height - want) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}（應為 ${want.toFixed(2)}）`);
     }
     // 3. 航空公司標誌：框大小一致、圖在框內、跟文字垂直置中
     for (const lg of document.querySelectorAll(".card .logo")) {
@@ -166,25 +171,32 @@ async function measure(page) {
       const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
       if (cards.length && lefts.size > cols) out.push(`卡片左邊界有 ${lefts.size} 種位置，但只有 ${cols} 欄（欄位沒對齊）`);
     }
-    // 5. 去程／回程：標籤、日期、直飛三欄在同一張卡片內要對齊
+    // 5. 去程／回程兩格並排：同高、同寬、上緣對齊，格子裡的標籤／日期／航線上緣也對齊
     for (const legs of document.querySelectorAll(".legs")) {
       if (!vis(legs)) continue;
       const ls = [...legs.querySelectorAll(".lg")];
+      const lr = R(legs);
+      for (const l of ls) { const r = R(l); if (r.left < lr.left - 1 || r.right > lr.right + 1) out.push("去程／回程格子超出"); }
       if (ls.length < 2) continue;
-      const col = (sel, side) => ls.map(l => R(l.querySelector(sel))[side]);
-      for (const [sel, side, name] of [[".lbl", "left", "去程／回程標籤"], [".lbl", "right", "標籤右緣"], [".st", "right", "直飛／轉機"]]) {
-        const v = col(sel, side);
+      for (const [get, name] of [[l => R(l).top, "去程／回程格子上緣"], [l => R(l).height, "去程／回程格子高度"], [l => R(l).width, "去程／回程格子寬度"],
+        [l => R(l.querySelector(".lbl")).top, "去程／回程標籤"], [l => R(l.querySelector(".dt")).top, "去程／回程日期"], [l => R(l.querySelector(".rt")).top, "去程／回程航線"]]) {
+        const v = ls.map(get);
         if (Math.max(...v) - Math.min(...v) > 1) out.push(`${name}沒對齊`);
       }
-      const dt = ls.map(l => R(l.querySelector(".dt")).left);
-      if (Math.max(...dt) - Math.min(...dt) > 1) out.push("去程／回程日期沒對齊");
+    }
+    // 5b. 價格和按鈕在同一排：垂直置中、按鈕不超出卡片
+    for (const b of document.querySelectorAll(".buy")) {
+      if (!vis(b)) continue;
+      const v = R(b.querySelector(".v")), c = R(b.querySelector(".cta")), card = R(b.closest(".card"));
+      if (v.right > c.left + 1) out.push(`價格壓到按鈕：${b.querySelector(".v").textContent.trim()}`);
+      if (c.right > card.right - 8) out.push("按鈕太貼卡片右邊或超出");
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".pr .v", ".lg .dt", ".tile .t b", ".tile .t span", ".month .p", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".rank .nm", ".rank .pz"]) {
+    for (const sel of [".cap .city", ".air .an", ".pr .v", ".buy .v", ".buy .cta", ".lg .dt", ".lg .rt", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".mini .why", ".rank .nm", ".rank .pz", ".hc .ref b", ".hc .fl", ".chip", ".qk", ".share-site button", ".fab"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.lg");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
@@ -207,7 +219,7 @@ async function measure(page) {
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
-    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"]]) {
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"], ["#pickList .mini", "今天最划算小卡"]]) {
       const els = [...document.querySelectorAll(sel)].filter(vis);
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
@@ -218,11 +230,19 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
+    // 9b. 說明條、分享網站：文字和按鈕不超出、按鈕垂直置中
+    for (const [box, btn] of [["#intro .wrap", "#introX"], [".share-site", "#shareSite"]]) {
+      const b = document.querySelector(box), x = document.querySelector(btn);
+      if (!b || !vis(b)) continue;
+      const r = R(b), xr = R(x);
+      if (xr.right > r.right + 1 || xr.left < r.left - 1) out.push(`${btn} 超出`);
+      if (Math.abs((xr.top + xr.bottom) / 2 - (r.top + r.bottom) / 2) > 3) out.push(`${btn} 沒有垂直置中`);
+    }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
     // 11. 篩選列每顆按鈕高度一致、垂直置中
-    for (const sc of [...document.querySelectorAll(".scroller")].filter(e => getComputedStyle(e).display === "flex")) {
+    for (const sc of [...document.querySelectorAll(".scroller, .quick")].filter(e => getComputedStyle(e).display === "flex")) {
       const bs = [...sc.children].filter(vis);
       const tops = bs.map(b => Math.round(R(b).top)), hs = bs.map(b => Math.round(R(b).height));
       if (bs.length && (Math.max(...tops) - Math.min(...tops) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`#${sc.id} 按鈕沒對齊`);
@@ -236,11 +256,15 @@ const all = [];
 const browser = await chromium.launch();
 try {
   for (const [w, h] of VIEWPORTS) {
-    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: w < 700 ? 2 : 1 });
+    // 量版面時把動畫關掉（量到動畫中途的位置會誤判）；動畫另外在最後測
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: w < 700 ? 2 : 1, reducedMotion: "reduce" });
     page.on("pageerror", e => all.push(`[${w}] 網頁錯誤：${e.message}`));
     await setup(page);
     await page.goto(base);
     await page.waitForSelector("#flightList .card");
+    // 減少動態：連 ::after（品牌雷達點）都不能動
+    const pingAnim = await page.$eval(".brand .ping", e => getComputedStyle(e, "::after").animationName);
+    if (pingAnim !== "none") all.push(`[${w}] 減少動態時品牌雷達點還在動（${pingAnim}）`);
     // 先收藏兩條航線，讓「我收藏的航線」也一起量
     for (const b of (await page.$$("#flightList .card [data-fav]")).slice(0, 2)) await b.click();
     await page.waitForTimeout(200);
@@ -303,6 +327,16 @@ try {
           const rows = {}; for (const c of cells) (rows[Math.round(R(c).top)] ||= []).push(Math.round(R(c).height));
           for (const hs of Object.values(rows)) if (Math.max(...hs) - Math.min(...hs) > 1) out.push("日曆同一列格子高度不一");
         }
+        // 日曆每一天要在正確的星期欄（1 號對到那天的星期幾）
+        for (const cal of document.querySelectorAll(".cal")) {
+          const [y, m] = cal.querySelector("h4").textContent.match(/\d+/g).map(Number);
+          const wds = [...cal.querySelectorAll(".wd")].map(w => Math.round(R(w).left));
+          const days = [...cal.querySelectorAll(".day:not(.blank)")];
+          for (const [i, d] of days.entries()) {
+            const want = new Date(Date.UTC(y, m - 1, i + 1)).getUTCDay();
+            if (Math.abs(Math.round(R(d).left) - wds[want]) > 1) { out.push(`日曆 ${m}/${i + 1} 不在星期${"日一二三四五六"[want]}那一欄`); break; }
+          }
+        }
         for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city")) {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
           const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
@@ -336,9 +370,70 @@ try {
 
     // 篩選到國家後再量一次（版面最容易出問題的情境：只剩 1～2 張卡）
     await page.click('.tabs button[data-tab="flights"]');
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForFunction(() => [...document.querySelectorAll("#tiles img.bgimg")].every(i => i.classList.contains("ok")), null, { timeout: 5000 }).catch(() => {});
     await page.click('#tiles .tile[data-v="HK"]');
+    // 點地區後重畫的磚塊：載入過的照片要馬上顯示（不能先變空白再淡入）
+    const blank = await page.$$eval("#tiles img.bgimg", els => els.filter(i => !i.classList.contains("ok")).length);
+    if (blank) all.push(`[${w}px] 點地區後有 ${blank} 張磚塊照片重新變空白（會閃）`);
     await page.waitForTimeout(300);
     (await measure(page)).forEach(i => all.push(`[${w}px 香港] ${i}`));
+    await page.close();
+  }
+  // ---------- 動畫開著：不能有東西一直隱形、動畫結束後版面一樣要對齊 ----------
+  for (const [w, h] of [[390, 844], [1280, 900]]) {
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "no-preference" });
+    page.on("pageerror", e => all.push(`[動畫 ${w}] 網頁錯誤：${e.message}`));
+    await setup(page);
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    await page.waitForTimeout(1200);
+    const hero = await page.evaluate(() => {
+      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pricebig strong");
+      return { act: s && s.classList.contains("act"), op: h2 ? getComputedStyle(h2).opacity : "0", fp: !!document.querySelector("#hero .fp"),
+        price: st ? st.textContent : "", want: st ? "NT$" + Number(st.dataset.v).toLocaleString("en-US") : "" };
+    });
+    if (!hero.act || hero.op !== "1") all.push(`[動畫 ${w}] 大圖文字沒有出現（act=${hero.act} opacity=${hero.op}）`);
+    if (!hero.fp) all.push(`[動畫 ${w}] 大圖沒有航線動畫`);
+    // 航線圖的比例要跟畫面一樣（飛機不會被拉長）
+    const asp = await page.$eval("#hero .fp", s => { const vb = s.viewBox.baseVal, r = s.getBoundingClientRect(); return [vb.width / vb.height, r.width / r.height]; });
+    if (Math.abs(asp[0] / asp[1] - 1) > 0.06) all.push(`[動畫 ${w}] 大圖航線被拉長變形（${asp.map(x => x.toFixed(2)).join(" vs ")}）`);
+    // 新資料進來但最便宜的 5 個城市沒變：大圖不能重畫（會閃、價格會重新跳）
+    const kept = await page.evaluate(() => { const sl = document.querySelector("#hero .slide"); sl.__m = 1;
+      mergeAndRender([{ origin: "TPE", destination: "SGN", origin_airport: "TPE", destination_airport: "SGN", price: 99999, airline: "VJ",
+        departure_at: new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10) + "T08:00:00+08:00", transfers: 0 }]);
+      return document.querySelector("#hero .slide").__m === 1; });
+    if (!kept) all.push(`[動畫 ${w}] 新資料進來時大圖整個重畫（會閃一下、價格重跳）`);
+    if (hero.price !== hero.want) all.push(`[動畫 ${w}] 大圖價格跳數字後不是正確價格：${hero.price} ≠ ${hero.want}`);
+    // 慢慢捲到底：每個浮上來的元素都要真的出現
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 250) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
+    await page.waitForTimeout(900);
+    const stuck = await page.$$eval(".rv:not(.in)", els => els.filter(e => e.offsetParent && !e.closest(".hidden")).map(e => e.className + "｜" + e.textContent.trim().slice(0, 12)));
+    if (stuck.length) all.push(`[動畫 ${w}] 捲過了還沒出現：${stuck.slice(0, 5).join("、")}（共 ${stuck.length}）`);
+    await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(600);
+    (await measure(page)).filter(x => !/輪播|照片沒填滿/.test(x)).forEach(i => all.push(`[動畫 ${w}] ${i}`));
+    // 收藏愛心彈跳
+    await page.click("#flightList .card [data-fav]");
+    if (!(await page.$("#flightList .fav-btn.pop"))) all.push(`[動畫 ${w}] 收藏沒有愛心動畫`);
+    // 幫我選：彩帶
+    await page.click("#luckyBtn");
+    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    if (!(await page.$("#sheet .confetti i"))) all.push(`[動畫 ${w}] 幫我選沒有彩帶`);
+    await page.waitForTimeout(1800);
+    const sx = await page.$eval(".sheet-panel", p => p.scrollWidth - p.clientWidth);
+    if (sx > 1) all.push(`[動畫 ${w}] 彩帶讓面板可以左右滑（多 ${sx}px）`);
+    await page.keyboard.press("Escape");
+    // 酒店頁：大圖文字要看得到
+    await page.click('.tabs button[data-tab="hotels"]');
+    await page.waitForTimeout(700);
+    const hop = await page.$eval("#hotelHero h2", e => getComputedStyle(e).opacity);
+    if (hop !== "1") all.push(`[動畫 ${w}] 酒店大圖文字看不到（opacity=${hop}）`);
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 250) { scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
+    await page.waitForTimeout(900);
+    const stuckH = await page.$$eval("#hotels .rv:not(.in)", els => els.filter(e => e.offsetParent).length);
+    if (stuckH) all.push(`[動畫 ${w}] 酒店頁有 ${stuckH} 個捲過了還沒出現`);
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `motion-${w}-hotels.png`) });
+    console.log(`[動畫 ${w}] 檢查完成`);
     await page.close();
   }
 } finally {
