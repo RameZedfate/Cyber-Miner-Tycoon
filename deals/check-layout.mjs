@@ -100,9 +100,9 @@ async function setup(page) {
     askedSizes.add(new URL(r.request().url()).searchParams.get("width"));
     r.fulfill({ contentType: "image/svg+xml", body: svg(2400, 900, "panorama", "#7c3aed") }); });
   await page.route("https://img.mock/**", r => {
-    // 東京鐵塔的照片第一次故意失敗（像維基百科太忙），網頁要自己再試一次
+    // 富士山（日本磚塊）的照片第一次故意失敗（像維基百科太忙），網頁要自己再試一次
     const u0 = r.request().url();
-    if (u0.includes("Tokyo%20Tower") && !u0.includes("r=1") && !failedOnce.has(u0)) { failedOnce.add(u0); return r.fulfill({ status: 429, body: "" }); }
+    if (u0.includes("Mount%20Fuji") && !u0.includes("r=1") && !failedOnce.has(u0)) { failedOnce.add(u0); return r.fulfill({ status: 429, body: "" }); }
     const m = r.request().url().match(/\/(\d+)x(\d+)\.svg/);
     r.fulfill({ contentType: "image/svg+xml", body: svg(+m[1], +m[2], `${m[1]}x${m[2]}`, "#3b6ea5") });
   });
@@ -180,19 +180,28 @@ async function measure(page) {
       const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
       if (cards.length && lefts.size > cols) out.push(`卡片左邊界有 ${lefts.size} 種位置，但只有 ${cols} 欄（欄位沒對齊）`);
     }
-    // 5. 去程／回程兩格並排：同高、同寬、上緣對齊，格子裡的標籤／日期／航線上緣也對齊
-    for (const legs of document.querySelectorAll(".legs")) {
-      if (!vis(legs)) continue;
-      const ls = [...legs.querySelectorAll(".lg")];
-      const lr = R(legs);
-      for (const l of ls) { const r = R(l); if (r.left < lr.left - 1 || r.right > lr.right + 1) out.push("去程／回程格子超出"); }
-      if (ls.length < 2) continue;
-      for (const [get, name] of [[l => R(l).top, "去程／回程格子上緣"], [l => R(l).height, "去程／回程格子高度"], [l => R(l).width, "去程／回程格子寬度"],
-        [l => R(l.querySelector(".lbl")).top, "去程／回程標籤"], [l => R(l.querySelector(".dt")).top, "去程／回程日期"], [l => R(l.querySelector(".rt")).top, "去程／回程航線"]]) {
-        const v = ls.map(get);
-        if (Math.max(...v) - Math.min(...v) > 1) out.push(`${name}沒對齊`);
+    // 5. 精簡卡片：日期列、航空公司列在同一排卡片裡上緣對齊；收藏愛心在照片右上角、不壓到標籤
+    for (const grid of document.querySelectorAll(".grid")) {
+      const cards = [...grid.children].filter(c => c.classList.contains("card") && vis(c) && c.querySelector(".when"));
+      const rows = {};
+      for (const c of cards) (rows[Math.round(R(c).top)] ||= []).push(c);
+      for (const cs of Object.values(rows)) {
+        if (cs.length < 2) continue;
+        for (const [sel, name] of [[".when", "日期列"], [".air", "航空公司列"], [".buy", "價格列"]]) {
+          const v = cs.map(c => R(c.querySelector(sel)).top);
+          if (Math.max(...v) - Math.min(...v) > 1) out.push(`同一排卡片的${name}沒對齊`);
+        }
       }
     }
+    for (const fb of document.querySelectorAll(".card .fav-btn")) {
+      if (!vis(fb)) continue;
+      const card = fb.closest(".card"), ph = R(card.querySelector(".ph")), r = R(fb), bd = card.querySelector(".badges");
+      if (r.top < ph.top || r.bottom > ph.bottom || r.right > ph.right || r.left < ph.left + ph.width / 2) out.push("收藏愛心不在照片右上角");
+      if (bd && bd.children.length) { const b = R(bd.lastElementChild); if (b.right > r.left - 2 && b.bottom > r.top && b.top < r.bottom) out.push("照片上的標籤壓到收藏愛心"); }
+    }
+    // 其他熱門航線（文字列）：高度一樣、文字不超出
+    const rrows = [...document.querySelectorAll(".rrow")].filter(vis);
+    if (rrows.length) { const hs = rrows.map(e => Math.round(R(e).height)); if (Math.max(...hs) - Math.min(...hs) > 1) out.push("熱門航線列高度不一"); }
     // 5b. 價格和按鈕在同一排：垂直置中、按鈕不超出卡片
     for (const b of document.querySelectorAll(".buy")) {
       if (!vis(b)) continue;
@@ -201,11 +210,11 @@ async function measure(page) {
       if (c.right > card.right - 8) out.push("按鈕太貼卡片右邊或超出");
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".pr .v", ".buy .v", ".buy .cta", ".lg .dt", ".lg .rt", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".mini .why", ".rank .nm", ".rank .pz", ".hc .ref b", ".hc .fl", ".chip", ".qk", ".share-site button", ".fab"]) {
+    for (const sel of [".cap .city", ".air .an", ".buy .v", ".buy .cta", ".when b", ".when span", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.lg");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
@@ -228,7 +237,7 @@ async function measure(page) {
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
-    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#weekendList .mini", "說走就走小卡"], ["#favList .mini", "收藏小卡"], ["#pickList .mini", "今天最划算小卡"]]) {
+    for (const [sel, name] of [["#tiles .tile", "地區磚塊"], ["#months .month", "月份按鈕"], ["#favList .mini", "收藏小卡"]]) {
       const els = [...document.querySelectorAll(sel)].filter(vis);
       const ws = els.map(e => Math.round(R(e).width)), hs = els.map(e => Math.round(R(e).height));
       if (els.length && (Math.max(...ws) - Math.min(...ws) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`${name}大小不一：${ws.join(",")} / ${hs.join(",")}`);
@@ -239,14 +248,6 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
-    // 9b. 說明條、分享網站：文字和按鈕不超出、按鈕垂直置中
-    for (const [box, btn] of [["#intro .wrap", "#introX"], [".share-site", "#shareSite"]]) {
-      const b = document.querySelector(box), x = document.querySelector(btn);
-      if (!b || !vis(b)) continue;
-      const r = R(b), xr = R(x);
-      if (xr.right > r.right + 1 || xr.left < r.left - 1) out.push(`${btn} 超出`);
-      if (Math.abs((xr.top + xr.bottom) / 2 - (r.top + r.bottom) / 2) > 3) out.push(`${btn} 沒有垂直置中`);
-    }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
@@ -284,12 +285,11 @@ try {
       await page.waitForTimeout(700);
       const issues = await measure(page);
       issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
-      if (tab === "flights") { const n = await page.$$eval("#weekendList .mini", e => e.length); console.log(`[${w}px] 說走就走：${n} 張`); if (!n) all.push(`[${w}px] 說走就走沒有顯示`); }
       if (tab === "flights") {
         await page.waitForTimeout(1800); // 等第一次失敗後的重試
         // 只看畫面上看得到的（藏起來的分頁裡的照片要等打開才會載入）
-        const tt = await page.$$eval('img.bgimg[alt="東京鐵塔"]', els => els.filter(e => !e.closest(".hidden")).map(e => e.classList.contains("ok")));
-        if (!tt.length || tt.some(x => !x)) all.push(`[${w}px] 東京鐵塔照片第一次失敗後沒有重試成功（${JSON.stringify(tt)}）`);
+        const tt = await page.$$eval('#tiles img.bgimg[alt="富士山"]', els => els.map(e => e.classList.contains("ok")));
+        if (!tt.length || tt.some(x => !x)) all.push(`[${w}px] 富士山照片第一次失敗後沒有重試成功（${JSON.stringify(tt)}）`);
       }
       const ok = await page.$$eval(".bgimg.ok", els => els.filter(e => !e.closest("section.hidden")).length);
       const fb = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).length);
@@ -373,15 +373,6 @@ try {
     (await measure(page)).forEach(i => all.push(`[${w}px 幫我選] ${i}`));
     if (SHOTS && w <= 390) await page.screenshot({ path: path.join(SHOTS, `lucky-${w}.png`) });
     await page.keyboard.press("Escape");
-    // 連假倒數：數字框與文字垂直置中
-    const cd = await page.evaluate(() => {
-      const b = document.querySelector("#countdown"); if (!b || b.classList.contains("hidden")) return "沒有顯示連假倒數";
-      const R = (e) => e.getBoundingClientRect(), a = R(b.querySelector(".num")), t = R(b.querySelector(".txt")), box = R(b);
-      if (Math.abs((a.top + a.bottom) / 2 - (box.top + box.bottom) / 2) > 2) return "倒數數字框沒有垂直置中";
-      if (t.right > box.right) return "倒數文字超出";
-      return "";
-    });
-    if (cd) all.push(`[${w}px] ${cd}`);
 
     // 篩選到國家後再量一次（版面最容易出問題的情境：只剩 1～2 張卡）
     await page.click('.tabs button[data-tab="flights"]');
