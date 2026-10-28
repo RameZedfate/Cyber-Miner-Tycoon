@@ -12,7 +12,7 @@
 <meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
 <meta property="og:title" content="HOWTRAVLE 便宜票雷達｜台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:description" content="每天自動整理台灣出發的低價機票，價格日曆、連假倒數、幫你抽目的地，一鍵到 Trip.com 訂。" />
-<meta property="og:image" content="https://commons.wikimedia.org/wiki/Special:FilePath/Hong_Kong_Night_Skyline.jpg?width=1200" />
+<meta property="og:image" content="https://commons.wikimedia.org/wiki/Special:FilePath/Hong_Kong_Night_Skyline.jpg?width=1280" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -990,7 +990,11 @@ async function getJSON(url){
 /* ====================================================================
    ④ 圖片：城市照片（維基百科）＋航空公司標誌
    ==================================================================== */
-const IMG_KEY = "howtravle_img_v1", IMG_TTL = 7 * 864e5;
+// v2：改用維基百科的標準照片尺寸（舊的記錄裡有非標準尺寸、可能抓不到的網址，換新的 key 等於清掉）
+const IMG_KEY = "howtravle_img_v2", IMG_TTL = 7 * 864e5;
+try { localStorage.removeItem("howtravle_img_v1"); } catch(e) {}
+// 維基百科（Wikimedia）只接受外部網站用標準寬度抓縮圖（500、960、1280…），其他寬度常常被拒絕
+function stdSize(s){ s = Number(s) || 960; return s <= 640 ? 500 : s <= 960 ? 960 : s <= 1280 ? 1280 : 1920; }
 let imgCache = {};
 try { imgCache = JSON.parse(localStorage.getItem(IMG_KEY) || "{}") || {}; } catch(e) { imgCache = {}; }
 const imgPending = new Set();
@@ -998,18 +1002,19 @@ let imgTimer = null;
 
 // 照片區塊：漸層底＋地標文字（抓不到照片時看到的）＋照片（抓到才淡入）
 function commonsUrl(file, size){
-  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file.replace(/^File:/, "").replace(/ /g, "_")) + "?width=" + (size || 800);
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file.replace(/^File:/, "").replace(/ /g, "_")) + "?width=" + stdSize(size);
 }
 const loadedImg = new Set(); // 這次瀏覽已經載入過的照片網址
 function photoHTML(wiki, country, label, size, eager){
+  size = stdSize(size);
   const lazy = eager ? "" : ' loading="lazy"';
   // 已經載入過：直接放網址並顯示（重畫時不會再淡入一次）
-  const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + (size || 800)] || {}).u;
+  const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + size] || {}).u;
   if (known && loadedImg.has(known))
     return `<div class="fb">${esc(label || "")}</div><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><div class="shade"></div>`;
   const img = !wiki ? "" : /^File:/.test(wiki)
     ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${lazy} decoding="async" />`
-    : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size || 800}"${lazy} decoding="async" />`;
+    : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size}"${lazy} decoding="async" />`;
   return `<div class="fb">${esc(label || "")}</div>${img}<div class="shade"></div>`;
 }
 function queueImages(){ revealify(); clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
@@ -1017,21 +1022,30 @@ function applyImg(im, src){
   im.dataset.done = "1";
   if (!src) return;
   im.addEventListener("load", () => { im.classList.add("ok"); loadedImg.add(src); }, { once: true });
-  im.addEventListener("error", () => im.remove(), { once: true });
+  // 載入失敗：1.5 秒後再試一次（維基百科偶爾太忙會拒絕），還是不行就顯示漸層底
+  im.addEventListener("error", () => {
+    if (im.dataset.retry){ im.remove(); return; }
+    im.dataset.retry = "1";
+    setTimeout(() => { if (!im.isConnected) return;
+      im.addEventListener("error", () => im.remove(), { once: true });
+      im.loading = "eager"; // 重試時馬上抓，不用等捲回來
+      im.src = src + (src.includes("?") ? "&" : "?") + "r=1"; }, 1500);
+  }, { once: true });
   im.src = src;
 }
 async function loadImages(){
   for (const im of document.querySelectorAll("img[data-file]:not([data-done])")) applyImg(im, im.dataset.file);
   const want = {};
   for (const im of document.querySelectorAll("img[data-wiki]:not([data-done])")){
-    const size = im.dataset.size || "800", key = im.dataset.wiki + "|" + size, c = imgCache[key];
-    if (c && Date.now() - c.t < IMG_TTL){ applyImg(im, c.u); continue; }
+    const size = im.dataset.size || "960", key = im.dataset.wiki + "|" + size, c = imgCache[key];
+    // 有照片的記 7 天；沒抓到照片的只記 1 天（隔天再試）
+    if (c && Date.now() - c.t < (c.u ? IMG_TTL : 864e5)){ applyImg(im, c.u); continue; }
     if (!imgPending.has(key)) (want[size] ||= new Set()).add(im.dataset.wiki);
   }
   for (const [size, set] of Object.entries(want)){
     const titles = [...set];
-    for (let i = 0; i < titles.length; i += 40){
-      const chunk = titles.slice(i, i + 40);
+    for (let i = 0; i < titles.length; i += 20){
+      const chunk = titles.slice(i, i + 20);
       chunk.forEach(t => imgPending.add(t + "|" + size));
       try {
         const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&redirects=1"
@@ -1049,7 +1063,7 @@ async function loadImages(){
     }
   }
   for (const im of document.querySelectorAll("img[data-wiki]:not([data-done])")){
-    const c = imgCache[im.dataset.wiki + "|" + (im.dataset.size || "800")];
+    const c = imgCache[im.dataset.wiki + "|" + (im.dataset.size || "960")];
     if (c) applyImg(im, c.u);
   }
 }
