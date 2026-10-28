@@ -73,6 +73,10 @@ const server = http.createServer((req, res) => {
 }).listen(0);
 const base = `http://127.0.0.1:${server.address().port}/`;
 
+// 網頁向維基百科要的照片寬度（只能是標準寬度，否則正式網站常常被拒絕）
+const askedSizes = new Set();
+const STD_SIZES = new Set(["500", "960", "1280", "1920"]);
+let failedOnce = new Set();
 async function setup(page) {
   await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
     body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MAIN) }));
@@ -84,6 +88,7 @@ async function setup(page) {
     const u = new URL(r.request().url());
     const titles = u.searchParams.get("titles").split("|");
     const size = u.searchParams.get("pithumbsize");
+    askedSizes.add(size);
     const pages = titles.map((t, i) => {
       if (t === NO_PHOTO) return { title: t };
       const [w, h] = SHAPES[(t.length + i) % SHAPES.length];
@@ -91,9 +96,13 @@ async function setup(page) {
     });
     r.fulfill({ contentType: "application/json", body: JSON.stringify({ query: { pages } }) });
   });
-  await page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**", r =>
-    r.fulfill({ contentType: "image/svg+xml", body: svg(2400, 900, "panorama", "#7c3aed") }));
+  await page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**", r => {
+    askedSizes.add(new URL(r.request().url()).searchParams.get("width"));
+    r.fulfill({ contentType: "image/svg+xml", body: svg(2400, 900, "panorama", "#7c3aed") }); });
   await page.route("https://img.mock/**", r => {
+    // 東京鐵塔的照片第一次故意失敗（像維基百科太忙），網頁要自己再試一次
+    const u0 = r.request().url();
+    if (u0.includes("Tokyo%20Tower") && !u0.includes("r=1") && !failedOnce.has(u0)) { failedOnce.add(u0); return r.fulfill({ status: 429, body: "" }); }
     const m = r.request().url().match(/\/(\d+)x(\d+)\.svg/);
     r.fulfill({ contentType: "image/svg+xml", body: svg(+m[1], +m[2], `${m[1]}x${m[2]}`, "#3b6ea5") });
   });
@@ -276,6 +285,12 @@ try {
       const issues = await measure(page);
       issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
       if (tab === "flights") { const n = await page.$$eval("#weekendList .mini", e => e.length); console.log(`[${w}px] 說走就走：${n} 張`); if (!n) all.push(`[${w}px] 說走就走沒有顯示`); }
+      if (tab === "flights") {
+        await page.waitForTimeout(1800); // 等第一次失敗後的重試
+        // 只看畫面上看得到的（藏起來的分頁裡的照片要等打開才會載入）
+        const tt = await page.$$eval('img.bgimg[alt="東京鐵塔"]', els => els.filter(e => !e.closest(".hidden")).map(e => e.classList.contains("ok")));
+        if (!tt.length || tt.some(x => !x)) all.push(`[${w}px] 東京鐵塔照片第一次失敗後沒有重試成功（${JSON.stringify(tt)}）`);
+      }
       const ok = await page.$$eval(".bgimg.ok", els => els.filter(e => !e.closest("section.hidden")).length);
       const fb = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).length);
       const fbNames = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).map(e => e.textContent));
@@ -440,5 +455,8 @@ try {
   await browser.close();
   server.close();
 }
+const bad = [...askedSizes].filter(x => !STD_SIZES.has(String(x)));
+if (bad.length) all.push(`向維基百科要了非標準的照片寬度：${bad.join(",")}（只能用 500／960／1280／1920）`);
+console.log(`照片寬度：${[...askedSizes].sort().join("、")}`);
 if (all.length) { console.log("❌ 版面問題：\n" + [...new Set(all)].join("\n")); process.exit(1); }
 console.log("✅ 版面檢查全部通過");
