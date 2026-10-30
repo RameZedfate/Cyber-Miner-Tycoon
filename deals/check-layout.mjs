@@ -167,10 +167,10 @@ async function measure(page) {
       for (const c of cards) (rows[Math.round(R(c).top)] ||= []).push(c);
       for (const [top, cs] of Object.entries(rows)) {
         if (cs.length < 2) continue;
-        const hs = cs.map(c => R(c).height), bs = cs.map(c => { const p = c.querySelector(".price, .ref"); return p ? R(p).top : R(c.querySelector(".cb")).top; });
+        const hs = cs.map(c => R(c).height), bs = cs.map(c => R(c.querySelector(".cb")).top);
         const phs = cs.map(c => R(c.querySelector(".ph")).bottom);
         if (Math.max(...hs) - Math.min(...hs) > 1) out.push(`同一列卡片高度不一（top=${top}）：${hs.map(h => h.toFixed(0)).join("/")}`);
-        if (Math.max(...bs) - Math.min(...bs) > 1) out.push(`同一列價格沒對齊（top=${top}）`);
+        if (Math.max(...bs) - Math.min(...bs) > 1) out.push(`同一列卡片文字區沒對齊（top=${top}）`);
         if (Math.max(...phs) - Math.min(...phs) > 1) out.push(`同一列照片底部沒對齊（top=${top}）`);
       }
       // 卡片左右邊界要貼齊格線
@@ -199,6 +199,17 @@ async function measure(page) {
       if (r.top < ph.top || r.bottom > ph.bottom || r.right > ph.right || r.left < ph.left + ph.width / 2) out.push("收藏愛心不在照片右上角");
       if (bd && bd.children.length) { const b = R(bd.lastElementChild); if (b.right > r.left - 2 && b.bottom > r.top && b.top < r.bottom) out.push("照片上的標籤壓到收藏愛心"); }
     }
+    // 點擊位置：點照片上的標籤要去訂票（整張卡片的連結）；點愛心、「N 組日期」要點到它們自己
+    const sheetOpen = !document.querySelector("#sheet").classList.contains("hidden");
+    const barBottom = document.querySelector(".tabbar").getBoundingClientRect().bottom;
+    const hitIs = (el, sel) => { const r = R(el); const x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+      if (y < barBottom + 2 || y > innerHeight - 2) return true;               // 被上方分頁列擋住或在畫面外：不算
+      if (sheetOpen !== !!el.closest("#sheet")) return true;                    // 面板打開時只看面板裡的
+      const top = document.elementFromPoint(x, y); return !!(top && top.closest(sel)); };
+    for (const b of document.querySelectorAll(".card .badge")) if (vis(b) && !hitIs(b, ".card-link")) out.push("點照片上的標籤不會去訂票");
+    for (const b of document.querySelectorAll(".card .fav-btn")) if (vis(b) && !hitIs(b, ".fav-btn")) out.push("愛心被蓋住點不到");
+    for (const b of document.querySelectorAll(".card .more-d")) if (vis(b) && !hitIs(b, ".more-d")) out.push("「N 組日期」被蓋住點不到");
+    for (const b of document.querySelectorAll(".card .cty")) if (vis(b) && !hitIs(b, ".card-link")) out.push("點城市名稱不會去訂票");
     // 其他熱門航線（文字列）：高度一樣、文字不超出
     const rrows = [...document.querySelectorAll(".rrow")].filter(vis);
     if (rrows.length) { const hs = rrows.map(e => Math.round(R(e).height)); if (Math.max(...hs) - Math.min(...hs) > 1) out.push("熱門航線列高度不一"); }
@@ -209,7 +220,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".price", ".when b", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
@@ -253,7 +264,7 @@ async function measure(page) {
       const first = c.querySelector(".scroller > *, .row > *"); return first ? Math.round(R(first).left) : null; }).filter(v => v !== null);
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
-    if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
+    if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl:not(.sr-only)")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
@@ -267,7 +278,8 @@ async function measure(page) {
   });
 }
 
-const VIEWPORTS = [[360, 780], [390, 844], [768, 1024], [1280, 900], [1440, 900]];
+// 640、1000 是兩欄／三欄剛切換的寬度，最容易擠
+const VIEWPORTS = [[360, 780], [390, 844], [640, 900], [768, 1024], [1000, 800], [1280, 900], [1440, 900]];
 const all = [];
 const browser = await chromium.launch();
 try {
