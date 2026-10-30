@@ -217,7 +217,7 @@ try {
     const refs = await page.$$eval("#hotelCities .ref b", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
     if (refs.some((v, i) => i && v < refs[i - 1])) problems.push(`熱門城市酒店沒有由便宜到貴：${refs.join(",")}`);
     // 入住日期選項：換日期後連結的入住日要跟著換
-    const ci = async () => new URL(await page.$eval("#hotelCities .cta", a => a.href)).searchParams.get("checkin");
+    const ci = async () => new URL(await page.$eval("#hotelCities .card-link", a => a.href)).searchParams.get("checkin");
     const ci0 = await ci();
     const nDates = await page.$$eval("#hDates button", b => b.length);
     if (nDates < 2) problems.push("酒店入住日期選項不足");
