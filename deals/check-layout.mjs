@@ -302,9 +302,9 @@ async function measure(page) {
       const cta = s.querySelector(".hero-cta"); if (cta) { const a = R(cta); if (a.right > r.right + 1 || a.left < r.left - 1) out.push("輪播按鈕超出圖片"); }
     }
     // 登機證卡片：在大圖裡、缺口對準撕線、日期和價格不重疊、代碼不壓到中間的飛機
-    for (const ps of document.querySelectorAll("#hero .pass, #hotelHero .pass")) {
+    for (const ps of document.querySelectorAll("#hero .pass, #hotelHero .pass, #sheet .win .pass")) {
       if (!vis(ps)) continue; // 酒店分頁時大圖藏起來
-      const sl = R(ps.closest(".slide")), r = R(ps), isKey = ps.classList.contains("key");
+      const sl = R(ps.closest(".slide, .win")), r = R(ps), isKey = ps.classList.contains("key");
       if (r.left < sl.left - 1 || r.right > sl.right + 1 || r.bottom > sl.bottom + 1) out.push("登機證卡片超出大圖");
       const route = R(ps.querySelector(".pass-route")), tear = parseFloat(getComputedStyle(ps).getPropertyValue("--tear"));
       if (Math.abs(route.height - tear) > 1.5) out.push(`登機證缺口沒對準撕線（${route.height} vs ${tear}）`);
@@ -466,7 +466,7 @@ try {
     await page.keyboard.press("Escape");
     // 幫我選
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 });
     await page.waitForTimeout(400);
     (await measure(page)).forEach(i => all.push(`[${w}px 幫我選] ${i}`));
     if (SHOTS && w <= 390) await page.screenshot({ path: path.join(SHOTS, `lucky-${w}.png`) });
@@ -521,7 +521,7 @@ try {
     if (!(await page.$("#flightList .fav-btn.pop"))) all.push(`[動畫 ${w}] 收藏沒有愛心動畫`);
     // 幫我選：彩帶
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 });
     if (!(await page.$("#sheet .confetti i"))) all.push(`[動畫 ${w}] 幫我選沒有彩帶`);
     await page.waitForTimeout(1800);
     const sx = await page.$eval(".sheet-panel", p => p.scrollWidth - p.clientWidth);

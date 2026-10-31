@@ -204,10 +204,10 @@ try {
       if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板（返回鍵版本）");
     }
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
     await checkLinks(page, "幫我選", sub1);
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
     await page.click("#sheet .sheet-x");
     if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板");
     await page.click('.tabs button[data-tab="hotels"]');

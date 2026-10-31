@@ -416,6 +416,14 @@
   .share-url{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
   .btn2{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 16px;border-radius:14px;
     border:1px solid var(--line);background:#fff;font-weight:700;font-size:14.5px}
+  /* 幫我選的結果：城市照片＋登機證 */
+  .win{position:relative;min-height:420px;border-radius:22px 22px 0 0;display:flex;align-items:flex-end}
+  .win .shade{background:linear-gradient(180deg,rgba(5,12,24,.45) 0%,rgba(5,12,24,.05) 35%,rgba(5,12,24,.8) 100%)}
+  .win .fb{display:none}
+  .win-in{position:relative;z-index:2;width:100%;padding:20px 18px 18px;color:#fff}
+  .win-in h3{margin:10px 0 0;font-size:32px;font-weight:900;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+  .win .pass{max-width:none}
+  @media (min-width:760px){ .win{border-radius:22px 22px 0 0} }
   .slot{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:22px 22px 0 0}
   .slot .s1{font-size:13px;color:#C9D6EA;letter-spacing:2px}
   .slot .s2{font-size:40px;font-weight:900;margin-top:6px;letter-spacing:2px}
@@ -1267,9 +1275,6 @@ function renderHero(){
   } else {
     slides = top.map((f, i) => {
       const lm = landmarkOf(f.d);
-      const url = flightUrl(f);
-      const dates = f.ret ? `${fmtDate(f.dep)} → ${fmtDate(f.ret)}` : fmtDate(f.dep);
-      const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
       return `
       <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
         ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}
@@ -1277,17 +1282,7 @@ function renderHero(){
           <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span></div>
           <div class="wrap has-pass">
             <h2>${esc(cityName(f.d))}</h2>
-            <a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
-              <span class="pass-route">
-                <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
-                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}</small></span>
-                <span class="pr-end r"><b>${esc(f.dAp || f.d)}</b><small>${esc(cityName(f.d))}</small></span>
-              </span>
-              <span class="pass-foot">
-                <span class="pf-d"><span><small>去程</small>${esc(fmtDate(f.dep))}</span>${f.ret ? `<span><small>回程</small>${esc(fmtDate(f.ret))}</span>` : ""}</span>
-                <span class="pf-p"><small>${f.ret ? "來回" : "單程"}・起</small><strong data-v="${Math.round(f.price)}">${priceHTML(f.price)}</strong><em>看機票 ${ARROW()}</em></span>
-              </span>
-            </a>
+            ${passHTML(f)}
           </div>
         </div>
       </div>`;
@@ -1909,6 +1904,22 @@ function sheetRouteSVG(){
     <g class="sr-plane"><g transform="rotate(90) scale(.8) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
       <animateMotion dur="1.6s" begin="0.15s" fill="freeze" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".4 0 .2 1"><mpath href="#srPath"/></animateMotion></g></svg>`;
 }
+// 登機證卡片（大圖、幫我選共用）：機場代碼、天數／直飛、去回程日期、價格，整張點了去訂票
+function passHTML(f){
+  const url = flightUrl(f); if (!url) return "";
+  const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
+  return `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
+              <span class="pass-route">
+                <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
+                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}</small></span>
+                <span class="pr-end r"><b>${esc(f.dAp || f.d)}</b><small>${esc(cityName(f.d))}</small></span>
+              </span>
+              <span class="pass-foot">
+                <span class="pf-d"><span><small>去程</small>${esc(fmtDate(f.dep))}</span>${f.ret ? `<span><small>回程</small>${esc(fmtDate(f.ret))}</span>` : ""}</span>
+                <span class="pf-p"><small>${f.ret ? "來回" : "單程"}・起</small><strong data-v="${Math.round(f.price)}">${priceHTML(f.price)}</strong><em>看機票 ${ARROW()}</em></span>
+              </span>
+            </a>`;
+}
 // 抽中時灑彩帶（品牌色）
 function confettiHTML(){
   if (!MOTION) return "";
@@ -1928,11 +1939,14 @@ function lucky(){
   const pick = pool[Math.floor(Math.random() * pool.length)];
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const show = () => { openSheet(`<div class="sh-body" style="padding-top:56px">
-      <h3 style="margin:0 0 4px;font-size:20px">就決定是${esc(cityName(pick.d))}了！</h3>
-      <p class="sub" style="margin-bottom:12px">從現在最便宜的 ${pool.length} 個地方幫你抽的</p>
-      <div class="grid">${flightCard(pick, { noMore: false })}</div>
-      <div class="sh-actions"><button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button></div></div>${confettiHTML()}`);
+  const lm = landmarkOf(pick.d);
+  // 抽中的結果：城市照片上一張登機證（像中獎的機票）
+  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true)}
+        <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
+          <h3>就決定是${esc(cityName(pick.d))}了！</h3>${passHTML(pick)}</div></div>
+      <div class="sh-body"><div class="sh-actions" style="margin-top:0">
+        <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
+        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}看全部日期</button>` : ""}</div></div>${confettiHTML()}`);
     setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
   openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div>`);
