@@ -128,7 +128,7 @@
   .hero-dots{position:absolute;right:18px;top:24px;display:flex;gap:6px;z-index:3}
   @media (min-width:1000px){
     .hero .slide .in .wrap.has-pass{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:0 32px}
-    .hero .slide .in .wrap:first-child{padding:0 32px}
+    .hero .slide .in .wrap{padding:0 32px}
     .hero h2{font-size:76px;margin:0}
     .hero .pass{flex:0 0 420px;margin:0}
   }
@@ -424,7 +424,7 @@
   .win .fb{font-size:0}
   .win-pre{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
   .win-sub{margin-top:4px;font-size:13.5px;font-weight:600;opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.35)}
-  .btn2.fav-btn{color:var(--ink)}
+  .btn2.fav-btn{color:var(--ink);position:relative}
   .btn2.fav-btn[aria-pressed="true"]{color:var(--red)}
   .btn2.fav-btn .fav-t{color:var(--ink)}
   .win-in{position:relative;z-index:2;width:100%;padding:20px 18px 18px;color:#fff}
@@ -969,11 +969,11 @@ function photoHTML(wiki, country, label, size, eager, inline){
   // 已經載入過：直接放網址並顯示（重畫時不會再淡入一次）
   const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + size] || {}).u;
   if (known && loadedImg.has(known))
-    return `<${T} class="fb">${esc(label || "")}</${T}><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><${T} class="shade"></${T}>`;
+    return `<${T} class="fb" aria-hidden="true">${esc(label || "")}</${T}><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><${T} class="shade"></${T}>`;
   const img = !wiki ? "" : /^File:/.test(wiki)
     ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${FILE_FALLBACK[wiki] ? ` data-fb="${esc(FILE_FALLBACK[wiki])}" data-size="${size}"` : ""}${lazy} decoding="async" />`
     : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size}"${lazy} decoding="async" />`;
-  return `<${T} class="fb">${esc(label || "")}</${T}>${img}<${T} class="shade"></${T}>`;
+  return `<${T} class="fb" aria-hidden="true">${esc(label || "")}</${T}>${img}<${T} class="shade"></${T}>`;
 }
 function queueImages(){ revealify(); clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
 // 真的抓不到：有備用條目就改抓備用，否則顯示漸層底
@@ -1260,7 +1260,7 @@ let heroSig = null, heroCounted = false; // 大圖內容沒變就不重畫；價
 function renderHero(){
   const box = $("#hero");
   if (!state.loaded){ clearInterval(heroTimer); heroSig = null; box.innerHTML = heroLoading(); return; }
-  const top = cheapestPerCity(modeFiltered()).slice(0, CONFIG.heroSlides);
+  const top = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, CONFIG.heroSlides);
   const sig = [state.mode, innerWidth, ...top.map(f => [f.o, f.d, f.dep, f.ret, f.price, f.airline].join(","))].join("|");
   if (sig === heroSig) return; // 一樣就不動（不會閃、不會重新跳數字）
   const again = heroSig !== null && heroCounted; // 不是第一次：直接顯示，不再跳數字
@@ -1535,23 +1535,24 @@ function hotelRegions(){
   return [a, b].filter(Boolean).join("・");
 }
 function renderHotelHero(){
-  const hotelMin = Math.min(...Object.values(HOTEL_REF).map(r => r[0]));
   const url = affiliate("https://tw.trip.com/hotels/");
   const curated = state.hotels.length > 0;
   if (hotelHeroKey === curated) return; // 沒變就不重畫（避免照片閃一下）
   hotelHeroKey = curated;
+  const refs = Object.values(HOTEL_REF).map(r => r[0]).filter(v => v > 0);
+  const hotelMin = refs.length ? Math.min(...refs) : null, regions = hotelRegions();
   $("#hotelHero").innerHTML = `<div class="hero-track"><div class="slide ph g-JP act" style="display:block">
       ${photoHTML("Fushimi Inari-taisha", "JP", "伏見稻荷大社", 1280, false)}
       ${MOTION ? `<div class="stars" aria-hidden="true">${[[8,18,0],[22,40,.8],[37,12,1.6],[55,30,.4],[68,8,2],[80,36,1.2],[91,20,.2],[46,52,1.9],[14,60,1.1],[74,58,.6]].map(([x, y, d]) => `<i style="left:${x}%;top:${y}%;animation-delay:${d}s"></i>`).join("")}</div>` : ""}
       <div class="in"><div class="wrap"><span class="eyebrow">${icon("bed")}${curated ? "便宜又不踩雷" : `${Object.keys(HOTEL_CITY).length} 個熱門城市`}</span></div>
         <div class="wrap has-pass"><h2>下一趟住哪裡？</h2>
-          <a class="pass key" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${Object.keys(HOTEL_CITY).length} 個熱門城市，${esc(hotelRegions())}，每晚 ${money(hotelMin)} 起，去 Trip.com 找酒店">
+          <a class="pass key" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${Object.keys(HOTEL_CITY).length} 個熱門城市，${esc(regions)}${hotelMin ? `，每晚 ${money(hotelMin)} 起` : ""}，去 Trip.com 找酒店">
             <span class="pass-route"><span class="key-chip" aria-hidden="true"></span>
               <span class="pr-end"><b>HOTEL</b><small>熱門城市每晚參考價</small></span>
               <span class="key-wave" aria-hidden="true">${icon("bed")}</span></span>
             <span class="pass-foot">
-              <span class="pf-d"><span><small>城市</small>${Object.keys(HOTEL_CITY).length} 個</span><span><small>地區</small>${esc(hotelRegions())}</span></span>
-              <span class="pf-p"><small>每晚・起</small><strong>${priceHTML(hotelMin)}</strong><em>找酒店 ${ARROW()}</em></span>
+              <span class="pf-d"><span><small>城市</small>${Object.keys(HOTEL_CITY).length} 個</span><span><small>地區</small>${esc(regions)}</span></span>
+              <span class="pf-p">${hotelMin ? `<small>每晚・起</small><strong>${priceHTML(hotelMin)}</strong>` : ""}<em>找酒店 ${ARROW()}</em></span>
             </span>
           </a></div></div>
     </div></div>`;
@@ -1770,12 +1771,15 @@ function nextHoliday(){ return upcomingHolidays()[0] || null; }
 /* ====================================================================
    ⑮ 彈出面板：價格日曆、幫我選、分享
    ==================================================================== */
-let sheetReturnFocus = null, sheetInHistory = false;
-function openSheet(html){
+// 面板的「返回」：每打開一層就記一筆瀏覽紀錄，手機按返回先回上一層（例如價格日曆 → 幫我選的結果），最後才關掉
+let sheetReturnFocus = null, sheetDepth = 0;
+const sheetStack = []; // 上一層的內容（整段畫面原封不動收起來，收藏狀態、照片都保留）
+function openSheet(html, stack = false){
   const wasOpen = !$("#sheet").classList.contains("hidden");
-  if (!wasOpen) sheetReturnFocus = document.activeElement;
-  // 手機按「返回」時先關面板，不要直接離開網站
-  if (!wasOpen && !sheetInHistory){ try { history.pushState({ howSheet: 1 }, ""); sheetInHistory = true; } catch(e) {} }
+  if (!wasOpen){ sheetReturnFocus = document.activeElement; sheetStack.length = 0; }
+  const push = !wasOpen || stack;
+  if (push){ try { history.pushState({ howSheet: sheetDepth + 1 }, ""); sheetDepth++; } catch(e) {} }
+  if (wasOpen && stack){ const frag = document.createDocumentFragment(); frag.append(...$("#sheetBody").childNodes); sheetStack.push({ frag, scroll: $("#sheet .sheet-panel").scrollTop }); }
   $("#sheetBody").innerHTML = html;
   $("#sheet").classList.remove("hidden");
   document.body.classList.add("lock");
@@ -1783,15 +1787,29 @@ function openSheet(html){
   $("#sheet .sheet-x").focus({ preventScroll: true });
   queueImages();
 }
+// 關掉整個面板（按 X、Esc、點背景）：把這次記的瀏覽紀錄一次退掉
 function closeSheet(fromBack){
   clearTimeout(slotTimer); clearTimeout(confettiTimer);
   if ($("#sheet").classList.contains("hidden")) return;
   $("#sheet").classList.add("hidden");
   document.body.classList.remove("lock");
-  if (sheetInHistory){ sheetInHistory = false; if (!fromBack) try { history.back(); } catch(e) {} }
+  sheetStack.length = 0;
+  const n = sheetDepth; sheetDepth = 0;
+  if (n && !fromBack) try { history.go(-n); } catch(e) {}
   if (sheetReturnFocus && sheetReturnFocus.focus) sheetReturnFocus.focus({ preventScroll: true });
 }
-window.addEventListener("popstate", () => { if (sheetInHistory) closeSheet(true); });
+window.addEventListener("popstate", () => {
+  if (!sheetDepth) return;
+  sheetDepth--;
+  const prev = sheetStack.pop();
+  if (prev && !$("#sheet").classList.contains("hidden")){
+    clearTimeout(confettiTimer);
+    $("#sheetBody").replaceChildren(prev.frag);
+    $("#sheet .sheet-panel").scrollTop = prev.scroll;
+    return;
+  }
+  closeSheet(true);
+});
 function toast(msg){
   const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
@@ -1864,7 +1882,7 @@ function routeSheetHTML(o, d){
 }
 function openRoute(o, d){
   const html = routeSheetHTML(o, d);
-  if (html) openSheet(html);
+  if (html) openSheet(html, true); // 從別的面板（例如幫我選）點進來時，返回會回到原本那層
 }
 // 暫時用指定的分頁／來回模式算資料（酒店頁的機票價格用「便宜機票・來回」）
 function withMode(mode, type, fn){
@@ -1894,7 +1912,7 @@ async function shareLink(text, url){
       <p class="sub" style="margin-bottom:10px">${esc(text)}</p>
       <input class="share-url" readonly value="${esc(url)}" aria-label="分享連結" />
       <div class="sh-actions"><button class="cta" id="copyUrl" style="flex:1 1 auto;border:0">${icon("share")}複製連結</button></div>
-      <p class="sub" style="margin-top:10px;font-size:12.5px">複製不了的話，長按上面的連結選「全選」再複製。</p></div>`);
+      <p class="sub" style="margin-top:10px;font-size:12.5px">複製不了的話，長按上面的連結選「全選」再複製。</p></div>`, true);
     const inp = document.querySelector(".share-url"); if (inp){ inp.focus({ preventScroll: true }); inp.select(); }
   }
 }
@@ -1948,9 +1966,9 @@ function lucky(){
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lm = landmarkOf(pick.d), save = savingPct(pick);
-  const winPhoto = photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
+  const winPhoto = () => photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
   // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
-  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto}
+  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
         <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
           <h3>就決定是${esc(cityName(pick.d))}了！</h3>
           <div class="win-sub">${esc([`${ORIGIN_NAME[pick.o]}出發`, airlineLabel(pick.airline), save ? `比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}` : ""].filter(Boolean).join("・"))}</div>
@@ -1963,7 +1981,7 @@ function lucky(){
     confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
   // 拉霸轉的時候先偷偷抓結果的照片，結果出來時照片已經好了
-  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto}</div>`);
+  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto()}</div>`);
   let i = 0, delay = 60, t0 = Date.now();
   const tick = () => {
     const el = $("#slotName"); if (!el) return;

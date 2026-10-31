@@ -326,6 +326,10 @@ async function measure(page) {
     for (const b of document.querySelectorAll(".pbadge")) { if (!vis(b)) continue; const r = R(b), ph = R(b.closest(".ph"));
       if (r.right > ph.right - 4 || r.bottom > ph.bottom) out.push("酒店價格標超出照片");
     }
+    // 輪播圓點（右上）不能壓到左上的小標或登機證
+    { const d = document.querySelector("#hero .hero-dots"), s0 = document.querySelector("#hero .slide");
+      if (d && s0 && vis(d)) { const a = R(d); for (const el of s0.querySelectorAll(".eyebrow, .pass")) { const b = R(el);
+        if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) out.push(`輪播圓點壓到${el.classList.contains("pass") ? "登機證" : "小標"}`); } } }
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
