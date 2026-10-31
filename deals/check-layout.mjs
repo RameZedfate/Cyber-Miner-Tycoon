@@ -35,6 +35,8 @@ const MAIN = { updated_at: new Date().toISOString(), rows: [
   row("TPE","VDO","TPE","VDO",day(22),day(27),9900,1,0,"QQ"),        // 不在名單的航空公司
   row("TPE","FUK","TPE","FUK",day(15),null,2399,0,0,"IT"),
   row("TPE","CJU","TPE","CJU","2027-02-04","2027-02-09",8900,0,0,"KE"),
+  // 五位數價格（最寬的數字）：普吉島只有一萬多的票
+  row("TPE","HKT","TPE","HKT",day(11),day(16),12845,1,1,"TG"), row("TPE","HKT","TPE","HKT",day(12),day(17),13280,1,1,"TG"),
   // 說走就走：不管今天星期幾，都放幾張近 3 週週五出發、週日回來的票
   ...[0, 1, 2].flatMap(w => [["FUK", 3999], ["OKA", 4299], ["HKG", 3199]].map(([d, p], i) => {
     const fri = day(((5 - today.getUTCDay() + 7) % 7 || 7) + 7 * w); const sun = new Date(fri); sun.setUTCDate(sun.getUTCDate() + 2);
@@ -73,6 +75,18 @@ const server = http.createServer((req, res) => {
 }).listen(0);
 const base = `http://127.0.0.1:${server.address().port}/`;
 
+// 本機字型：@fontsource 的 Plus Jakarta Sans、Noto Sans TC（npm pack 解開後的 package 資料夾）。
+// 位置：環境變數 HOWTRAVLE_FONTS（裡面要有 pj/ 和 noto/），預設找 repo 根目錄的 .work/fonts
+const FONT_ROOT = process.env.HOWTRAVLE_FONTS || path.join(DIR, "..", ".work", "fonts");
+// 每個字型資料夾可以是 pj/package/*.css（npm pack 解開的樣子）或直接 pj/*.css
+const fontDir = (n) => [path.join(FONT_ROOT, n, "package"), path.join(FONT_ROOT, n)].find(d => fs.existsSync(path.join(d, "400.css"))) || path.join(FONT_ROOT, n);
+const FONT_DIRS = { pj: fontDir("pj"), noto: fontDir("noto") };
+function fontCss(tag, weights) {
+  return weights.map(w => { const f = path.join(FONT_DIRS[tag], `${w}.css`); return fs.existsSync(f) ? fs.readFileSync(f, "utf8").replace(/url\(\.\/files\//g, `url(https://fonts.local/${tag}/files/`) : ""; }).join("\n");
+}
+const FONT_CSS = fontCss("pj", [400, 500, 600, 700, 800]) + fontCss("noto", [400, 500, 700, 900]);
+const REAL_FONTS = FONT_CSS.includes("Plus Jakarta Sans");
+console.log(REAL_FONTS ? "字型：用正式網站的 Plus Jakarta Sans／Noto Sans TC 量" : "⚠️ 找不到本機字型，用系統字型量（數字寬度可能跟正式網站不同）");
 // 網頁向維基百科要的照片寬度（只能是標準寬度，否則正式網站常常被拒絕）
 const askedSizes = new Set();
 const STD_SIZES = new Set(["500", "960", "1280", "1920"]);
@@ -82,8 +96,15 @@ async function setup(page) {
     body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MAIN) }));
   await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(PICKS) }));
   await page.route("**/hotels.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(HOTELS) }));
-  await page.route("https://fonts.googleapis.com/**", r => r.fulfill({ contentType: "text/css", body: "" }));
+  // 字型：有本機字型檔就用跟正式網站一樣的字型量（數字比較寬，才量得出會不會擠）；沒有就用系統字型並提醒
+  await page.route("https://fonts.googleapis.com/**", r => r.fulfill({ contentType: "text/css", body: FONT_CSS }));
   await page.route("https://fonts.gstatic.com/**", r => r.abort());
+  await page.route("https://fonts.local/**", r => {
+    const u = new URL(r.request().url()), [tag, ...rest] = u.pathname.slice(1).split("/");
+    const p = path.join(FONT_DIRS[tag] || "/nonexistent", ...rest);
+    if (!fs.existsSync(p)) return r.fulfill({ status: 404, body: "" });
+    r.fulfill({ contentType: "font/woff2", body: fs.readFileSync(p) });
+  });
   await page.route("https://en.wikipedia.org/w/api.php**", r => {
     const u = new URL(r.request().url());
     const titles = u.searchParams.get("titles").split("|");
@@ -114,6 +135,35 @@ async function setup(page) {
     r.fulfill({ contentType: "image/svg+xml", body: svg(w, h, code, "#e11d48") });
   });
   await page.route("https://img.wway.io/**", r => r.fulfill({ status: 404, body: "" }));
+}
+
+// 文字對比：純色底上的字，小字至少 4.5:1、大字至少 3:1（照片、大圖、雷達區塊上的字不算）。
+// 透明度會算進去；區塊標題上方的英文小字（::before）也量。root＝要量的範圍
+async function contrast(page, root = "body", skipSheet = true) {
+  return page.evaluate(([root, skipSheet]) => {
+    const out = [], seen = new Set();
+    const rgb = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 1]; };
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const cs = getComputedStyle(e);
+      if (cs.backgroundImage !== "none") return null; const c = rgb(cs.backgroundColor); if ((c[3] ?? 1) > 0.95) return c; } return [255, 255, 255, 1]; };
+    const opacityOf = (el) => { let o = 1; for (let e = el; e; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity); return o; };
+    const test = (el, cs, label) => {
+      const bg = bgOf(el); if (!bg) return;
+      const op = opacityOf(el); if (op === 0) return;
+      const fg = rgb(cs.color), a = (fg[3] ?? 1) * op;
+      const mix = fg.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a));
+      const L1 = lum(mix), L2 = lum(bg), ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+      const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700, large = size >= 24 || (bold && size >= 18.66);
+      if (ratio < (large ? 3 : 4.5)) { const k = label + "|" + cs.color; if (!seen.has(k)) { seen.add(k); out.push(`文字對比不足 ${ratio.toFixed(2)}：${label}`); } }
+    };
+    for (const el of document.querySelector(root).querySelectorAll("*")) {
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+      if (el.closest(".ph, .hero, .band, .sh-head, .slot, svg, .toast, .sr-only") || (skipSheet && el.closest("#sheet"))) continue;
+      if ([...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) test(el, getComputedStyle(el), `「${el.textContent.trim().slice(0, 14)}」(${el.className || el.tagName})`);
+      if (el.matches("h2.sec[data-eb]")) test(el, getComputedStyle(el, "::before"), `標題英文小字 ${el.dataset.eb}`);
+    }
+    return out;
+  }, [root, skipSheet]);
 }
 
 // 在頁面裡量測
@@ -199,6 +249,15 @@ async function measure(page) {
       if (r.top < ph.top || r.bottom > ph.bottom || r.right > ph.right || r.left < ph.left + ph.width / 2) out.push("收藏愛心不在照片右上角");
       if (bd && bd.children.length) { const b = R(bd.lastElementChild); if (b.right > r.left - 2 && b.bottom > r.top && b.top < r.bottom) out.push("照片上的標籤壓到收藏愛心"); }
     }
+    // 幫我選的結果：關閉鈕不能蓋到標題、小字；按鈕一排放得下
+    const win = document.querySelector("#sheet:not(.hidden) .win");
+    if (win) {
+      const x = R(document.querySelector("#sheet .sheet-x"));
+      for (const el of win.querySelectorAll(".win-in h3, .win .eyebrow, .win-sub")) { const r = R(el);
+        if (r.left < x.right && r.right > x.left && r.top < x.bottom && r.bottom > x.top) out.push(`幫我選的關閉鈕蓋到「${el.textContent.trim().slice(0, 10)}」`); }
+      const bs = [...document.querySelectorAll("#sheet .sh-actions .btn2")].map(R);
+      if (bs.length && Math.max(...bs.map(b => b.top)) - Math.min(...bs.map(b => b.top)) > 1) out.push("幫我選的按鈕擠成兩排");
+    }
     // 點擊位置：點照片上的標籤要去訂票（整張卡片的連結）；點愛心、「N 組日期」要點到它們自己
     const sheetOpen = !document.querySelector("#sheet").classList.contains("hidden");
     const barBottom = document.querySelector(".tabbar").getBoundingClientRect().bottom;
@@ -220,11 +279,11 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow,.win");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
@@ -251,6 +310,26 @@ async function measure(page) {
       for (const el of s.querySelectorAll(".in > .wrap")) { const a = R(el); if (a.bottom > r.bottom + 1 || a.top < r.top - 1) out.push("輪播文字超出圖片"); }
       const cta = s.querySelector(".hero-cta"); if (cta) { const a = R(cta); if (a.right > r.right + 1 || a.left < r.left - 1) out.push("輪播按鈕超出圖片"); }
     }
+    // 登機證卡片：在大圖裡、缺口對準撕線、日期和價格不重疊、代碼不壓到中間的飛機
+    for (const ps of document.querySelectorAll("#hero .pass, #hotelHero .pass, #sheet .win .pass")) {
+      if (!vis(ps)) continue; // 酒店分頁時大圖藏起來
+      const sl = R(ps.closest(".slide, .win")), r = R(ps), isKey = ps.classList.contains("key");
+      if (r.left < sl.left - 1 || r.right > sl.right + 1 || r.bottom > sl.bottom + 1) out.push("登機證卡片超出大圖");
+      const route = R(ps.querySelector(".pass-route")), tear = parseFloat(getComputedStyle(ps).getPropertyValue("--tear"));
+      if (Math.abs(route.height - tear) > 1.5) out.push(`登機證缺口沒對準撕線（${route.height} vs ${tear}）`);
+      const d = R(ps.querySelector(".pf-d")), p = R(ps.querySelector(".pf-p"));
+      if (d.right > p.left - 4) out.push("登機證的日期壓到價格");
+      if (!isKey) { const ends = ps.querySelectorAll(".pr-end"), mid = R(ps.querySelector(".pr-plane"));
+        if (R(ends[0]).right > mid.left || R(ends[1]).left < mid.right) out.push("登機證的機場代碼壓到飛機"); }
+      // 酒店照片上的價格標不能超出照片
+    }
+    for (const b of document.querySelectorAll(".pbadge")) { if (!vis(b)) continue; const r = R(b), ph = R(b.closest(".ph"));
+      if (r.right > ph.right - 4 || r.bottom > ph.bottom) out.push("酒店價格標超出照片");
+    }
+    // 輪播圓點（右上）不能壓到左上的小標或登機證
+    { const d = document.querySelector("#hero .hero-dots"), s0 = document.querySelector("#hero .slide");
+      if (d && s0 && vis(d)) { const a = R(d); for (const el of s0.querySelectorAll(".eyebrow, .pass")) { const b = R(el);
+        if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) out.push(`輪播圓點壓到${el.classList.contains("pass") ? "登機證" : "小標"}`); } } }
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
     // 9. 地區磚塊、月份按鈕大小一致
@@ -279,7 +358,7 @@ async function measure(page) {
 }
 
 // 640、1000 是兩欄／三欄剛切換的寬度，最容易擠
-const VIEWPORTS = [[360, 780], [390, 844], [640, 900], [768, 1024], [1000, 800], [1280, 900], [1440, 900]];
+const VIEWPORTS = [[320, 640], [360, 780], [390, 844], [640, 900], [768, 1024], [1000, 800], [1280, 900], [1440, 900]];
 const all = [];
 const browser = await chromium.launch();
 try {
@@ -290,6 +369,7 @@ try {
     await setup(page);
     await page.goto(base);
     await page.waitForSelector("#flightList .card");
+    await page.evaluate(() => document.fonts.ready);
     // 減少動態：連 ::after（品牌雷達點）都不能動
     const pingAnim = await page.$eval(".brand .ping", e => getComputedStyle(e, "::after").animationName);
     if (pingAnim !== "none") all.push(`[${w}] 減少動態時品牌雷達點還在動（${pingAnim}）`);
@@ -301,7 +381,7 @@ try {
       // 捲動整頁讓延遲載入的照片都載入
       await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 40)); } window.scrollTo(0, 0); });
       await page.waitForTimeout(700);
-      const issues = await measure(page);
+      const issues = [...await measure(page), ...await contrast(page)];
       issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
       if (tab === "flights") {
         await page.waitForTimeout(1800); // 等第一次失敗後的重試
@@ -374,6 +454,10 @@ try {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
           const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
         }
+        // 小登機證：代碼、飛機、價格不互相重疊
+        const tk = document.querySelector("#sheet .ticket");
+        if (tk) { const e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong"));
+          if (e[0].right > pl.left || e[1].left < pl.right || e[1].right > pr.left) out.push("日曆上方的登機證文字重疊"); }
         const opts = [...document.querySelectorAll(".opt")];
         const ls = new Set(opts.map(o => Math.round(R(o).left))), rs = new Set(opts.map(o => Math.round(R(o).right)));
         if (ls.size > 1 || rs.size > 1) out.push("日期選項左右邊沒對齊");
@@ -381,12 +465,21 @@ try {
         return out;
       });
       sheetIssues.forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
+      (await contrast(page, "#sheet", false)).forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `sheet-${w}.png`) });
       await page.keyboard.press("Escape");
     }
+    // 五位數價格的價格日曆：上方小登機證的價格不能擠到代碼
+    await page.evaluate(() => openRoute("TPE", "HKT"));
+    await page.waitForSelector("#sheet:not(.hidden) .ticket", { timeout: 3000 }).catch(() => all.push(`[${w}px] 普吉島價格日曆沒打開`));
+    const tk5 = await page.evaluate(() => { const tk = document.querySelector("#sheet .ticket"); if (!tk) return "";
+      const R = (e) => e.getBoundingClientRect(), e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong")), box = R(tk);
+      return (e[0].right > pl.left || e[1].left < pl.right || e[1].right > R(tk.querySelector(".tk-p")).left || pr.right > box.right) ? `五位數價格的日曆登機證擠在一起（${tk.querySelector(".tk-p strong").textContent}）` : ""; });
+    if (tk5) all.push(`[${w}px] ${tk5}`);
+    await page.keyboard.press("Escape");
     // 幫我選
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 });
     await page.waitForTimeout(400);
     (await measure(page)).forEach(i => all.push(`[${w}px 幫我選] ${i}`));
     if (SHOTS && w <= 390) await page.screenshot({ path: path.join(SHOTS, `lucky-${w}.png`) });
@@ -413,7 +506,7 @@ try {
     await page.waitForSelector("#flightList .card");
     await page.waitForTimeout(1200);
     const hero = await page.evaluate(() => {
-      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pricebig strong");
+      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pass strong[data-v]");
       return { act: s && s.classList.contains("act"), op: h2 ? getComputedStyle(h2).opacity : "0", fp: !!document.querySelector("#hero .fp"),
         price: st ? st.textContent : "", want: st ? "NT$" + Number(st.dataset.v).toLocaleString("en-US") : "" };
     });
@@ -441,7 +534,7 @@ try {
     if (!(await page.$("#flightList .fav-btn.pop"))) all.push(`[動畫 ${w}] 收藏沒有愛心動畫`);
     // 幫我選：彩帶
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 });
     if (!(await page.$("#sheet .confetti i"))) all.push(`[動畫 ${w}] 幫我選沒有彩帶`);
     await page.waitForTimeout(1800);
     const sx = await page.$eval(".sheet-panel", p => p.scrollWidth - p.clientWidth);

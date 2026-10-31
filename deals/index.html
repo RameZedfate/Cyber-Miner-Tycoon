@@ -6,18 +6,18 @@
 <title>HOWTRAVLE 便宜票雷達</title>
 <meta name="description" content="台灣出發飛日本、韓國、泰國、越南、中國大陸、香港的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
 <meta name="theme-color" content="#FFFFFF" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Cpath fill='%23FFC72C' d='M32 9c1.8 0 3.2 1.9 3.2 4.3v10l16 9.2v4.7l-16-4.9v9.4l4.7 3.4V50L32 47.6 24.1 50v-4.9l4.7-3.4v-9.4l-16 4.9v-4.7l16-9.2v-10C28.8 10.9 30.2 9 32 9z'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%234F78B0' stroke-width='5'/%3E%3Cg transform='translate(32 32) rotate(45) scale(1.75) translate(-12 -12)' fill='%23FFC72C'%3E%3Cpath d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z'/%3E%3C/g%3E%3C/svg%3E" />
 <!-- 分享預覽（LINE／FB／IG 貼連結時顯示的標題與大圖） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
 <meta property="og:title" content="HOWTRAVLE 便宜票雷達｜台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:description" content="每天自動整理台灣出發的低價機票，價格日曆、連假倒數、幫你抽目的地，一鍵到 Trip.com 訂。" />
-<meta property="og:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png" />
+<meta property="og:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png?v=2" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="HOWTRAVLE 便宜票雷達：台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:url" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/" />
-<meta name="twitter:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png" />
+<meta name="twitter:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png?v=2" />
 <!-- 加到手機主畫面的圖示與名稱 -->
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -25,19 +25,20 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* =====================================================================
      設計系統：參考 Airbnb（照片為主、文字在下、整張可點）、Apple（白底、分段切換、
      大字、留白）、Google Flights（乾淨的篩選膠囊、價格顏色）
      ===================================================================== */
   :root{
-    --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#B7791F; --red:#E11D48;
-    --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#6B7280; --faint:#9CA3AF;
+    --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#946200; --red:#E11D48;
+    --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#646B78; --faint:#9CA3AF;
     --line:#E5E7EB; --soft:#F3F4F6; --blue:#2563EB; --green:#0E7A4F;
     --r-lg:20px; --r:16px;
     --shadow:0 1px 2px rgba(17,24,39,.05),0 4px 14px rgba(17,24,39,.06);
-    --font:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
+    /* 英文與數字用 Plus Jakarta Sans（價格更俐落），中文自動落到 Noto Sans TC */
+    --font:"Plus Jakarta Sans","Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%;
@@ -94,24 +95,54 @@
   .hero h2{font-size:44px;line-height:1.02;margin:0 0 4px;font-weight:900;letter-spacing:.5px;text-shadow:0 2px 16px rgba(0,0,0,.3)}
   @media (min-width:760px){ .hero h2{font-size:64px} }
   .hero .lm{font-size:15px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.4)}
-  .hero .pricebig{display:flex;align-items:baseline;gap:6px;margin-top:6px;flex-wrap:wrap}
-  .hero .pricebig small{font-size:14px;font-weight:700;opacity:.9}
-  .hero .pricebig strong{font-size:34px;font-weight:900;color:var(--yellow);letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.3)}
-  .hero .meta{font-size:14px;margin-top:2px;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.4);display:flex;flex-wrap:wrap;row-gap:2px}
-  .hero .meta span{white-space:nowrap}
-  .hero .meta span + span::before{content:"・"}
+  /* 登機證卡片（毛玻璃＋兩側半圓缺口＋撕線） */
+  .pass{--tear:66px;display:block;margin-top:10px;max-width:440px;color:#fff;text-decoration:none;border-radius:18px;
+    background:rgba(255,255,255,.14);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);
+    -webkit-mask:radial-gradient(circle 9px at 0 var(--tear),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% var(--tear),#0000 98%,#000) right/51% 100% no-repeat;
+            mask:radial-gradient(circle 9px at 0 var(--tear),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% var(--tear),#0000 98%,#000) right/51% 100% no-repeat}
+  /* 外框會被缺口遮罩切掉，所以鍵盤焦點改畫在卡片裡面 */
+  .pass:focus{outline:none}
+  .pass:focus-visible{box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 5px var(--blue)}
+  .pass-route{display:flex;align-items:center;gap:10px;height:var(--tear);padding:0 16px;border-bottom:1.5px dashed rgba(255,255,255,.38)}
+  .pr-end{display:flex;flex-direction:column;line-height:1.05;flex:0 0 auto}
+  .pr-end.r{text-align:right}
+  .pr-end b{font-size:25px;font-weight:800;letter-spacing:.5px}
+  .pr-end small{font-size:12px;opacity:.85;margin-top:3px}
+  .pr-mid{position:relative;flex:1 1 auto;display:flex;align-items:center;gap:6px;min-width:0;padding-bottom:14px}
+  .pr-line{flex:1 1 auto;height:0;border-top:1.5px dotted rgba(255,255,255,.6)}
+  .pr-plane{width:18px;height:18px;color:var(--yellow);transform:rotate(90deg)}
+  .pr-mid small{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:11.5px;opacity:.9;white-space:nowrap}
+  .pass-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:10px 16px 12px}
+  .pf-d{display:flex;flex-direction:column;gap:2px;font-size:13.5px;font-weight:700;white-space:nowrap}
+  .pf-d small{font-size:11px;font-weight:600;opacity:.75;margin-right:6px}
+  .pf-p{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;white-space:nowrap}
+  .pf-p small{font-size:11px;opacity:.8}
+  .pf-p strong{font-size:30px;font-weight:800;color:var(--yellow);letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+  .pf-p strong .cur{font-size:.5em;margin-right:2px;font-weight:700}
+  .pf-p em{font-style:normal;font-size:12.5px;font-weight:700;margin-top:3px;display:inline-flex;align-items:center;gap:3px}
+  .pf-p em .ic{width:14px;height:14px}
   .hero-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;height:46px;padding:0 22px;
     background:#fff;color:var(--navy);font-weight:800;font-size:15.5px;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.22)}
   .hero-cta .ic{width:18px;height:18px;stroke-width:2.4}
-  .hero-dots{position:absolute;right:18px;bottom:18px;display:flex;gap:6px;z-index:3}
+  .hero-dots{position:absolute;right:18px;top:24px;display:flex;gap:6px;z-index:3}
+  @media (min-width:1000px){
+    .hero .slide .in .wrap.has-pass{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:0 32px}
+    .hero .slide .in .wrap{padding:0 32px}
+    .hero h2{font-size:76px;margin:0}
+    .hero .pass{flex:0 0 420px;margin:0}
+  }
   .hero-dots button{width:7px;height:7px;border-radius:999px;border:0;background:rgba(255,255,255,.5);padding:0;transition:width .3s}
   .hero-dots button[aria-current="true"]{width:20px;background:#fff}
-  .hero .fb{display:none}
+  .hero .fb{font-size:0} /* 大圖已有城市大字：只留底圖花紋，不寫地標名 */
 
   /* ---------- 照片（卡片、磚塊共用） ---------- */
   .ph{position:relative;display:block;overflow:hidden;background:var(--g,linear-gradient(135deg,#1E3A8A,#0EA5E9));text-decoration:none;color:#fff}
-  .ph .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;
-    font-size:24px;letter-spacing:2px;color:rgba(255,255,255,.28);text-align:center;padding:0 12px}
+  /* 照片還沒出來（或抓不到）時：國家漸層＋淡淡的點陣與大飛機＋地標名稱，看起來是刻意的設計 */
+  .ph .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;
+    font-size:21px;letter-spacing:3px;color:rgba(255,255,255,.62);text-align:center;padding:0 16px;text-shadow:0 1px 8px rgba(0,0,0,.15);
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='rgba(255,255,255,0.14)' d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z' transform='rotate(45 12 12)'/%3E%3C/svg%3E") no-repeat right -8% bottom -18%/58% auto,
+               radial-gradient(rgba(255,255,255,.13) 1px,transparent 1.3px) 0 0/16px 16px}
   .ph .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.55) 100%)}
   .g-JP{--g:linear-gradient(135deg,#BE123C,#F472B6)} .g-KR{--g:linear-gradient(135deg,#1D4ED8,#7C3AED)}
   .g-TH{--g:linear-gradient(135deg,#B45309,#F59E0B)} .g-VN{--g:linear-gradient(135deg,#047857,#14B8A6)}
@@ -128,17 +159,23 @@
   .lucky .ic{width:17px;height:17px;color:var(--gold)}
 
   /* ---------- 想去哪？（Airbnb 分類：照片在上、字在下） ---------- */
-  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px}
-  @media (min-width:760px){ .tiles{grid-template-columns:repeat(6,minmax(0,1fr));gap:16px} }
-  .tile{position:relative;border:0;padding:0;background:none;text-align:left;border-radius:var(--r);display:flex;flex-direction:column;gap:7px}
-  .tile .ph{position:relative;aspect-ratio:1/1;border-radius:var(--r);box-shadow:var(--shadow)}
-  .tile .ph .shade{display:none}
-  .tile .fb{font-size:13px;letter-spacing:1px;line-height:1.3}
-  .tile .t{padding:0 2px}
-  .tile .t b{display:block;font-size:15.5px;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile .t span{display:block;font-size:12.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile.nop .t span{color:var(--faint)}
-  .tile[aria-pressed="true"] .ph{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--navy)}
+  /* 想去哪？像 IG 限時動態：一排圓形照片，最便宜的地區外圈是漸層 */
+  .tiles{display:flex;gap:14px;overflow-x:auto;padding:4px 16px 2px;margin:0 -16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
+  .tiles::-webkit-scrollbar{display:none}
+  @media (min-width:760px){ .tiles{justify-content:space-between;gap:20px;overflow:visible;margin:0;padding:4px 0 2px} }
+  .tile{position:relative;flex:0 0 78px;border:0;padding:0;background:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px;scroll-snap-align:start}
+  @media (min-width:760px){ .tile{flex:1 1 0;max-width:132px;min-width:0} }
+  .ring{display:block;width:78px;height:78px;border-radius:999px;padding:3px;background:#DADDE3}
+  @media (min-width:760px){ .ring{width:100%;max-width:112px;height:auto;aspect-ratio:1/1;padding:4px} }
+  .ring.hot{background:conic-gradient(from 210deg,#FFC72C,#FF8A00,#E11D48,#B32ADB,#FFC72C)}
+  .tile .ph{position:relative;display:block;width:100%;height:100%;border-radius:999px;box-shadow:0 0 0 3px var(--bg)}
+  .tile .ph .shade,.tile .ph .fb{display:none}
+  .tile .t{display:block;width:100%;padding:0}
+  .tile .t b{display:block;font-size:14.5px;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .t span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile.nop .t span{color:var(--muted)}
+  .tile.nop .ph{filter:saturate(.55)}
+  .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
 
   /* ---------- 篩選（沒有外框，像 Google Flights 的膠囊列） ---------- */
@@ -153,12 +190,19 @@
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
   .scroller::-webkit-scrollbar{display:none}
-  .month{flex:0 0 auto;width:100px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 6px;text-align:center;scroll-snap-align:start}
-  .month .m{font-size:15.5px;font-weight:800;line-height:1.3}
+  .month{flex:0 0 auto;width:112px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px 8px 8px;text-align:left;scroll-snap-align:start;
+    display:flex;align-items:stretch;gap:9px}
+  .month .bar{flex:0 0 6px;height:34px;border-radius:3px;background:var(--soft);display:flex;align-items:flex-end;overflow:hidden}
+  .month .bar i{display:block;width:100%;border-radius:3px;background:#C7CDD6}
+  .month.best .bar i{background:var(--green)}
+  .month[aria-pressed="true"] .bar{background:rgba(255,255,255,.18)}
+  .month[aria-pressed="true"] .bar i{background:var(--yellow)}
+  .month .mt{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .month .m{font-size:15.5px;font-weight:800;line-height:1.3;white-space:nowrap}
   .month .m small{font-size:11px;font-weight:700;color:var(--muted);margin-right:3px}
   .month .p{font-size:12px;margin-top:1px;color:var(--ink-2);font-weight:700;white-space:nowrap}
   .month .p.low{color:var(--green)}
-  .month .p.none{color:var(--faint);font-weight:500}
+  .month .p.none{color:var(--muted);font-weight:500}
   .month[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
   .month[aria-pressed="true"] .m small{color:#C9D6EA}
   .month[aria-pressed="true"] .p{color:var(--yellow)}
@@ -197,7 +241,8 @@
   .top-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
   .cty{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .price{flex:0 0 auto;white-space:nowrap}
-  .price strong{font-size:18.5px;font-weight:900;color:var(--ink);letter-spacing:-.2px}
+  .price strong{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .cur{font-size:.68em;font-weight:700;margin-right:1px;letter-spacing:0}
   .price em{font-style:normal;font-size:12.5px;color:var(--muted);margin-left:2px}
   .card.deal .price strong{color:var(--green)}
   .air{display:flex;align-items:center;gap:8px;height:22px;color:var(--muted);font-size:13.5px;min-width:0}
@@ -220,8 +265,20 @@
   @media (min-width:760px){ .grid-sm{grid-template-columns:repeat(3,minmax(0,1fr))} }
   @media (min-width:1000px){ .grid-sm{grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 18px} }
   .hc .ph{aspect-ratio:1/1}
-  .hc .ref{font-size:13px;color:var(--muted)}
-  .hc .ref b{color:var(--ink);font-weight:800}
+  /* 酒店城市卡：照片左下角的價格標 */
+  .pbadge{position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:baseline;gap:2px;height:28px;padding:0 10px;border-radius:999px;
+    background:rgba(255,255,255,.95);color:var(--ink);box-shadow:0 1px 6px rgba(0,0,0,.18);pointer-events:none;line-height:28px}
+  .pbadge strong{font-size:14.5px;font-weight:800}
+  .pbadge small{font-size:11px;color:var(--muted)}
+  /* 酒店大圖的「房卡」：左邊金色晶片 */
+  .pass.key .pass-route{gap:12px}
+  .key-chip{flex:0 0 auto;width:30px;height:24px;border-radius:5px;background:linear-gradient(135deg,#F7D774,#C9A13B);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);background-image:linear-gradient(90deg,transparent 45%,rgba(0,0,0,.18) 45% 55%,transparent 55%),linear-gradient(transparent 45%,rgba(0,0,0,.18) 45% 55%,transparent 55%),linear-gradient(135deg,#F7D774,#C9A13B)}
+  .pass.key .pr-end{flex:1 1 auto;min-width:0}
+  .pass.key .pr-end b{letter-spacing:3px}
+  .pass.key .pr-end small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .key-wave{flex:0 0 auto;width:34px;height:34px;border-radius:999px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:var(--yellow)}
+  .key-wave .ic{width:18px;height:18px}
   .hname{font-size:16px;font-weight:800;line-height:1.35;min-height:2.7em;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .hotel .top-row{align-items:flex-start}
   .hotel .area{font-size:13px;color:var(--muted)}
@@ -233,9 +290,11 @@
   .rlist{display:grid;grid-template-columns:minmax(0,1fr);background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
   @media (min-width:640px){ .rlist{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (min-width:1000px){ .rlist{grid-template-columns:repeat(3,minmax(0,1fr))} }
-  .rrow{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;text-decoration:none;color:var(--ink);min-width:0;
+  .rrow{display:flex;align-items:center;gap:10px;height:56px;padding:0 16px 0 12px;text-decoration:none;color:var(--ink);min-width:0;
     border-bottom:1px solid var(--line);margin-bottom:-1px}
   .rrow:hover{background:var(--soft)}
+  .rrow .rr-t{flex:0 0 auto;width:34px;height:34px;border-radius:999px}
+  .rrow .rr-t .shade,.rrow .rr-t .fb{display:none}
   .rrow .rr-c{font-weight:700;font-size:15px;white-space:nowrap}
   .rrow .rr-o{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 auto;min-width:0}
   .rrow .rr-go{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
@@ -245,14 +304,14 @@
   @media (min-width:1000px){ .wk-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible;margin:0;padding:2px 0 6px} .wk-row .mini{flex:none;min-width:0} }
   .mini{flex:0 0 200px;scroll-snap-align:start;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:8px}
   .mini .ph{aspect-ratio:4/3;border-radius:var(--r);box-shadow:var(--shadow)}
-  .mini .ph .cap{left:12px;right:12px;bottom:10px}
-  .mini .ph .cap .city{font-size:20px}
+  .mini .ph .shade{background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 32%)}
   .mini .badges{top:10px;left:10px;right:10px}
   .mini .mb{padding:0 2px;display:flex;flex-direction:column;gap:2px}
   .mini .md{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-  .mini .mp strong{font-size:17px;font-weight:900;white-space:nowrap}
-  .mini .mp span{font-size:12px;color:var(--muted);white-space:nowrap}
+  .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+  .mini .mc{font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .mini .mp strong{font-size:16px;font-weight:800;white-space:nowrap}
+  .mini .ms{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:2}
   .cap .city{font-size:24px;font-weight:900;line-height:1.1;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cap .lm{font-size:13px;margin-top:4px;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -304,17 +363,30 @@
   .sheet-x .ic{width:18px;height:18px}
   body.lock{overflow:hidden}
   .sheet .grid{grid-template-columns:minmax(0,1fr)}
-  .sh-head{position:relative;aspect-ratio:16/7;min-height:150px}
+  /* 寬高比 16:7，但至少 150 高（用 height 算，不用 aspect-ratio，否則窄螢幕會被撐寬） */
+  .sh-head{position:relative;width:100%;height:max(150px, calc(min(100vw, 640px) * 0.4375))}
   .sh-head .cap{left:20px;bottom:16px}
   .sh-body{padding:16px 16px 24px}
   .facts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  /* 價格日曆上方的小登機證：機場代碼、飛行時間、最低價 */
+  .ticket{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;position:relative}
+  .tk-end{display:flex;flex-direction:column;line-height:1.1;flex:0 0 auto}
+  .tk-end b{font-size:21px;font-weight:800;letter-spacing:.4px}
+  .tk-end small{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .tk-mid{position:relative;flex:1 1 auto;display:flex;align-items:center;gap:5px;min-width:30px;padding-bottom:14px}
+  .tk-mid i{flex:1 1 auto;border-top:1.5px dotted #C7CDD6}
+  .tk-plane{width:16px;height:16px;color:var(--gold);transform:rotate(90deg)}
+  .tk-mid small{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap}
+  .tk-p{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;margin-left:4px;padding-left:14px;border-left:1.5px dashed var(--line);align-self:stretch;justify-content:center}
+  .tk-p small{font-size:11px;color:var(--muted)}
+  .tk-p strong{font-size:21px;font-weight:800;white-space:nowrap}
   .fact{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;color:var(--ink-2);border:1px solid var(--line)}
   .fact b{font-weight:700;color:var(--ink)}
   .cal{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:12px;border:1px solid var(--line)}
   .cal h4{margin:0 0 10px;font-size:15px;font-weight:800}
   .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
   .cal-grid .wd{font-size:11px;color:var(--muted);text-align:center;padding-bottom:2px}
-  .day{border:0;border-radius:10px;min-height:46px;padding:4px 0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;color:var(--faint)}
+  .day{border:0;border-radius:10px;min-height:46px;padding:4px 0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;color:var(--muted)}
   .day .n{font-size:12px;font-weight:700;line-height:1.2}
   .day .p{font-size:10.5px;line-height:1.2;margin-top:2px;white-space:nowrap;font-weight:700}
   .day.blank{background:transparent}
@@ -327,6 +399,7 @@
   .opt:last-child{border-bottom:0}
   .opt:hover{background:var(--soft)}
   .opt .d1{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:359px){ .opt{padding:11px 12px;gap:8px} .opt .d1{font-size:13px} .opt .pp strong{font-size:16px} }
   .opt .d2{font-size:12px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;min-width:0}
   .opt .d2 .logo{height:18px;max-width:54px}
   .opt .d2 .logo img{height:18px}
@@ -345,13 +418,43 @@
   .share-url{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
   .btn2{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 16px;border-radius:14px;
     border:1px solid var(--line);background:#fff;font-weight:700;font-size:14.5px}
+  /* 幫我選的結果：城市照片＋登機證 */
+  .win{position:relative;min-height:min(420px, 60vh);border-radius:22px 22px 0 0;display:flex;align-items:flex-end}
+  .win .shade{background:linear-gradient(180deg,rgba(5,12,24,.45) 0%,rgba(5,12,24,.05) 35%,rgba(5,12,24,.8) 100%)}
+  .win .fb{font-size:0}
+  .win-pre{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+  .win-sub{margin-top:4px;font-size:13.5px;font-weight:600;opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+  .btn2.fav-btn{color:var(--ink);position:relative}
+  .btn2.fav-btn[aria-pressed="true"]{color:var(--red)}
+  .btn2.fav-btn .fav-t{color:var(--ink)}
+  .win-in{position:relative;z-index:2;width:100%;padding:20px 18px 18px;color:#fff}
+  .win-in h3{margin:10px 0 0;font-size:32px;font-weight:900;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+  .win .pass{max-width:none}
   .slot{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:22px 22px 0 0}
   .slot .s1{font-size:13px;color:#C9D6EA;letter-spacing:2px}
   .slot .s2{font-size:40px;font-weight:900;margin-top:6px;letter-spacing:2px}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:10px 18px;
     border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
-  footer{color:var(--faint);font-size:12px;line-height:1.8;padding:28px 16px 48px;margin-top:20px;border-top:1px solid var(--line)}
+  footer{color:var(--muted);font-size:12px;line-height:1.8;padding:28px 16px 52px}
+  footer p{margin:8px 0 0}
+  .ft-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .ft-brand img{width:40px;height:40px;border-radius:11px;box-shadow:var(--shadow)}
+  .ft-brand b{display:block;color:var(--ink);font-size:15px;font-weight:800}
+  .ft-brand span{display:block;color:var(--muted);font-size:12.5px}
+  /* 區塊標題上方的英文小字（像雜誌／Apple 的 eyebrow） */
+  h2.sec[data-eb]::before{content:attr(data-eb);content:attr(data-eb) / "";display:block;font-family:var(--font);font-size:11.5px;font-weight:800;
+    letter-spacing:2.2px;color:var(--gold);margin-bottom:5px;line-height:1}
+  /* 雷達：整條深色帶狀區塊，背景有淡淡的點陣 */
+  .band{margin-top:30px;padding:2px 0 40px;color:#fff;
+    background:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.2px) 0 0/22px 22px,
+               radial-gradient(120% 90% at 50% 0%,#16386A 0%,#0B2340 55%,#071A30 100%)}
+  .band h2.sec{color:#fff}
+  .band h2.sec[data-eb]::before{color:var(--yellow)}
+  .band .sub{color:#AFC2DC}
+  .band .radar-wrap{background:transparent;box-shadow:none;padding:0}
+  /* 沒有結果時的小插圖 */
+  .empty-art{display:block;width:120px;height:72px;margin:0 auto 10px}
 
   /* ====================== 動畫（系統設定「減少動態」時全部關掉） ====================== */
   .hero-load{position:relative;height:380px;overflow:hidden;background:linear-gradient(160deg,#13335C,#0B2340 60%,#071A30);display:flex;align-items:center;justify-content:center;color:#C9D6EA;font-weight:700;font-size:15px}
@@ -383,6 +486,10 @@
   .anim .slide.act .in .wrap:last-child > *:nth-child(5){transition-delay:.24s}
   .hero-cta .ic{animation:nudge 1.8s ease-in-out infinite}
   @keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateX(4px)}}
+  /* 登機證上的小飛機沿著虛線前後飄 */
+  .anim .pr-plane,.anim .tk-plane{animation:glide 3.2s ease-in-out infinite}
+  .hero.off .pr-plane{animation-play-state:paused}
+  @keyframes glide{0%,100%{translate:-4px 0}50%{translate:4px 0}}
   .brand .ping{display:inline-block;position:relative;width:8px;height:8px;border-radius:999px;background:var(--yellow);margin-right:8px;vertical-align:2px}
   .brand .ping::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--yellow);animation:ping 2s ease-out infinite}
   @keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(3);opacity:0}}
@@ -452,24 +559,24 @@
 
   <div class="wrap">
     <div class="sec-head">
-      <div><h2 class="sec">想去哪？</h2>
+      <div><h2 class="sec" data-eb="EXPLORE">想去哪？</h2>
       <p class="sub" id="tilesSub">點一下只看那個地區</p></div>
       <button class="lucky" id="luckyBtn">幫我選！</button>
     </div>
     <div class="tiles" id="tiles"></div>
 
     <section id="favSec" class="hidden">
-      <h2 class="sec">我收藏的航線</h2>
+      <h2 class="sec" data-eb="SAVED">我收藏的航線</h2>
       <div class="scroller wk-row" id="favList"></div>
     </section>
 
     <section id="picks" class="hidden">
-      <h2 class="sec" id="picksTitle">Adam 今日精選</h2>
+      <h2 class="sec" data-eb="TODAY’S PICK" id="picksTitle">Adam 今日精選</h2>
       <div id="pickList"></div>
     </section>
 
     <div id="listTop">
-      <h2 class="sec" id="fTitle">便宜機票</h2>
+      <h2 class="sec" data-eb="DEALS" id="fTitle">便宜機票</h2>
       <p class="sub" id="fSub">預估最低價</p>
     </div>
 
@@ -501,19 +608,20 @@
     <button class="more hidden" id="moreBtn">查看更多航線</button>
 
     <section id="moreRoutes" class="hidden">
-      <h2 class="sec" id="mrTitle">其他熱門航線</h2>
+      <h2 class="sec" data-eb="MORE ROUTES" id="mrTitle">其他熱門航線</h2>
       <p class="sub" id="mrSub">還沒有預估價，點了直接看 Trip.com 即時價</p>
       <div class="date-note" id="mrDates"></div>
       <div class="rlist" id="routeList"></div>
       <button class="more hidden" id="routesMore">顯示全部</button>
     </section>
-
-    <section id="radarSec" class="hidden">
-      <h2 class="sec">便宜票雷達</h2>
+  </div>
+  <section id="radarSec" class="band hidden">
+    <div class="wrap">
+      <h2 class="sec" data-eb="RADAR">便宜票雷達</h2>
       <p class="sub" id="radarSub">越綠越便宜，點一下看日期</p>
       <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
-    </section>
-  </div>
+    </div>
+  </section>
 </section>
 
 <!-- ===================== 酒店 ===================== -->
@@ -525,11 +633,11 @@
       <div class="prow"><span class="plbl sr-only">地區</span><div class="pctl"><div class="scroller" id="hCountries" role="group" aria-label="地區"></div></div></div>
     </div>
     <section id="hotelPicked" class="hidden">
-      <h2 class="sec">精選酒店</h2>
+      <h2 class="sec" data-eb="STAYS">精選酒店</h2>
       <div class="meta-row"><span id="hUpdated"></span><span id="hCount"></span></div>
       <div class="grid" id="hotelList"></div>
     </section>
-    <h2 class="sec" id="hcTitle">熱門城市酒店</h2>
+    <h2 class="sec" data-eb="HOTELS" id="hcTitle">熱門城市酒店</h2>
     <p class="sub" id="hcSub">每晚參考價，點了看 Trip.com 即時房價</p>
     <div class="grid grid-sm" id="hotelCities"></div>
   </div>
@@ -544,9 +652,9 @@
 </div>
 
 <footer class="wrap">
-  價格為預估最低價，每天自動更新，實際以 Trip.com 為準。<br />
-  本頁訂購連結為 Trip.com 聯盟連結，你付的價格不變，我會獲得少量回饋。謝謝支持！<br />
-  照片：Wikipedia／Wikimedia Commons。本站非 Trip.com 官方網站。
+  <div class="ft-brand"><img src="icon-180.png" alt="" width="40" height="40" /><div><b>HOWTRAVLE 便宜票雷達</b><span>台灣出發・日韓泰越・大陸港・每天自動更新</span></div></div>
+  <p>價格為預估最低價，實際以 Trip.com 為準。本頁訂購連結為 Trip.com 聯盟連結，你付的價格不變，我會獲得少量回饋，謝謝支持！</p>
+  <p>照片：Wikipedia／Wikimedia Commons。本站非 Trip.com 官方網站。</p>
 </footer>
 
 <script>
@@ -749,6 +857,8 @@ function icon(name, cls){
   return `<svg class="ic${f ? " f" : ""}${cls ? " " + cls : ""}" viewBox="0 0 24 24" aria-hidden="true">${f ? v.slice(1) : v}</svg>`;
 }
 const ARROW = () => icon("arrow");
+// 沒有結果時的小插圖（雲＋虛線航線＋小飛機）
+const EMPTY_ART = `<svg class="empty-art" viewBox="0 0 120 72" aria-hidden="true"><ellipse cx="44" cy="54" rx="30" ry="12" fill="#E8ECF2"/><ellipse cx="78" cy="50" rx="24" ry="10" fill="#EEF1F5"/><path d="M14 40 C 40 34, 70 18, 106 12" fill="none" stroke="#C9D2DE" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/><g transform="translate(88 16) rotate(62) scale(1.1) translate(-12 -12)" fill="#FFC72C"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></g></svg>`;
 
 /* ====================================================================
    ③ 小工具
@@ -770,7 +880,7 @@ function countUp(el, to){
   if (!el || !MOTION) return;
   const from = Math.round(to * 0.62), t0 = performance.now(), dur = 750;
   const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = money(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
+    el.innerHTML = priceHTML(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 // 捲到才浮上來：卡片、小卡、磚塊、標題…（面板裡、左右滑的列不用）
@@ -796,7 +906,7 @@ function revealify(){
   const els = document.querySelectorAll(".card:not([data-rv]), .mini:not([data-rv]), .tile:not([data-rv]), h2.sec:not([data-rv]), .radar-wrap:not([data-rv]), .rlist:not([data-rv])");
   for (const el of els){
     el.dataset.rv = "1";
-    if (el.closest("#sheet, .scroller")) continue;
+    if (el.closest("#sheet, .scroller, .tiles")) continue;
     el.classList.add("rv");
     revealObs.observe(el); revealWatched.add(el);
   }
@@ -811,6 +921,8 @@ function wd(s){ return parseD(s).getUTCDay(); }
 function fmtDate(s){ const d = parseD(s); return `${d.getUTCMonth()+1}/${d.getUTCDate()}（${WD[d.getUTCDay()]}）`; }
 function fmtDateLong(s){ const d = parseD(s); return `${d.getUTCMonth()+1}月${d.getUTCDate()}日 週${WD[d.getUTCDay()]}`; }
 function money(n){ return "NT$" + Math.round(n).toLocaleString("en-US"); }
+// 價格排版：「NT$」小字＋數字大字（像訂票 App）
+function priceHTML(n){ return `<span class="cur">NT$</span>${Math.round(n).toLocaleString("en-US")}`; }
 function fmtTime(iso){
   const d = new Date(iso); if (isNaN(d)) return "";
   const t = new Date(d.getTime() + 8*3600e3);
@@ -849,17 +961,19 @@ function commonsUrl(file, size){
 const loadedImg = new Set(); // 這次瀏覽已經載入過的照片網址
 // 指定的照片檔抓不到時，改用這個維基條目的代表照片
 const FILE_FALLBACK = { "File:Hong Kong Skyline Restitch - Dec 2007.jpg": "Victoria Harbour" };
-function photoHTML(wiki, country, label, size, eager){
+// inline＝外層是 <button>／<span> 時用 span 包（button 裡不能放 div）
+function photoHTML(wiki, country, label, size, eager, inline){
   size = stdSize(size);
+  const T = inline ? "span" : "div";
   const lazy = eager ? "" : ' loading="lazy"';
   // 已經載入過：直接放網址並顯示（重畫時不會再淡入一次）
   const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + size] || {}).u;
   if (known && loadedImg.has(known))
-    return `<div class="fb">${esc(label || "")}</div><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><div class="shade"></div>`;
+    return `<${T} class="fb" aria-hidden="true">${esc(label || "")}</${T}><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><${T} class="shade"></${T}>`;
   const img = !wiki ? "" : /^File:/.test(wiki)
     ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${FILE_FALLBACK[wiki] ? ` data-fb="${esc(FILE_FALLBACK[wiki])}" data-size="${size}"` : ""}${lazy} decoding="async" />`
     : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size}"${lazy} decoding="async" />`;
-  return `<div class="fb">${esc(label || "")}</div>${img}<div class="shade"></div>`;
+  return `<${T} class="fb" aria-hidden="true">${esc(label || "")}</${T}>${img}<${T} class="shade"></${T}>`;
 }
 function queueImages(){ revealify(); clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
 // 真的抓不到：有備用條目就改抓備用，否則顯示漸層底
@@ -1111,7 +1225,7 @@ function flightCard(f, opt = {}){
     </div>
     ${opt.pick ? "" : favBtn(f.o, f.d)}
     <div class="cb">
-      <div class="top-row"><span class="cty">${esc(cityName(f.d))}</span><span class="price"><strong>${money(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></span></div>
+      <div class="top-row"><span class="cty">${esc(cityName(f.d))}</span><span class="price"><strong>${priceHTML(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></span></div>
       <div class="air">${logoHTML(f.airline)}<span class="an">${esc(ORIGIN_NAME[f.o])}出發・${esc(airlineLabel(f.airline))}</span>${nDates > 1 ? `<button class="more-d" data-route="${esc(f.o)}-${esc(f.d)}">${nDates} 組日期 ›</button>` : ""}</div>
       <div class="when${nDates > 1 ? " tap" : ""}"${nDates > 1 ? ` data-route="${esc(f.o)}-${esc(f.d)}"` : ""}>
         <b>${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</b><span class="dm">${esc([days, stops].filter(Boolean).join("・"))}</span>
@@ -1123,19 +1237,19 @@ function flightCard(f, opt = {}){
 
 // 航空公司名稱：名單裡有就用中文名，沒有就寫「其他航空」，資料沒給就請粉絲到 Trip.com 看
 function airlineLabel(code){ return AIRLINE_NAMES[code] || (code ? "其他航空" : "航空公司見 Trip.com"); }
-// 小卡（今天最划算、收藏、說走就走共用）：照片＋城市，下面日期、價格、去 Trip.com
+// 收藏小卡：照片在上，下面城市與價格、日期、出發地；整張點了去 Trip.com
 function miniCard(f, o = {}){
   const url = flightUrl(f); if (!url) return "";
   const lm = landmarkOf(f.d);
+  // 跟機票卡同一套：照片在上，城市與價格在下
   return `<a class="mini" href="${esc(url)}" target="_blank" rel="noopener sponsored">
-      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), o.size || 640, false)}
-        ${o.badge ? `<div class="badges">${o.badge}</div>` : ""}
-        <div class="cap"><div class="city">${esc(cityName(f.d))}</div><div class="lm">${icon(o.capIcon || "pin")}${esc(ORIGIN_NAME[f.o])}出發</div></div></div>
-      <div class="mb">${o.why ? `<div class="why">${icon("star")} ${esc(o.why)}</div>` : ""}
-        <div class="md">${esc(o.md || (fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : "")))}</div>
-        <div class="mp"><strong>${money(f.price)}</strong><span>${esc(o.mp || "")}</span></div>
-        ${o.ma ? `<div class="ma">${esc(o.ma)}</div>` : ""}
-        </div></a>`;
+      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 640, false)}
+        ${o.badge ? `<div class="badges">${o.badge}</div>` : ""}</div>
+      <div class="mb">
+        <div class="mp"><b class="mc">${esc(cityName(f.d))}</b><strong>${priceHTML(f.price)}</strong></div>
+        <div class="md">${esc(fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : ""))}</div>
+        <div class="ms">${esc([`${ORIGIN_NAME[f.o]}出發`, o.mp].filter(Boolean).join("・"))}</div>
+      </div></a>`;
 }
 
 /* ====================================================================
@@ -1146,7 +1260,7 @@ let heroSig = null, heroCounted = false; // 大圖內容沒變就不重畫；價
 function renderHero(){
   const box = $("#hero");
   if (!state.loaded){ clearInterval(heroTimer); heroSig = null; box.innerHTML = heroLoading(); return; }
-  const top = cheapestPerCity(modeFiltered()).slice(0, CONFIG.heroSlides);
+  const top = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, CONFIG.heroSlides);
   const sig = [state.mode, innerWidth, ...top.map(f => [f.o, f.d, f.dep, f.ret, f.price, f.airline].join(","))].join("|");
   if (sig === heroSig) return; // 一樣就不動（不會閃、不會重新跳數字）
   const again = heroSig !== null && heroCounted; // 不是第一次：直接顯示，不再跳數字
@@ -1167,19 +1281,14 @@ function renderHero(){
   } else {
     slides = top.map((f, i) => {
       const lm = landmarkOf(f.d);
-      const url = flightUrl(f);
-      const dates = f.ret ? `${fmtDate(f.dep)} → ${fmtDate(f.ret)}` : fmtDate(f.dep);
-      const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
       return `
       <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
         ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}
         <div class="in">
           <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span></div>
-          <div class="wrap">
+          <div class="wrap has-pass">
             <h2>${esc(cityName(f.d))}</h2>
-            <div class="pricebig"><small>${f.ret ? "來回" : "單程"}</small><strong data-v="${Math.round(f.price)}">${money(f.price)}</strong><small>起</small></div>
-            <div class="meta">${[`${ORIGIN_NAME[f.o]}出發`, dates, f.direct ? "直飛" : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div>
-            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看機票，說走就走${ARROW()}</a>
+            ${passHTML(f)}
           </div>
         </div>
       </div>`;
@@ -1189,7 +1298,7 @@ function renderHero(){
   // 用實際的寬高畫，飛機不會被拉長變形
   const W = Math.max(240, box.clientWidth || innerWidth - 32), Hh = Math.round((innerWidth >= 760 ? 440 : 380) * 0.42);
   const P = (x, y) => `${Math.round(x * W)} ${Math.round(y * Hh)}`;
-  const d = `M${P(-0.05, 0.75)} C ${P(0.27, 0.68)}, ${P(0.52, 0.2)}, ${P(1.05, 0.11)}`;
+  const d = `M${P(-0.05, 0.78)} C ${P(0.27, 0.72)}, ${P(0.55, 0.3)}, ${P(1.05, 0.34)}`;
   const fp = !MOTION ? "" : `<svg class="fp" viewBox="0 0 ${W} ${Hh}" aria-hidden="true">
       <path id="fpPath" class="fp-line" d="${d}"/><path class="fp-glow" d="${d}"/>
       <g class="fp-plane"><g transform="rotate(90) scale(${innerWidth >= 760 ? 1 : .8}) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
@@ -1203,7 +1312,7 @@ function renderHero(){
   const activate = (i, quiet) => {
     if (i === actIdx) return; actIdx = i;
     slideEls.forEach((el, k) => el.classList.toggle("act", k === i));
-    const st = slideEls[i] && slideEls[i].querySelector(".pricebig strong[data-v]");
+    const st = slideEls[i] && slideEls[i].querySelector(".pass strong[data-v]");
     if (st && !quiet){ countUp(st, Number(st.dataset.v)); heroCounted = true; }
   };
   if (again) activate(0, true); // 資料更新後重畫：直接顯示
@@ -1234,9 +1343,11 @@ function renderTiles(){
   setHTML($("#tiles"), order.map(c => {
     const min = mins[c] || null;
     const p = COUNTRY_PHOTO[c];
+    // 像 IG 限時動態：圓形照片；最便宜的地區外圈是漸層色
+    const hot = min && c === order[0];
     return `<button class="tile${min || !state.loaded ? "" : " nop"}" data-v="${c}" aria-pressed="${state.country === c}">
-      <div class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false)}</div>
-      <div class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) + " 起" : (state.loaded ? "查即時價" : "讀取中")}</span></div>
+      <span class="ring${hot ? " hot" : ""}"><span class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false, true)}</span></span>
+      <span class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
     </button>`;
   }).join(""));
   queueImages();
@@ -1249,12 +1360,15 @@ function renderMonths(){
   const base = baseFiltered();
   const keys = monthKeys(), thisYear = todayTW().slice(0, 4);
   const mins = keys.map(k => { let min = null; for (const f of base) if (f.dep.startsWith(k) && (min === null || f.price < min)) min = f.price; return min; });
-  const low = Math.min(...mins.filter(Boolean));
+  const have = mins.filter(Boolean), low = Math.min(...have), high = Math.max(...have);
+  // 價格長條：越便宜越高（像 Google Flights 的價格圖），最便宜的月份是綠色
+  const bar = (p) => !p ? 0 : high === low ? 100 : Math.round(38 + 62 * (high - p) / (high - low));
   $("#months").innerHTML = keys.map((k, i) => {
     const [y,m] = k.split("-");
     const min = mins[i];
-    return `<button class="month" aria-pressed="${k === state.month}" data-v="${k}">
-      <div class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</div><div class="p${min ? (min === low ? " low" : "") : " none"}">${min ? money(min) + " 起" : "查即時價"}</div></button>`;
+    return `<button class="month${min === low && have.length > 1 ? " best" : ""}" aria-pressed="${k === state.month}" data-v="${k}">
+      <span class="bar" aria-hidden="true"><i style="height:${bar(min)}%"></i></span>
+      <span class="mt"><span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? (min === low ? " low" : "") : " none"}">${min ? money(min) : "查即時價"}</span></span></button>`;
   }).join("");
 }
 function renderChips(){
@@ -1293,6 +1407,7 @@ function renderMoreRoutes(shown){
       if (!url) continue;
       const lm = landmarkOf(d);
       cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
+        <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false, true)}</span>
         <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(ORIGIN_NAME[o])}出發</span><span class="rr-go">看即時價 ›</span></a>`);
     }
   }
@@ -1330,11 +1445,11 @@ function renderFlights(){
   const box = $("#flightList");
   const narrowed = state.country || state.filter !== "cheap" || state.budget;
   if (!modeFiltered().length){
-    box.innerHTML = `<div class="empty"><b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
+    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
       <div class="btns"><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else if (!list.length){
     const hol = state.filter === "holiday" && suggestDates().holiday;
-    box.innerHTML = `<div class="empty"><b>這個條件目前沒有預估低價</b>${hol ? "連假票通常比較早賣完，下面的熱門航線已幫你帶入連假日期。" : "下面的熱門航線可以直接看 Trip.com 即時價，或放寬條件看看。"}
+    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>這個條件目前沒有預估低價</b>${hol ? "連假票通常比較早賣完，下面的熱門航線已幫你帶入連假日期。" : "下面的熱門航線可以直接看 Trip.com 即時價，或放寬條件看看。"}
       <div class="btns">${narrowed ? `<button class="btn" data-clear>看全部最便宜的票</button>` : ""}</div></div>`;
   } else {
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
@@ -1412,17 +1527,34 @@ function hotelCard(h){
   </article>`;
 }
 let hotelHeroKey = null;
+// 酒店涵蓋的地區（依 HOTEL_CITY 自動算）：例如「日韓泰越・大陸港」
+function hotelRegions(){
+  const cs = new Set(Object.keys(HOTEL_CITY).map(countryOf));
+  const a = ["JP","KR","TH","VN"].filter(c => cs.has(c)).map(c => COUNTRIES[c][0]).join("");
+  const b = (cs.has("CN") ? "大陸" : "") + (cs.has("HK") ? "港" : "");
+  return [a, b].filter(Boolean).join("・");
+}
 function renderHotelHero(){
   const url = affiliate("https://tw.trip.com/hotels/");
   const curated = state.hotels.length > 0;
   if (hotelHeroKey === curated) return; // 沒變就不重畫（避免照片閃一下）
   hotelHeroKey = curated;
+  const refs = Object.values(HOTEL_REF).map(r => r[0]).filter(v => v > 0);
+  const hotelMin = refs.length ? Math.min(...refs) : null, regions = hotelRegions();
   $("#hotelHero").innerHTML = `<div class="hero-track"><div class="slide ph g-JP act" style="display:block">
       ${photoHTML("Fushimi Inari-taisha", "JP", "伏見稻荷大社", 1280, false)}
       ${MOTION ? `<div class="stars" aria-hidden="true">${[[8,18,0],[22,40,.8],[37,12,1.6],[55,30,.4],[68,8,2],[80,36,1.2],[91,20,.2],[46,52,1.9],[14,60,1.1],[74,58,.6]].map(([x, y, d]) => `<i style="left:${x}%;top:${y}%;animation-delay:${d}s"></i>`).join("")}</div>` : ""}
       <div class="in"><div class="wrap"><span class="eyebrow">${icon("bed")}${curated ? "便宜又不踩雷" : `${Object.keys(HOTEL_CITY).length} 個熱門城市`}</span></div>
-        <div class="wrap"><h2>下一趟住哪裡？</h2><div class="lm">熱門城市每晚參考價，一鍵看 Trip.com 房價</div>
-          <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">去 Trip.com 找酒店${ARROW()}</a></div></div>
+        <div class="wrap has-pass"><h2>下一趟住哪裡？</h2>
+          <a class="pass key" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${Object.keys(HOTEL_CITY).length} 個熱門城市，${esc(regions)}${hotelMin ? `，每晚 ${money(hotelMin)} 起` : ""}，去 Trip.com 找酒店">
+            <span class="pass-route"><span class="key-chip" aria-hidden="true"></span>
+              <span class="pr-end"><b>HOTEL</b><small>熱門城市每晚參考價</small></span>
+              <span class="key-wave" aria-hidden="true">${icon("bed")}</span></span>
+            <span class="pass-foot">
+              <span class="pf-d"><span><small>城市</small>${Object.keys(HOTEL_CITY).length} 個</span><span><small>地區</small>${esc(regions)}</span></span>
+              <span class="pf-p">${hotelMin ? `<small>每晚・起</small><strong>${priceHTML(hotelMin)}</strong>` : ""}<em>找酒店 ${ARROW()}</em></span>
+            </span>
+          </a></div></div>
     </div></div>`;
 }
 // Trip.com 酒店搜尋頁（含入住／退房日期、2 位成人、1 間房）
@@ -1458,11 +1590,11 @@ function renderHotelCities(){
     const lm = LANDMARKS[c], co = countryOf(c), ref = HOTEL_REF[c];
     return `<article class="card hc">
       <a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(cityName(c))}酒店，看 Trip.com 房價"></a>
-      <div class="ph g-${esc(co || "")}">${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}</div>
+      <div class="ph g-${esc(co || "")}">${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}
+        ${ref ? `<span class="pbadge"><strong>${priceHTML(ref[0])}</strong><small>／晚起</small></span>` : ""}</div>
       <div class="cb">
         <div class="top-row"><span class="cty">${esc(cityName(c))}</span></div>
-        <div class="air"><span class="an">${esc([COUNTRIES[co], `${nights} 晚`].filter(Boolean).join("・"))}</span></div>
-        ${ref ? `<div class="ref">每晚約 <b>${money(ref[0])}</b> 起</div>` : ""}
+        <div class="air"><span class="an">${esc([COUNTRIES[co], `${nights} 晚參考`].filter(Boolean).join("・"))}</span></div>
       </div>
     </article>`;
   }).join("");
@@ -1639,12 +1771,15 @@ function nextHoliday(){ return upcomingHolidays()[0] || null; }
 /* ====================================================================
    ⑮ 彈出面板：價格日曆、幫我選、分享
    ==================================================================== */
-let sheetReturnFocus = null, sheetInHistory = false;
-function openSheet(html){
+// 面板的「返回」：每打開一層就記一筆瀏覽紀錄，手機按返回先回上一層（例如價格日曆 → 幫我選的結果），最後才關掉
+let sheetReturnFocus = null, sheetDepth = 0;
+const sheetStack = []; // 上一層的內容（整段畫面原封不動收起來，收藏狀態、照片都保留）
+function openSheet(html, stack = false){
   const wasOpen = !$("#sheet").classList.contains("hidden");
-  if (!wasOpen) sheetReturnFocus = document.activeElement;
-  // 手機按「返回」時先關面板，不要直接離開網站
-  if (!wasOpen && !sheetInHistory){ try { history.pushState({ howSheet: 1 }, ""); sheetInHistory = true; } catch(e) {} }
+  if (!wasOpen){ sheetReturnFocus = document.activeElement; sheetStack.length = 0; }
+  const push = !wasOpen || stack;
+  if (push){ try { history.pushState({ howSheet: sheetDepth + 1 }, ""); sheetDepth++; } catch(e) {} }
+  if (wasOpen && stack){ const frag = document.createDocumentFragment(); frag.append(...$("#sheetBody").childNodes); sheetStack.push({ frag, scroll: $("#sheet .sheet-panel").scrollTop }); }
   $("#sheetBody").innerHTML = html;
   $("#sheet").classList.remove("hidden");
   document.body.classList.add("lock");
@@ -1652,15 +1787,29 @@ function openSheet(html){
   $("#sheet .sheet-x").focus({ preventScroll: true });
   queueImages();
 }
+// 關掉整個面板（按 X、Esc、點背景）：把這次記的瀏覽紀錄一次退掉
 function closeSheet(fromBack){
-  clearTimeout(slotTimer);
+  clearTimeout(slotTimer); clearTimeout(confettiTimer);
   if ($("#sheet").classList.contains("hidden")) return;
   $("#sheet").classList.add("hidden");
   document.body.classList.remove("lock");
-  if (sheetInHistory){ sheetInHistory = false; if (!fromBack) try { history.back(); } catch(e) {} }
+  sheetStack.length = 0;
+  const n = sheetDepth; sheetDepth = 0;
+  if (n && !fromBack) try { history.go(-n); } catch(e) {}
   if (sheetReturnFocus && sheetReturnFocus.focus) sheetReturnFocus.focus({ preventScroll: true });
 }
-window.addEventListener("popstate", () => { if (sheetInHistory) closeSheet(true); });
+window.addEventListener("popstate", () => {
+  if (!sheetDepth) return;
+  sheetDepth--;
+  const prev = sheetStack.pop();
+  if (prev && !$("#sheet").classList.contains("hidden")){
+    clearTimeout(confettiTimer);
+    $("#sheetBody").replaceChildren(prev.frag);
+    $("#sheet .sheet-panel").scrollTop = prev.scroll;
+    return;
+  }
+  closeSheet(true);
+});
 function toast(msg){
   const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
@@ -1676,7 +1825,6 @@ function routeSheetHTML(o, d){
   const durs = list.map(f => f.dur).filter(Boolean);
   const facts = [
     `<span class="fact">${icon("clock")}時差 <b>${esc(TZ[c] || "")}</b></span>`,
-    durs.length ? `<span class="fact">${icon("plane")}飛行約 <b>${esc(fmtDur(Math.min(...durs)))}</b></span>` : "",
     CURRENCY_NAME[c] ? `<span class="fact">貨幣 <b>${esc(CURRENCY_NAME[c])}</b></span>` : "",
   ].join("");
   // 價格日曆：每個出發日的最低價，依價格分三級上色
@@ -1696,7 +1844,7 @@ function routeSheetHTML(o, d){
       const key = `${m}-${String(dd).padStart(2, "0")}`, f = byDay.get(key), ix = `style="--i:${first + dd}"`;
       cells.push(f
         ? `<button class="day lv${lv(f.price)}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}"><span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
-        : `<div class="day" ${ix}><span class="n" style="color:#94A3B8;font-weight:500">${dd}</span></div>`);
+        : `<div class="day" ${ix}><span class="n" style="font-weight:500">${dd}</span></div>`);
     }
     return `<div class="cal"><h4>${y} 年 ${mm} 月</h4><div class="cal-grid">${cells.join("")}</div></div>`;
   }).join("");
@@ -1706,7 +1854,7 @@ function routeSheetHTML(o, d){
     return `<a class="opt" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div style="min-width:0"><div class="d1">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
         <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([f.airline ? airlineLabel(f.airline) : "", days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
-      <div class="pp"><strong>${money(f.price)}</strong><span>訂這組 →</span></div></a>`;
+      <div class="pp"><strong>${priceHTML(f.price)}</strong><span>訂這組 →</span></div></a>`;
   }).join("");
   const url = flightUrl(cheapest);
   const hotelUrl = hotelCityUrl(d, cheapest.dep, cheapest.ret || addDays(cheapest.dep, 3));
@@ -1714,6 +1862,12 @@ function routeSheetHTML(o, d){
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${sheetRouteSVG()}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[c] || "")}</div></div></div>
     <div class="sh-body">
+      <div class="ticket">
+        <span class="tk-end"><b>${esc(cheapest.oAp || o)}</b><small>${esc(ORIGIN_NAME[o])}</small></span>
+        <span class="tk-mid"><i></i>${icon("plane", "tk-plane")}<i></i><small>${durs.length ? esc(fmtDur(Math.min(...durs))) : (cheapest.direct ? "直飛" : "")}</small></span>
+        <span class="tk-end"><b>${esc(cheapest.dAp || d)}</b><small>${esc(cityName(d))}</small></span>
+        <span class="tk-p"><small>最低</small><strong>${priceHTML(cheapest.price)}</strong></span>
+      </div>
       <div class="facts">${facts}</div>
       ${cal}
       <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
@@ -1728,7 +1882,7 @@ function routeSheetHTML(o, d){
 }
 function openRoute(o, d){
   const html = routeSheetHTML(o, d);
-  if (html) openSheet(html);
+  if (html) openSheet(html, true); // 從別的面板（例如幫我選）點進來時，返回會回到原本那層
 }
 // 暫時用指定的分頁／來回模式算資料（酒店頁的機票價格用「便宜機票・來回」）
 function withMode(mode, type, fn){
@@ -1758,7 +1912,7 @@ async function shareLink(text, url){
       <p class="sub" style="margin-bottom:10px">${esc(text)}</p>
       <input class="share-url" readonly value="${esc(url)}" aria-label="分享連結" />
       <div class="sh-actions"><button class="cta" id="copyUrl" style="flex:1 1 auto;border:0">${icon("share")}複製連結</button></div>
-      <p class="sub" style="margin-top:10px;font-size:12.5px">複製不了的話，長按上面的連結選「全選」再複製。</p></div>`);
+      <p class="sub" style="margin-top:10px;font-size:12.5px">複製不了的話，長按上面的連結選「全選」再複製。</p></div>`, true);
     const inp = document.querySelector(".share-url"); if (inp){ inp.focus({ preventScroll: true }); inp.select(); }
   }
 }
@@ -1774,6 +1928,23 @@ function sheetRouteSVG(){
     <g class="sr-plane"><g transform="rotate(90) scale(.8) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
       <animateMotion dur="1.6s" begin="0.15s" fill="freeze" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".4 0 .2 1"><mpath href="#srPath"/></animateMotion></g></svg>`;
 }
+// 登機證卡片（大圖、幫我選共用）：機場代碼、天數／直飛、去回程日期、價格，整張點了去訂票
+function passHTML(f){
+  const url = flightUrl(f); if (!url) return "";
+  const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
+  const tag = [days, f.direct ? "直飛" : ""].filter(Boolean).join("・");
+  return `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc(tag)}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
+              <span class="pass-route">
+                <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
+                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc(tag)}</small></span>
+                <span class="pr-end r"><b>${esc(f.dAp || f.d)}</b><small>${esc(cityName(f.d))}</small></span>
+              </span>
+              <span class="pass-foot">
+                <span class="pf-d"><span><small>去程</small>${esc(fmtDate(f.dep))}</span>${f.ret ? `<span><small>回程</small>${esc(fmtDate(f.ret))}</span>` : ""}</span>
+                <span class="pf-p"><small>${f.ret ? "來回" : "單程"}・起</small><strong data-v="${Math.round(f.price)}">${priceHTML(f.price)}</strong><em>看機票 ${ARROW()}</em></span>
+              </span>
+            </a>`;
+}
 // 抽中時灑彩帶（品牌色）
 function confettiHTML(){
   if (!MOTION) return "";
@@ -1787,20 +1958,30 @@ function confettiHTML(){
 }
 // 幫我選！：從目前分頁最便宜的 15 個城市隨機抽一個
 let slotTimer = null;
+let confettiTimer = null;
 function lucky(){
-  const pool = cheapestPerCity(modeFiltered()).slice(0, 15);
+  const pool = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, 15);
   if (!pool.length){ toast("票還在載入，等一下再試"); return; }
   const pick = pool[Math.floor(Math.random() * pool.length)];
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const show = () => { openSheet(`<div class="sh-body" style="padding-top:56px">
-      <h3 style="margin:0 0 4px;font-size:20px">就決定是${esc(cityName(pick.d))}了！</h3>
-      <p class="sub" style="margin-bottom:12px">從現在最便宜的 ${pool.length} 個地方幫你抽的</p>
-      <div class="grid">${flightCard(pick, { noMore: false })}</div>
-      <div class="sh-actions"><button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button></div></div>${confettiHTML()}`);
-    setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
+  const lm = landmarkOf(pick.d), save = savingPct(pick);
+  const winPhoto = () => photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
+  // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
+  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
+        <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
+          <h3>就決定是${esc(cityName(pick.d))}了！</h3>
+          <div class="win-sub">${esc([`${ORIGIN_NAME[pick.o]}出發`, airlineLabel(pick.airline), save ? `比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}` : ""].filter(Boolean).join("・"))}</div>
+          ${passHTML(pick)}</div></div>
+      <div class="sh-body"><div class="sh-actions" style="margin-top:0">
+        <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
+        ${favBtn(pick.o, pick.d, "btn2", true)}
+        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div></div>${confettiHTML()}`);
+    clearTimeout(confettiTimer);
+    confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
-  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div>`);
+  // 拉霸轉的時候先偷偷抓結果的照片，結果出來時照片已經好了
+  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto()}</div>`);
   let i = 0, delay = 60, t0 = Date.now();
   const tick = () => {
     const el = $("#slotName"); if (!el) return;
@@ -1874,9 +2055,10 @@ function saveFavPrice(k, p){
   try { localStorage.setItem(FAVP_KEY, JSON.stringify(favPrice)); } catch(e) {}
 }
 function isFav(o, d){ return favs.includes(favKey(o, d)); }
-function favBtn(o, d){
+// withText＝按鈕上也寫「收藏／已收藏」（幫我選的結果用）
+function favBtn(o, d, cls = "", withText = false){
   const on = isFav(o, d);
-  return `<button class="fav-btn" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}</button>`;
+  return `<button class="fav-btn${cls ? " " + cls : ""}" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}${withText ? `<span class="fav-t">${on ? "已收藏" : "收藏"}</span>` : ""}</button>`;
 }
 function toggleFav(o, d){
   const k = favKey(o, d);
@@ -1884,8 +2066,14 @@ function toggleFav(o, d){
   if (isFav(o, d)){ const l = routeFlights(o, d); if (l.length){ const p = Math.round(Math.min(...l.map(x => x.price))); saveFavPrice(k, p); favPriceAtLoad[favPK(k)] = { p, t: Date.now() }; } }
   try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e) {}
   toast(isFav(o, d) ? `已收藏${cityName(d)}，下次打開會在最上面` : `已取消收藏${cityName(d)}`);
-  for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.outerHTML = favBtn(o, d);
-  if (isFav(o, d)) for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.classList.add("pop");
+  // 原地更新（卡片的圓形愛心、幫我選的「收藏」按鈕各自保留樣子）
+  const on = isFav(o, d);
+  for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)){
+    b.setAttribute("aria-pressed", on); b.setAttribute("aria-label", `${on ? "取消收藏" : "收藏"} ${cityName(d)}`);
+    const ic = b.querySelector("svg"); if (ic) ic.outerHTML = icon(on ? "heartF" : "heart");
+    const t = b.querySelector(".fav-t"); if (t) t.textContent = on ? "已收藏" : "收藏";
+    b.classList.remove("pop"); if (on){ void b.offsetWidth; b.classList.add("pop"); }
+  }
   renderFavs();
 }
 function renderFavs(){
@@ -1904,7 +2092,7 @@ function renderFavs(){
     if (diff <= -100){ badge = `<span class="badge save">${icon("down")}比你上次看便宜 ${money(-diff)}</span>`; drops.push([d, -diff]); }
     else if (diff >= 100) badge = `<span class="badge">${icon("up")}比上次貴 ${money(diff)}</span>`;
     if (dataSettled) saveFavPrice(k, Math.round(f.price));
-    return miniCard(f, { capIcon: "heartF", mp: `最便宜・${list.length} 組`, badge });
+    return miniCard(f, { mp: `最便宜・${list.length} 組`, badge });
   }).join("");
   if (drops.length && !favDropToasted){
     favDropToasted = true;

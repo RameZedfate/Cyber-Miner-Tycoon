@@ -203,18 +203,59 @@ try {
       await page.waitForTimeout(300);
       if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板（返回鍵版本）");
     }
+    // 讓幫我選一定抽到有多組日期的城市（才測得到「全部日期」和返回鍵）
+    const pickable = await page.evaluate(() => { const pool = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, 15);
+      const i = pool.findIndex(f => routeFlights(f.o, f.d).length > 1); if (i < 0) return false;
+      Math.random = () => (i + 0.5) / pool.length; return true; });
+    if (!pickable) problems.push("測試資料裡沒有多組日期的城市可以抽");
     await page.click("#luckyBtn");
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
     await checkLinks(page, "幫我選", sub1);
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
-    await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 }).catch(() => {});
-    await page.click("#sheet .sheet-x");
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
+    // 幫我選結果上的「收藏」：按了變「已收藏」，關掉後上面出現收藏區；再按一次取消
+    const lf = await page.$("#sheet .btn2.fav-btn");
+    if (!lf) problems.push("幫我選的結果沒有收藏按鈕");
+    else {
+      const key = await lf.getAttribute("data-fav");
+      const wasOn = (await lf.getAttribute("aria-pressed")) === "true";
+      if (wasOn) await lf.click(); // 先變成沒收藏，從頭測
+      await page.click("#sheet .btn2.fav-btn");
+      const now = await page.$eval("#sheet .btn2.fav-btn", b => [b.getAttribute("aria-pressed"), b.textContent.trim(), b.classList.contains("btn2")]);
+      if (now[0] !== "true" || !now[1].includes("已收藏") || !now[2]) problems.push(`幫我選的收藏按鈕沒有正確切換：${JSON.stringify(now)}`);
+      // 返回鍵：幫我選 → 全部日期 → 返回要回到抽中的結果（收藏狀態還在），再返回才關掉
+      const allDates = await page.$("#sheet .sh-actions [data-route]");
+      if (!allDates) problems.push("幫我選的結果沒有「全部日期」");
+      else {
+        await allDates.click();
+        await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("幫我選的「全部日期」沒有打開價格日曆"));
+        await page.goBack(); await page.waitForTimeout(300);
+        if (!(await page.$("#sheet:not(.hidden) .win .pass"))) problems.push("價格日曆按返回沒有回到幫我選的結果");
+        else if ((await page.$eval("#sheet .btn2.fav-btn", b => b.getAttribute("aria-pressed"))) !== "true") problems.push("回到幫我選的結果後收藏狀態不見了");
+      }
+      if (!(await page.isVisible("#sheet"))) problems.push("幫我選的結果不見了");
+      // 關掉面板後上面出現收藏區
+      if (await page.isVisible("#sheet")) await page.click("#sheet .sheet-x");
+      await page.waitForTimeout(300);
+      if (!(await page.isVisible("#favSec"))) problems.push("幫我選收藏後，關掉面板沒有出現收藏區");
+      if (!wasOn) await page.evaluate(k => { const [o, d] = k.split("-"); toggleFav(o, d); }, key); // 恢復原狀
+    }
     if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板");
+    // 疊兩層（幫我選 → 全部日期）後按 X：要全部關掉、還在網站上
+    const here = page.url();
+    await page.click("#luckyBtn");
+    await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
+    if (await page.$("#sheet .sh-actions [data-route]")) {
+      await page.click("#sheet .sh-actions [data-route]");
+      await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => {});
+    }
+    await page.click("#sheet .sheet-x"); await page.waitForTimeout(400);
+    if (await page.isVisible("#sheet") || page.url() !== here) problems.push(`疊兩層後按 X 沒有乾淨關掉：${page.url()}`);
     await page.click('.tabs button[data-tab="hotels"]');
     const nCity = await page.$$eval("#hotelCities .card", e => e.length);
     if (nCity < 10) problems.push(`熱門城市酒店只有 ${nCity} 個`);
     // 參考價由便宜到貴
-    const refs = await page.$$eval("#hotelCities .ref b", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
+    const refs = await page.$$eval("#hotelCities .pbadge strong", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
     if (refs.some((v, i) => i && v < refs[i - 1])) problems.push(`熱門城市酒店沒有由便宜到貴：${refs.join(",")}`);
     // 入住日期選項：換日期後連結的入住日要跟著換
     const ci = async () => new URL(await page.$eval("#hotelCities .card-link", a => a.href)).searchParams.get("checkin");
