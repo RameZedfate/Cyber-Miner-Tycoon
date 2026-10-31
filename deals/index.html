@@ -471,6 +471,9 @@
   .anim .slide.act .in .wrap:last-child > *:nth-child(5){transition-delay:.24s}
   .hero-cta .ic{animation:nudge 1.8s ease-in-out infinite}
   @keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateX(4px)}}
+  /* 登機證上的小飛機沿著虛線前後飄 */
+  .anim .pr-plane,.anim .tk-plane{animation:glide 3.2s ease-in-out infinite}
+  @keyframes glide{0%,100%{transform:rotate(90deg) translateY(4px)}50%{transform:rotate(90deg) translateY(-4px)}}
   .brand .ping{display:inline-block;position:relative;width:8px;height:8px;border-radius:999px;background:var(--yellow);margin-right:8px;vertical-align:2px}
   .brand .ping::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--yellow);animation:ping 2s ease-out infinite}
   @keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(3);opacity:0}}
