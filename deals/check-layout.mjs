@@ -35,6 +35,8 @@ const MAIN = { updated_at: new Date().toISOString(), rows: [
   row("TPE","VDO","TPE","VDO",day(22),day(27),9900,1,0,"QQ"),        // 不在名單的航空公司
   row("TPE","FUK","TPE","FUK",day(15),null,2399,0,0,"IT"),
   row("TPE","CJU","TPE","CJU","2027-02-04","2027-02-09",8900,0,0,"KE"),
+  // 五位數價格（最寬的數字）：普吉島只有一萬多的票
+  row("TPE","HKT","TPE","HKT",day(11),day(16),12845,1,1,"TG"), row("TPE","HKT","TPE","HKT",day(12),day(17),13280,1,1,"TG"),
   // 說走就走：不管今天星期幾，都放幾張近 3 週週五出發、週日回來的票
   ...[0, 1, 2].flatMap(w => [["FUK", 3999], ["OKA", 4299], ["HKG", 3199]].map(([d, p], i) => {
     const fri = day(((5 - today.getUTCDay() + 7) % 7 || 7) + 7 * w); const sun = new Date(fri); sun.setUTCDate(sun.getUTCDate() + 2);
@@ -73,6 +75,16 @@ const server = http.createServer((req, res) => {
 }).listen(0);
 const base = `http://127.0.0.1:${server.address().port}/`;
 
+// 本機字型：@fontsource 的 Plus Jakarta Sans、Noto Sans TC（npm pack 解開後的 package 資料夾）。
+// 位置：環境變數 HOWTRAVLE_FONTS（裡面要有 pj/ 和 noto/），預設找 repo 根目錄的 .work/fonts
+const FONT_ROOT = process.env.HOWTRAVLE_FONTS || path.join(DIR, "..", ".work", "fonts");
+const FONT_DIRS = { pj: path.join(FONT_ROOT, "pj", "package"), noto: path.join(FONT_ROOT, "noto") };
+function fontCss(tag, weights) {
+  return weights.map(w => { const f = path.join(FONT_DIRS[tag], `${w}.css`); return fs.existsSync(f) ? fs.readFileSync(f, "utf8").replace(/url\(\.\/files\//g, `url(https://fonts.local/${tag}/files/`) : ""; }).join("\n");
+}
+const FONT_CSS = fontCss("pj", [400, 500, 600, 700, 800]) + fontCss("noto", [400, 500, 700, 900]);
+const REAL_FONTS = FONT_CSS.includes("Plus Jakarta Sans");
+console.log(REAL_FONTS ? "字型：用正式網站的 Plus Jakarta Sans／Noto Sans TC 量" : "⚠️ 找不到本機字型，用系統字型量（數字寬度可能跟正式網站不同）");
 // 網頁向維基百科要的照片寬度（只能是標準寬度，否則正式網站常常被拒絕）
 const askedSizes = new Set();
 const STD_SIZES = new Set(["500", "960", "1280", "1920"]);
@@ -82,8 +94,15 @@ async function setup(page) {
     body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MAIN) }));
   await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(PICKS) }));
   await page.route("**/hotels.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(HOTELS) }));
-  await page.route("https://fonts.googleapis.com/**", r => r.fulfill({ contentType: "text/css", body: "" }));
+  // 字型：有本機字型檔就用跟正式網站一樣的字型量（數字比較寬，才量得出會不會擠）；沒有就用系統字型並提醒
+  await page.route("https://fonts.googleapis.com/**", r => r.fulfill({ contentType: "text/css", body: FONT_CSS }));
   await page.route("https://fonts.gstatic.com/**", r => r.abort());
+  await page.route("https://fonts.local/**", r => {
+    const u = new URL(r.request().url()), [tag, ...rest] = u.pathname.slice(1).split("/");
+    const p = path.join(FONT_DIRS[tag] || "/nonexistent", ...rest);
+    if (!fs.existsSync(p)) return r.fulfill({ status: 404, body: "" });
+    r.fulfill({ contentType: "font/woff2", body: fs.readFileSync(p) });
+  });
   await page.route("https://en.wikipedia.org/w/api.php**", r => {
     const u = new URL(r.request().url());
     const titles = u.searchParams.get("titles").split("|");
@@ -295,7 +314,7 @@ async function measure(page) {
 }
 
 // 640、1000 是兩欄／三欄剛切換的寬度，最容易擠
-const VIEWPORTS = [[360, 780], [390, 844], [640, 900], [768, 1024], [1000, 800], [1280, 900], [1440, 900]];
+const VIEWPORTS = [[320, 640], [360, 780], [390, 844], [640, 900], [768, 1024], [1000, 800], [1280, 900], [1440, 900]];
 const all = [];
 const browser = await chromium.launch();
 try {
@@ -306,6 +325,7 @@ try {
     await setup(page);
     await page.goto(base);
     await page.waitForSelector("#flightList .card");
+    await page.evaluate(() => document.fonts.ready);
     // 減少動態：連 ::after（品牌雷達點）都不能動
     const pingAnim = await page.$eval(".brand .ping", e => getComputedStyle(e, "::after").animationName);
     if (pingAnim !== "none") all.push(`[${w}] 減少動態時品牌雷達點還在動（${pingAnim}）`);
@@ -392,7 +412,7 @@ try {
         }
         // 小登機證：代碼、飛機、價格不互相重疊
         const tk = document.querySelector("#sheet .ticket");
-        if (tk) { const e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p"));
+        if (tk) { const e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong"));
           if (e[0].right > pl.left || e[1].left < pl.right || e[1].right > pr.left) out.push("日曆上方的登機證文字重疊"); }
         const opts = [...document.querySelectorAll(".opt")];
         const ls = new Set(opts.map(o => Math.round(R(o).left))), rs = new Set(opts.map(o => Math.round(R(o).right)));
@@ -404,6 +424,14 @@ try {
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `sheet-${w}.png`) });
       await page.keyboard.press("Escape");
     }
+    // 五位數價格的價格日曆：上方小登機證的價格不能擠到代碼
+    await page.evaluate(() => openRoute("TPE", "HKT"));
+    await page.waitForSelector("#sheet:not(.hidden) .ticket", { timeout: 3000 }).catch(() => all.push(`[${w}px] 普吉島價格日曆沒打開`));
+    const tk5 = await page.evaluate(() => { const tk = document.querySelector("#sheet .ticket"); if (!tk) return "";
+      const R = (e) => e.getBoundingClientRect(), e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong")), box = R(tk);
+      return (e[0].right > pl.left || e[1].left < pl.right || e[1].right > R(tk.querySelector(".tk-p")).left || pr.right > box.right) ? `五位數價格的日曆登機證擠在一起（${tk.querySelector(".tk-p strong").textContent}）` : ""; });
+    if (tk5) all.push(`[${w}px] ${tk5}`);
+    await page.keyboard.press("Escape");
     // 幫我選
     await page.click("#luckyBtn");
     await page.waitForSelector("#sheet:not(.hidden) .card", { timeout: 5000 });
