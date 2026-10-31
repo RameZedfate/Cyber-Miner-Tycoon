@@ -214,7 +214,7 @@ try {
     const nCity = await page.$$eval("#hotelCities .card", e => e.length);
     if (nCity < 10) problems.push(`熱門城市酒店只有 ${nCity} 個`);
     // 參考價由便宜到貴
-    const refs = await page.$$eval("#hotelCities .ref b", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
+    const refs = await page.$$eval("#hotelCities .pbadge strong", els => els.map(e => Number(e.textContent.replace(/–.*/, "").replace(/[^0-9]/g, ""))));
     if (refs.some((v, i) => i && v < refs[i - 1])) problems.push(`熱門城市酒店沒有由便宜到貴：${refs.join(",")}`);
     // 入住日期選項：換日期後連結的入住日要跟著換
     const ci = async () => new URL(await page.$eval("#hotelCities .card-link", a => a.href)).searchParams.get("checkin");
