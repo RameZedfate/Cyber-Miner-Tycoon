@@ -25,7 +25,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* =====================================================================
      設計系統：參考 Airbnb（照片為主、文字在下、整張可點）、Apple（白底、分段切換、
@@ -37,7 +37,8 @@
     --line:#E5E7EB; --soft:#F3F4F6; --blue:#2563EB; --green:#0E7A4F;
     --r-lg:20px; --r:16px;
     --shadow:0 1px 2px rgba(17,24,39,.05),0 4px 14px rgba(17,24,39,.06);
-    --font:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
+    /* 英文與數字用 Plus Jakarta Sans（價格更俐落），中文自動落到 Noto Sans TC */
+    --font:"Plus Jakarta Sans","Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%;
@@ -94,16 +95,37 @@
   .hero h2{font-size:44px;line-height:1.02;margin:0 0 4px;font-weight:900;letter-spacing:.5px;text-shadow:0 2px 16px rgba(0,0,0,.3)}
   @media (min-width:760px){ .hero h2{font-size:64px} }
   .hero .lm{font-size:15px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.4)}
-  .hero .pricebig{display:flex;align-items:baseline;gap:6px;margin-top:6px;flex-wrap:wrap}
-  .hero .pricebig small{font-size:14px;font-weight:700;opacity:.9}
-  .hero .pricebig strong{font-size:34px;font-weight:900;color:var(--yellow);letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+  /* 登機證卡片（毛玻璃＋兩側半圓缺口＋撕線） */
+  .pass{--tear:66px;display:block;margin-top:10px;max-width:440px;color:#fff;text-decoration:none;border-radius:18px;
+    background:rgba(255,255,255,.14);backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.26),0 10px 30px rgba(0,0,0,.25);
+    -webkit-mask:radial-gradient(circle 9px at 0 var(--tear),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% var(--tear),#0000 98%,#000) right/51% 100% no-repeat;
+            mask:radial-gradient(circle 9px at 0 var(--tear),#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% var(--tear),#0000 98%,#000) right/51% 100% no-repeat}
+  .pass-route{display:flex;align-items:center;gap:10px;height:var(--tear);padding:0 16px;border-bottom:1.5px dashed rgba(255,255,255,.38)}
+  .pr-end{display:flex;flex-direction:column;line-height:1.05;flex:0 0 auto}
+  .pr-end.r{text-align:right}
+  .pr-end b{font-size:25px;font-weight:800;letter-spacing:.5px}
+  .pr-end small{font-size:12px;opacity:.85;margin-top:3px}
+  .pr-mid{position:relative;flex:1 1 auto;display:flex;align-items:center;gap:6px;min-width:0;padding-bottom:14px}
+  .pr-line{flex:1 1 auto;height:0;border-top:1.5px dotted rgba(255,255,255,.6)}
+  .pr-plane{width:18px;height:18px;color:var(--yellow);transform:rotate(90deg)}
+  .pr-mid small{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:11.5px;opacity:.9;white-space:nowrap}
+  .pass-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:10px 16px 12px}
+  .pf-d{display:flex;flex-direction:column;gap:2px;font-size:13.5px;font-weight:700;white-space:nowrap}
+  .pf-d small{font-size:11px;font-weight:600;opacity:.75;margin-right:6px}
+  .pf-p{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;white-space:nowrap}
+  .pf-p small{font-size:11px;opacity:.8}
+  .pf-p strong{font-size:30px;font-weight:800;color:var(--yellow);letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+  .pf-p strong .cur{font-size:.5em;margin-right:2px;font-weight:700}
+  .pf-p em{font-style:normal;font-size:12.5px;font-weight:700;margin-top:3px;display:inline-flex;align-items:center;gap:3px}
+  .pf-p em .ic{width:14px;height:14px}
   .hero .meta{font-size:14px;margin-top:2px;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.4);display:flex;flex-wrap:wrap;row-gap:2px}
   .hero .meta span{white-space:nowrap}
   .hero .meta span + span::before{content:"・"}
   .hero-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;height:46px;padding:0 22px;
     background:#fff;color:var(--navy);font-weight:800;font-size:15.5px;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.22)}
   .hero-cta .ic{width:18px;height:18px;stroke-width:2.4}
-  .hero-dots{position:absolute;right:18px;bottom:18px;display:flex;gap:6px;z-index:3}
+  .hero-dots{position:absolute;right:18px;top:24px;display:flex;gap:6px;z-index:3}
   .hero-dots button{width:7px;height:7px;border-radius:999px;border:0;background:rgba(255,255,255,.5);padding:0;transition:width .3s}
   .hero-dots button[aria-current="true"]{width:20px;background:#fff}
   .hero .fb{display:none}
@@ -128,17 +150,23 @@
   .lucky .ic{width:17px;height:17px;color:var(--gold)}
 
   /* ---------- 想去哪？（Airbnb 分類：照片在上、字在下） ---------- */
-  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px}
-  @media (min-width:760px){ .tiles{grid-template-columns:repeat(6,minmax(0,1fr));gap:16px} }
-  .tile{position:relative;border:0;padding:0;background:none;text-align:left;border-radius:var(--r);display:flex;flex-direction:column;gap:7px}
-  .tile .ph{position:relative;aspect-ratio:1/1;border-radius:var(--r);box-shadow:var(--shadow)}
-  .tile .ph .shade{display:none}
-  .tile .fb{font-size:13px;letter-spacing:1px;line-height:1.3}
-  .tile .t{padding:0 2px}
-  .tile .t b{display:block;font-size:15.5px;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile .t span{display:block;font-size:12.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 想去哪？像 IG 限時動態：一排圓形照片，最便宜的地區外圈是漸層 */
+  .tiles{display:flex;gap:14px;overflow-x:auto;padding:4px 16px 2px;margin:0 -16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
+  .tiles::-webkit-scrollbar{display:none}
+  @media (min-width:760px){ .tiles{justify-content:space-between;gap:20px;overflow:visible;margin:0;padding:4px 0 2px} }
+  .tile{position:relative;flex:0 0 78px;border:0;padding:0;background:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px;scroll-snap-align:start}
+  @media (min-width:760px){ .tile{flex:1 1 0;max-width:132px;min-width:0} }
+  .ring{display:block;width:78px;height:78px;border-radius:999px;padding:3px;background:#DADDE3}
+  @media (min-width:760px){ .ring{width:100%;max-width:112px;height:auto;aspect-ratio:1/1;padding:4px} }
+  .ring.hot{background:conic-gradient(from 210deg,#FFC72C,#FF8A00,#E11D48,#B32ADB,#FFC72C)}
+  .tile .ph{position:relative;display:block;width:100%;height:100%;border-radius:999px;box-shadow:0 0 0 3px var(--bg)}
+  .tile .ph .shade,.tile .ph .fb{display:none}
+  .tile .t{display:block;width:100%;padding:0}
+  .tile .t b{display:block;font-size:14.5px;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .t span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile.nop .t span{color:var(--faint)}
-  .tile[aria-pressed="true"] .ph{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--navy)}
+  .tile.nop .ph{filter:saturate(.55)}
+  .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
 
   /* ---------- 篩選（沒有外框，像 Google Flights 的膠囊列） ---------- */
@@ -197,7 +225,8 @@
   .top-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
   .cty{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .price{flex:0 0 auto;white-space:nowrap}
-  .price strong{font-size:18.5px;font-weight:900;color:var(--ink);letter-spacing:-.2px}
+  .price strong{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .cur{font-size:.68em;font-weight:700;margin-right:1px;letter-spacing:0}
   .price em{font-style:normal;font-size:12.5px;color:var(--muted);margin-left:2px}
   .card.deal .price strong{color:var(--green)}
   .air{display:flex;align-items:center;gap:8px;height:22px;color:var(--muted);font-size:13.5px;min-width:0}
@@ -770,7 +799,7 @@ function countUp(el, to){
   if (!el || !MOTION) return;
   const from = Math.round(to * 0.62), t0 = performance.now(), dur = 750;
   const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = money(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
+    el.innerHTML = priceHTML(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 // 捲到才浮上來：卡片、小卡、磚塊、標題…（面板裡、左右滑的列不用）
@@ -796,7 +825,7 @@ function revealify(){
   const els = document.querySelectorAll(".card:not([data-rv]), .mini:not([data-rv]), .tile:not([data-rv]), h2.sec:not([data-rv]), .radar-wrap:not([data-rv]), .rlist:not([data-rv])");
   for (const el of els){
     el.dataset.rv = "1";
-    if (el.closest("#sheet, .scroller")) continue;
+    if (el.closest("#sheet, .scroller, .tiles")) continue;
     el.classList.add("rv");
     revealObs.observe(el); revealWatched.add(el);
   }
@@ -811,6 +840,8 @@ function wd(s){ return parseD(s).getUTCDay(); }
 function fmtDate(s){ const d = parseD(s); return `${d.getUTCMonth()+1}/${d.getUTCDate()}（${WD[d.getUTCDay()]}）`; }
 function fmtDateLong(s){ const d = parseD(s); return `${d.getUTCMonth()+1}月${d.getUTCDate()}日 週${WD[d.getUTCDay()]}`; }
 function money(n){ return "NT$" + Math.round(n).toLocaleString("en-US"); }
+// 價格排版：「NT$」小字＋數字大字（像訂票 App）
+function priceHTML(n){ return `<span class="cur">NT$</span>${Math.round(n).toLocaleString("en-US")}`; }
 function fmtTime(iso){
   const d = new Date(iso); if (isNaN(d)) return "";
   const t = new Date(d.getTime() + 8*3600e3);
@@ -1111,7 +1142,7 @@ function flightCard(f, opt = {}){
     </div>
     ${opt.pick ? "" : favBtn(f.o, f.d)}
     <div class="cb">
-      <div class="top-row"><span class="cty">${esc(cityName(f.d))}</span><span class="price"><strong>${money(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></span></div>
+      <div class="top-row"><span class="cty">${esc(cityName(f.d))}</span><span class="price"><strong>${priceHTML(f.price)}</strong><em>${opt.pick ? "" : "起"}</em></span></div>
       <div class="air">${logoHTML(f.airline)}<span class="an">${esc(ORIGIN_NAME[f.o])}出發・${esc(airlineLabel(f.airline))}</span>${nDates > 1 ? `<button class="more-d" data-route="${esc(f.o)}-${esc(f.d)}">${nDates} 組日期 ›</button>` : ""}</div>
       <div class="when${nDates > 1 ? " tap" : ""}"${nDates > 1 ? ` data-route="${esc(f.o)}-${esc(f.d)}"` : ""}>
         <b>${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</b><span class="dm">${esc([days, stops].filter(Boolean).join("・"))}</span>
@@ -1133,7 +1164,7 @@ function miniCard(f, o = {}){
         <div class="cap"><div class="city">${esc(cityName(f.d))}</div><div class="lm">${icon(o.capIcon || "pin")}${esc(ORIGIN_NAME[f.o])}出發</div></div></div>
       <div class="mb">${o.why ? `<div class="why">${icon("star")} ${esc(o.why)}</div>` : ""}
         <div class="md">${esc(o.md || (fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : "")))}</div>
-        <div class="mp"><strong>${money(f.price)}</strong><span>${esc(o.mp || "")}</span></div>
+        <div class="mp"><strong>${priceHTML(f.price)}</strong><span>${esc(o.mp || "")}</span></div>
         ${o.ma ? `<div class="ma">${esc(o.ma)}</div>` : ""}
         </div></a>`;
 }
@@ -1177,9 +1208,17 @@ function renderHero(){
           <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span></div>
           <div class="wrap">
             <h2>${esc(cityName(f.d))}</h2>
-            <div class="pricebig"><small>${f.ret ? "來回" : "單程"}</small><strong data-v="${Math.round(f.price)}">${money(f.price)}</strong><small>起</small></div>
-            <div class="meta">${[`${ORIGIN_NAME[f.o]}出發`, dates, f.direct ? "直飛" : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div>
-            <a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看機票，說走就走${ARROW()}</a>
+            <a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))} ${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
+              <span class="pass-route">
+                <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
+                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}</small></span>
+                <span class="pr-end r"><b>${esc(f.dAp || f.d)}</b><small>${esc(cityName(f.d))}</small></span>
+              </span>
+              <span class="pass-foot">
+                <span class="pf-d"><span><small>去程</small>${esc(fmtDate(f.dep))}</span>${f.ret ? `<span><small>回程</small>${esc(fmtDate(f.ret))}</span>` : ""}</span>
+                <span class="pf-p"><small>${f.ret ? "來回" : "單程"}・起</small><strong data-v="${Math.round(f.price)}">${priceHTML(f.price)}</strong><em>看機票 ${ARROW()}</em></span>
+              </span>
+            </a>
           </div>
         </div>
       </div>`;
@@ -1203,7 +1242,7 @@ function renderHero(){
   const activate = (i, quiet) => {
     if (i === actIdx) return; actIdx = i;
     slideEls.forEach((el, k) => el.classList.toggle("act", k === i));
-    const st = slideEls[i] && slideEls[i].querySelector(".pricebig strong[data-v]");
+    const st = slideEls[i] && slideEls[i].querySelector(".pass strong[data-v]");
     if (st && !quiet){ countUp(st, Number(st.dataset.v)); heroCounted = true; }
   };
   if (again) activate(0, true); // 資料更新後重畫：直接顯示
@@ -1234,9 +1273,11 @@ function renderTiles(){
   setHTML($("#tiles"), order.map(c => {
     const min = mins[c] || null;
     const p = COUNTRY_PHOTO[c];
+    // 像 IG 限時動態：圓形照片；最便宜的地區外圈是漸層色
+    const hot = min && c === order[0];
     return `<button class="tile${min || !state.loaded ? "" : " nop"}" data-v="${c}" aria-pressed="${state.country === c}">
-      <div class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false)}</div>
-      <div class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) + " 起" : (state.loaded ? "查即時價" : "讀取中")}</span></div>
+      <span class="ring${hot ? " hot" : ""}"><span class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false)}</span></span>
+      <span class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
     </button>`;
   }).join(""));
   queueImages();
@@ -1706,7 +1747,7 @@ function routeSheetHTML(o, d){
     return `<a class="opt" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div style="min-width:0"><div class="d1">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
         <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([f.airline ? airlineLabel(f.airline) : "", days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
-      <div class="pp"><strong>${money(f.price)}</strong><span>訂這組 →</span></div></a>`;
+      <div class="pp"><strong>${priceHTML(f.price)}</strong><span>訂這組 →</span></div></a>`;
   }).join("");
   const url = flightUrl(cheapest);
   const hotelUrl = hotelCityUrl(d, cheapest.dep, cheapest.ret || addDays(cheapest.dep, 3));

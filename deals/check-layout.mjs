@@ -220,7 +220,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
@@ -250,6 +250,18 @@ async function measure(page) {
       if (hr.left < 15 || hr.right > W - 15) out.push(`大圖框沒有留邊（${hr.left}–${hr.right} / ${W}）`);
       for (const el of s.querySelectorAll(".in > .wrap")) { const a = R(el); if (a.bottom > r.bottom + 1 || a.top < r.top - 1) out.push("輪播文字超出圖片"); }
       const cta = s.querySelector(".hero-cta"); if (cta) { const a = R(cta); if (a.right > r.right + 1 || a.left < r.left - 1) out.push("輪播按鈕超出圖片"); }
+    }
+    // 登機證卡片：在大圖裡、缺口對準撕線、日期和價格不重疊、代碼不壓到中間的飛機
+    for (const ps of document.querySelectorAll("#hero .pass")) {
+      if (!vis(ps)) continue; // 酒店分頁時大圖藏起來
+      const sl = R(ps.closest(".slide")), r = R(ps);
+      if (r.left < sl.left - 1 || r.right > sl.right + 1 || r.bottom > sl.bottom + 1) out.push("登機證卡片超出大圖");
+      const route = R(ps.querySelector(".pass-route")), tear = parseFloat(getComputedStyle(ps).getPropertyValue("--tear"));
+      if (Math.abs(route.height - tear) > 1.5) out.push(`登機證缺口沒對準撕線（${route.height} vs ${tear}）`);
+      const d = R(ps.querySelector(".pf-d")), p = R(ps.querySelector(".pf-p"));
+      if (d.right > p.left - 4) out.push("登機證的日期壓到價格");
+      const ends = ps.querySelectorAll(".pr-end"), mid = R(ps.querySelector(".pr-plane"));
+      if (R(ends[0]).right > mid.left || R(ends[1]).left < mid.right) out.push("登機證的機場代碼壓到飛機");
     }
     const dots = document.querySelector(".hero-dots"), heroCta = document.querySelector("#hero .slide .hero-cta");
     if (dots && heroCta && vis(heroCta)) { const a = R(dots), b = R(heroCta); if (!(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom)) out.push("輪播圓點壓到按鈕"); }
@@ -413,7 +425,7 @@ try {
     await page.waitForSelector("#flightList .card");
     await page.waitForTimeout(1200);
     const hero = await page.evaluate(() => {
-      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pricebig strong");
+      const s = document.querySelector("#hero .slide"), h2 = s && s.querySelector("h2"), st = s && s.querySelector(".pass strong[data-v]");
       return { act: s && s.classList.contains("act"), op: h2 ? getComputedStyle(h2).opacity : "0", fp: !!document.querySelector("#hero .fp"),
         price: st ? st.textContent : "", want: st ? "NT$" + Number(st.dataset.v).toLocaleString("en-US") : "" };
     });
