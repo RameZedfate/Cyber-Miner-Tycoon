@@ -306,9 +306,10 @@
   .mini .badges{top:10px;left:10px;right:10px}
   .mini .mb{padding:0 2px;display:flex;flex-direction:column;gap:2px}
   .mini .md{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-  .mini .mp strong{font-size:17px;font-weight:900;white-space:nowrap}
-  .mini .mp span{font-size:12px;color:var(--muted);white-space:nowrap}
+  .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+  .mini .mc{font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .mini .mp strong{font-size:16px;font-weight:800;white-space:nowrap}
+  .mini .ms{font-size:12px;color:var(--muted);white-space:nowrap}
   .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:2}
   .cap .city{font-size:24px;font-weight:900;line-height:1.1;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cap .lm{font-size:13px;margin-top:4px;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1226,15 +1227,15 @@ function airlineLabel(code){ return AIRLINE_NAMES[code] || (code ? "其他航空
 function miniCard(f, o = {}){
   const url = flightUrl(f); if (!url) return "";
   const lm = landmarkOf(f.d);
+  // 跟機票卡同一套：照片在上，城市與價格在下
   return `<a class="mini" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), o.size || 640, false)}
-        ${o.badge ? `<div class="badges">${o.badge}</div>` : ""}
-        <div class="cap"><div class="city">${esc(cityName(f.d))}</div><div class="lm">${icon(o.capIcon || "pin")}${esc(ORIGIN_NAME[f.o])}出發</div></div></div>
-      <div class="mb">${o.why ? `<div class="why">${icon("star")} ${esc(o.why)}</div>` : ""}
+        ${o.badge ? `<div class="badges">${o.badge}</div>` : ""}</div>
+      <div class="mb">
+        <div class="mp"><b class="mc">${esc(cityName(f.d))}</b><strong>${priceHTML(f.price)}</strong></div>
         <div class="md">${esc(o.md || (fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : "")))}</div>
-        <div class="mp"><strong>${priceHTML(f.price)}</strong><span>${esc(o.mp || "")}</span></div>
-        ${o.ma ? `<div class="ma">${esc(o.ma)}</div>` : ""}
-        </div></a>`;
+        <div class="ms">${esc([`${ORIGIN_NAME[f.o]}出發`, o.mp].filter(Boolean).join("・"))}</div>
+      </div></a>`;
 }
 
 /* ====================================================================
