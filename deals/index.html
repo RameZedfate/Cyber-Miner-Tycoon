@@ -12,12 +12,12 @@
 <meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
 <meta property="og:title" content="HOWTRAVLE 便宜票雷達｜台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:description" content="每天自動整理台灣出發的低價機票，價格日曆、連假倒數、幫你抽目的地，一鍵到 Trip.com 訂。" />
-<meta property="og:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png" />
+<meta property="og:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png?v=2" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="HOWTRAVLE 便宜票雷達：台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:url" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/" />
-<meta name="twitter:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png" />
+<meta name="twitter:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png?v=2" />
 <!-- 加到手機主畫面的圖示與名稱 -->
 <link rel="apple-touch-icon" href="icon-180.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -134,7 +134,7 @@
   }
   .hero-dots button{width:7px;height:7px;border-radius:999px;border:0;background:rgba(255,255,255,.5);padding:0;transition:width .3s}
   .hero-dots button[aria-current="true"]{width:20px;background:#fff}
-  .hero .fb{display:none}
+  .hero .fb{font-size:0} /* 大圖已有城市大字：只留底圖花紋，不寫地標名 */
 
   /* ---------- 照片（卡片、磚塊共用） ---------- */
   .ph{position:relative;display:block;overflow:hidden;background:var(--g,linear-gradient(135deg,#1E3A8A,#0EA5E9));text-decoration:none;color:#fff}
@@ -305,15 +305,13 @@
   .mini{flex:0 0 200px;scroll-snap-align:start;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:8px}
   .mini .ph{aspect-ratio:4/3;border-radius:var(--r);box-shadow:var(--shadow)}
   .mini .ph .shade{background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 32%)}
-  .mini .ph .cap{left:12px;right:12px;bottom:10px}
-  .mini .ph .cap .city{font-size:20px}
   .mini .badges{top:10px;left:10px;right:10px}
   .mini .mb{padding:0 2px;display:flex;flex-direction:column;gap:2px}
   .mini .md{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mini .mp{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
   .mini .mc{font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .mini .mp strong{font-size:16px;font-weight:800;white-space:nowrap}
-  .mini .ms{font-size:12px;color:var(--muted);white-space:nowrap}
+  .mini .ms{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .cap{position:absolute;left:16px;right:16px;bottom:14px;z-index:2}
   .cap .city{font-size:24px;font-weight:900;line-height:1.1;letter-spacing:.5px;text-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cap .lm{font-size:13px;margin-top:4px;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -421,13 +419,17 @@
   .btn2{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 16px;border-radius:14px;
     border:1px solid var(--line);background:#fff;font-weight:700;font-size:14.5px}
   /* 幫我選的結果：城市照片＋登機證 */
-  .win{position:relative;min-height:420px;border-radius:22px 22px 0 0;display:flex;align-items:flex-end}
+  .win{position:relative;min-height:min(420px, 60vh);border-radius:22px 22px 0 0;display:flex;align-items:flex-end}
   .win .shade{background:linear-gradient(180deg,rgba(5,12,24,.45) 0%,rgba(5,12,24,.05) 35%,rgba(5,12,24,.8) 100%)}
-  .win .fb{display:none}
+  .win .fb{font-size:0}
+  .win-pre{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+  .win-sub{margin-top:4px;font-size:13.5px;font-weight:600;opacity:.92;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+  .btn2.fav-btn{color:var(--ink)}
+  .btn2.fav-btn[aria-pressed="true"]{color:var(--red)}
+  .btn2.fav-btn .fav-t{color:var(--ink)}
   .win-in{position:relative;z-index:2;width:100%;padding:20px 18px 18px;color:#fff}
   .win-in h3{margin:10px 0 0;font-size:32px;font-weight:900;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.35)}
   .win .pass{max-width:none}
-  @media (min-width:760px){ .win{border-radius:22px 22px 0 0} }
   .slot{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:22px 22px 0 0}
   .slot .s1{font-size:13px;color:#C9D6EA;letter-spacing:2px}
   .slot .s2{font-size:40px;font-weight:900;margin-top:6px;letter-spacing:2px}
@@ -1235,17 +1237,17 @@ function flightCard(f, opt = {}){
 
 // 航空公司名稱：名單裡有就用中文名，沒有就寫「其他航空」，資料沒給就請粉絲到 Trip.com 看
 function airlineLabel(code){ return AIRLINE_NAMES[code] || (code ? "其他航空" : "航空公司見 Trip.com"); }
-// 小卡（今天最划算、收藏、說走就走共用）：照片＋城市，下面日期、價格、去 Trip.com
+// 收藏小卡：照片在上，下面城市與價格、日期、出發地；整張點了去 Trip.com
 function miniCard(f, o = {}){
   const url = flightUrl(f); if (!url) return "";
   const lm = landmarkOf(f.d);
   // 跟機票卡同一套：照片在上，城市與價格在下
   return `<a class="mini" href="${esc(url)}" target="_blank" rel="noopener sponsored">
-      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), o.size || 640, false)}
+      <div class="ph g-${esc(f.country || "")}">${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 640, false)}
         ${o.badge ? `<div class="badges">${o.badge}</div>` : ""}</div>
       <div class="mb">
         <div class="mp"><b class="mc">${esc(cityName(f.d))}</b><strong>${priceHTML(f.price)}</strong></div>
-        <div class="md">${esc(o.md || (fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : "")))}</div>
+        <div class="md">${esc(fmtDate(f.dep) + (f.ret ? " → " + fmtDate(f.ret) : ""))}</div>
         <div class="ms">${esc([`${ORIGIN_NAME[f.o]}出發`, o.mp].filter(Boolean).join("・"))}</div>
       </div></a>`;
 }
@@ -1782,7 +1784,7 @@ function openSheet(html){
   queueImages();
 }
 function closeSheet(fromBack){
-  clearTimeout(slotTimer);
+  clearTimeout(slotTimer); clearTimeout(confettiTimer);
   if ($("#sheet").classList.contains("hidden")) return;
   $("#sheet").classList.add("hidden");
   document.body.classList.remove("lock");
@@ -1912,10 +1914,11 @@ function sheetRouteSVG(){
 function passHTML(f){
   const url = flightUrl(f); if (!url) return "";
   const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
-  return `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
+  const tag = [days, f.direct ? "直飛" : ""].filter(Boolean).join("・");
+  return `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc(tag)}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
               <span class="pass-route">
                 <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
-                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc([days, f.direct ? "直飛" : ""].filter(Boolean).join("・"))}</small></span>
+                <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc(tag)}</small></span>
                 <span class="pr-end r"><b>${esc(f.dAp || f.d)}</b><small>${esc(cityName(f.d))}</small></span>
               </span>
               <span class="pass-foot">
@@ -1937,23 +1940,30 @@ function confettiHTML(){
 }
 // 幫我選！：從目前分頁最便宜的 15 個城市隨機抽一個
 let slotTimer = null;
+let confettiTimer = null;
 function lucky(){
-  const pool = cheapestPerCity(modeFiltered()).slice(0, 15);
+  const pool = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, 15);
   if (!pool.length){ toast("票還在載入，等一下再試"); return; }
   const pick = pool[Math.floor(Math.random() * pool.length)];
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const lm = landmarkOf(pick.d);
-  // 抽中的結果：城市照片上一張登機證（像中獎的機票）
-  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true)}
+  const lm = landmarkOf(pick.d), save = savingPct(pick);
+  const winPhoto = photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
+  // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
+  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto}
         <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
-          <h3>就決定是${esc(cityName(pick.d))}了！</h3>${passHTML(pick)}</div></div>
+          <h3>就決定是${esc(cityName(pick.d))}了！</h3>
+          <div class="win-sub">${esc([`${ORIGIN_NAME[pick.o]}出發`, airlineLabel(pick.airline), save ? `比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}` : ""].filter(Boolean).join("・"))}</div>
+          ${passHTML(pick)}</div></div>
       <div class="sh-body"><div class="sh-actions" style="margin-top:0">
         <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
-        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}看全部日期</button>` : ""}</div></div>${confettiHTML()}`);
-    setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
+        ${favBtn(pick.o, pick.d, "btn2", true)}
+        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div></div>${confettiHTML()}`);
+    clearTimeout(confettiTimer);
+    confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
-  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div>`);
+  // 拉霸轉的時候先偷偷抓結果的照片，結果出來時照片已經好了
+  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto}</div>`);
   let i = 0, delay = 60, t0 = Date.now();
   const tick = () => {
     const el = $("#slotName"); if (!el) return;
@@ -2027,9 +2037,10 @@ function saveFavPrice(k, p){
   try { localStorage.setItem(FAVP_KEY, JSON.stringify(favPrice)); } catch(e) {}
 }
 function isFav(o, d){ return favs.includes(favKey(o, d)); }
-function favBtn(o, d){
+// withText＝按鈕上也寫「收藏／已收藏」（幫我選的結果用）
+function favBtn(o, d, cls = "", withText = false){
   const on = isFav(o, d);
-  return `<button class="fav-btn" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}</button>`;
+  return `<button class="fav-btn${cls ? " " + cls : ""}" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}${withText ? `<span class="fav-t">${on ? "已收藏" : "收藏"}</span>` : ""}</button>`;
 }
 function toggleFav(o, d){
   const k = favKey(o, d);
@@ -2037,8 +2048,14 @@ function toggleFav(o, d){
   if (isFav(o, d)){ const l = routeFlights(o, d); if (l.length){ const p = Math.round(Math.min(...l.map(x => x.price))); saveFavPrice(k, p); favPriceAtLoad[favPK(k)] = { p, t: Date.now() }; } }
   try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e) {}
   toast(isFav(o, d) ? `已收藏${cityName(d)}，下次打開會在最上面` : `已取消收藏${cityName(d)}`);
-  for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.outerHTML = favBtn(o, d);
-  if (isFav(o, d)) for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)) b.classList.add("pop");
+  // 原地更新（卡片的圓形愛心、幫我選的「收藏」按鈕各自保留樣子）
+  const on = isFav(o, d);
+  for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)){
+    b.setAttribute("aria-pressed", on); b.setAttribute("aria-label", `${on ? "取消收藏" : "收藏"} ${cityName(d)}`);
+    const ic = b.querySelector("svg"); if (ic) ic.outerHTML = icon(on ? "heartF" : "heart");
+    const t = b.querySelector(".fav-t"); if (t) t.textContent = on ? "已收藏" : "收藏";
+    b.classList.remove("pop"); if (on){ void b.offsetWidth; b.classList.add("pop"); }
+  }
   renderFavs();
 }
 function renderFavs(){
@@ -2057,7 +2074,7 @@ function renderFavs(){
     if (diff <= -100){ badge = `<span class="badge save">${icon("down")}比你上次看便宜 ${money(-diff)}</span>`; drops.push([d, -diff]); }
     else if (diff >= 100) badge = `<span class="badge">${icon("up")}比上次貴 ${money(diff)}</span>`;
     if (dataSettled) saveFavPrice(k, Math.round(f.price));
-    return miniCard(f, { capIcon: "heartF", mp: `最便宜・${list.length} 組`, badge });
+    return miniCard(f, { mp: `最便宜・${list.length} 組`, badge });
   }).join("");
   if (drops.length && !favDropToasted){
     favDropToasted = true;

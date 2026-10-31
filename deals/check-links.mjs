@@ -208,6 +208,16 @@ try {
     await checkLinks(page, "幫我選", sub1);
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
+    // 幫我選結果上的「收藏」：按了變「已收藏」，關掉後上面出現收藏區；再按一次取消
+    const lf = await page.$("#sheet .btn2.fav-btn");
+    if (!lf) problems.push("幫我選的結果沒有收藏按鈕");
+    else {
+      const wasOn = (await lf.getAttribute("aria-pressed")) === "true";
+      await lf.click();
+      const now = await page.$eval("#sheet .btn2.fav-btn", b => [b.getAttribute("aria-pressed"), b.textContent.trim(), b.classList.contains("btn2")]);
+      if (now[0] === String(wasOn) || !now[2] || (now[0] === "true" && !now[1].includes("已收藏"))) problems.push(`幫我選的收藏按鈕沒有正確切換：${JSON.stringify(now)}`);
+      if (!wasOn) await page.click("#sheet .btn2.fav-btn"); // 恢復原狀
+    }
     await page.click("#sheet .sheet-x");
     if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板");
     await page.click('.tabs button[data-tab="hotels"]');

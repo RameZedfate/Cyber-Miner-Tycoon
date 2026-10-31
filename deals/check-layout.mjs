@@ -249,6 +249,15 @@ async function measure(page) {
       if (r.top < ph.top || r.bottom > ph.bottom || r.right > ph.right || r.left < ph.left + ph.width / 2) out.push("收藏愛心不在照片右上角");
       if (bd && bd.children.length) { const b = R(bd.lastElementChild); if (b.right > r.left - 2 && b.bottom > r.top && b.top < r.bottom) out.push("照片上的標籤壓到收藏愛心"); }
     }
+    // 幫我選的結果：關閉鈕不能蓋到標題、小字；按鈕一排放得下
+    const win = document.querySelector("#sheet:not(.hidden) .win");
+    if (win) {
+      const x = R(document.querySelector("#sheet .sheet-x"));
+      for (const el of win.querySelectorAll(".win-in h3, .win .eyebrow, .win-sub")) { const r = R(el);
+        if (r.left < x.right && r.right > x.left && r.top < x.bottom && r.bottom > x.top) out.push(`幫我選的關閉鈕蓋到「${el.textContent.trim().slice(0, 10)}」`); }
+      const bs = [...document.querySelectorAll("#sheet .sh-actions .btn2")].map(R);
+      if (bs.length && Math.max(...bs.map(b => b.top)) - Math.min(...bs.map(b => b.top)) > 1) out.push("幫我選的按鈕擠成兩排");
+    }
     // 點擊位置：點照片上的標籤要去訂票（整張卡片的連結）；點愛心、「N 組日期」要點到它們自己
     const sheetOpen = !document.querySelector("#sheet").classList.contains("hidden");
     const barBottom = document.querySelector(".tabbar").getBoundingClientRect().bottom;
@@ -270,11 +279,11 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
-        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow");
+        const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow,.win");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
       }
     }
