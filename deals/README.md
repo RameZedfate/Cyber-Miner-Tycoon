@@ -123,6 +123,14 @@ Google Flights（沒有外框的篩選膠囊、價格用顏色分）。
 - 機票卡：點照片、城市、價格 → 去 Trip.com；點「日期那一行」或「N 組日期 ›」→ 價格日曆；點愛心 → 收藏
 - 分享預覽圖 `og.png`（1200×630）、手機主畫面圖示 `icon-180/192/512.png`、`manifest.webmanifest`。
   從主畫面打開的網址會帶 `?src=home_screen`，後台看得到從主畫面來的訂單
+- **大圖登機證**：城市名下方一張毛玻璃登機證（機場代碼、天數／直飛、去回程日期、價格），兩側半圓缺口用 CSS mask 做；
+  不支援 mask 的瀏覽器會顯示成一般圓角卡片。酒店分頁是同樣造型的「房卡」（地區依 `HOTEL_CITY` 自動算）
+- **想去哪？**：一排圓形照片（像 IG 限時動態），最便宜的地區外圈是漸層色
+- **月份按鈕**：左邊的價格長條越高越便宜，最便宜的月份是綠色
+- **價格日曆**：上方有小登機證（代碼、飛行時間、最低價）
+- **字型**：英文與數字 Plus Jakarta Sans、中文 Noto Sans TC（Google Fonts）；價格是「NT$」小字＋數字大字
+- **區塊標題**上方的金色英文小字寫在 `data-eb`（例如 `data-eb="DEALS"`），讀屏不會讀
+- 小字顏色對比至少 4.5:1（檢查程式會量）
 
 ## 動畫
 
@@ -197,3 +205,14 @@ node deals/check-worker.mjs
 ```
 
 三個都看到 ✅ 才上線。檢查程式用模擬價格與模擬照片測試，不會出現在正式網頁上。
+
+`check-layout.mjs` 會用跟正式網站一樣的字型量寬度（數字的寬度會影響會不會擠）。字型檔放在 repo 根目錄的 `.work/fonts`
+（不會進 git），第一次用時下載：
+
+```
+mkdir -p .work/fonts && cd .work/fonts
+npm pack @fontsource/plus-jakarta-sans@5 @fontsource/noto-sans-tc@5
+mkdir pj nt && tar -xzf fontsource-plus-jakarta-sans-*.tgz -C pj && tar -xzf fontsource-noto-sans-tc-*.tgz -C nt && mv nt/package noto
+```
+
+沒下載也能跑，只是會提醒「用系統字型量」。也可以用環境變數 `HOWTRAVLE_FONTS` 指定別的資料夾（裡面要有 `pj/` 和 `noto/`）。
