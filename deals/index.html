@@ -6,7 +6,7 @@
 <title>HOWTRAVLE 便宜票雷達</title>
 <meta name="description" content="台灣出發飛日本、韓國、泰國、越南、中國大陸、香港的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
 <meta name="theme-color" content="#FFFFFF" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Cpath fill='%23FFC72C' d='M32 9c1.8 0 3.2 1.9 3.2 4.3v10l16 9.2v4.7l-16-4.9v9.4l4.7 3.4V50L32 47.6 24.1 50v-4.9l4.7-3.4v-9.4l-16 4.9v-4.7l16-9.2v-10C28.8 10.9 30.2 9 32 9z'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Cg fill='none' stroke='%235B7FB0' stroke-width='2'%3E%3Ccircle cx='32' cy='32' r='13'/%3E%3Ccircle cx='32' cy='32' r='24'/%3E%3C/g%3E%3Cg transform='translate(32 32) rotate(45) scale(1.25) translate(-12 -12)' fill='%23FFC72C'%3E%3Cpath d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z'/%3E%3C/g%3E%3C/svg%3E" />
 <!-- 分享預覽（LINE／FB／IG 貼連結時顯示的標題與大圖） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
@@ -32,7 +32,7 @@
      大字、留白）、Google Flights（乾淨的篩選膠囊、價格顏色）
      ===================================================================== */
   :root{
-    --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#B7791F; --red:#E11D48;
+    --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#946200; --red:#E11D48;
     --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#6B7280; --faint:#9CA3AF;
     --line:#E5E7EB; --soft:#F3F4F6; --blue:#2563EB; --green:#0E7A4F;
     --r-lg:20px; --r:16px;
@@ -170,7 +170,7 @@
   .tile .t{display:block;width:100%;padding:0}
   .tile .t b{display:block;font-size:14.5px;font-weight:800;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile .t span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile.nop .t span{color:var(--faint)}
+  .tile.nop .t span{color:var(--muted)}
   .tile.nop .ph{filter:saturate(.55)}
   .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
@@ -199,7 +199,7 @@
   .month .m small{font-size:11px;font-weight:700;color:var(--muted);margin-right:3px}
   .month .p{font-size:12px;margin-top:1px;color:var(--ink-2);font-weight:700;white-space:nowrap}
   .month .p.low{color:var(--green)}
-  .month .p.none{color:var(--faint);font-weight:500}
+  .month .p.none{color:var(--muted);font-weight:500}
   .month[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
   .month[aria-pressed="true"] .m small{color:#C9D6EA}
   .month[aria-pressed="true"] .p{color:var(--yellow)}
@@ -287,9 +287,11 @@
   .rlist{display:grid;grid-template-columns:minmax(0,1fr);background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
   @media (min-width:640px){ .rlist{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (min-width:1000px){ .rlist{grid-template-columns:repeat(3,minmax(0,1fr))} }
-  .rrow{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;text-decoration:none;color:var(--ink);min-width:0;
+  .rrow{display:flex;align-items:center;gap:10px;height:56px;padding:0 16px 0 12px;text-decoration:none;color:var(--ink);min-width:0;
     border-bottom:1px solid var(--line);margin-bottom:-1px}
   .rrow:hover{background:var(--soft)}
+  .rrow .rr-t{flex:0 0 auto;width:34px;height:34px;border-radius:999px}
+  .rrow .rr-t .shade,.rrow .rr-t .fb{display:none}
   .rrow .rr-c{font-weight:700;font-size:15px;white-space:nowrap}
   .rrow .rr-o{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 auto;min-width:0}
   .rrow .rr-go{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
@@ -419,7 +421,7 @@
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:10px 18px;
     border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
-  footer{color:var(--faint);font-size:12px;line-height:1.8;padding:28px 16px 52px}
+  footer{color:var(--muted);font-size:12px;line-height:1.8;padding:28px 16px 52px}
   footer p{margin:8px 0 0}
   .ft-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
   .ft-brand img{width:40px;height:40px;border-radius:11px;box-shadow:var(--shadow)}
@@ -1288,7 +1290,7 @@ function renderHero(){
   // 用實際的寬高畫，飛機不會被拉長變形
   const W = Math.max(240, box.clientWidth || innerWidth - 32), Hh = Math.round((innerWidth >= 760 ? 440 : 380) * 0.42);
   const P = (x, y) => `${Math.round(x * W)} ${Math.round(y * Hh)}`;
-  const d = `M${P(-0.05, 0.75)} C ${P(0.27, 0.68)}, ${P(0.52, 0.2)}, ${P(1.05, 0.11)}`;
+  const d = `M${P(-0.05, 0.78)} C ${P(0.27, 0.72)}, ${P(0.55, 0.3)}, ${P(1.05, 0.34)}`;
   const fp = !MOTION ? "" : `<svg class="fp" viewBox="0 0 ${W} ${Hh}" aria-hidden="true">
       <path id="fpPath" class="fp-line" d="${d}"/><path class="fp-glow" d="${d}"/>
       <g class="fp-plane"><g transform="rotate(90) scale(${innerWidth >= 760 ? 1 : .8}) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
@@ -1397,6 +1399,7 @@ function renderMoreRoutes(shown){
       if (!url) continue;
       const lm = landmarkOf(d);
       cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
+        <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false)}</span>
         <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(ORIGIN_NAME[o])}出發</span><span class="rr-go">看即時價 ›</span></a>`);
     }
   }

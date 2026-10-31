@@ -300,6 +300,26 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl:not(.sr-only)")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
+    // 9c. 文字對比：純色底上的字，小字至少 4.5:1、大字至少 3:1（照片、大圖、雷達區塊上的字不算）
+    {
+      const rgb = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 1]; };
+      const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+      const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const cs = getComputedStyle(e);
+        if (cs.backgroundImage !== "none") return null; const c = rgb(cs.backgroundColor); if ((c[3] ?? 1) > 0.95) return c; } return [255, 255, 255, 1]; };
+      const seen = new Set();
+      for (const el of document.querySelectorAll("body *")) {
+        if (!vis(el) || el.closest(".ph, .hero, .band, .sh-head, .slot, svg, .toast, .sr-only")) continue;
+        const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+        if (!own) continue;
+        const cs = getComputedStyle(el); if (parseFloat(cs.opacity) < 1) continue;
+        const bg = bgOf(el); if (!bg) continue;
+        const fg = rgb(cs.color); const a = fg[3] ?? 1;
+        const mix = fg.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a));
+        const L1 = lum(mix), L2 = lum(bg), ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+        const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700, large = size >= 24 || (bold && size >= 18.66);
+        if (ratio < (large ? 3 : 4.5)) { const k = el.className + "|" + cs.color; if (!seen.has(k)) { seen.add(k); out.push(`文字對比不足 ${ratio.toFixed(2)}：「${el.textContent.trim().slice(0, 14)}」(${el.className || el.tagName})`); } }
+      }
+    }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
