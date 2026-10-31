@@ -220,7 +220,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .mp span", ".hc .ref b", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
@@ -386,6 +386,10 @@ try {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
           const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
         }
+        // 小登機證：代碼、飛機、價格不互相重疊
+        const tk = document.querySelector("#sheet .ticket");
+        if (tk) { const e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p"));
+          if (e[0].right > pl.left || e[1].left < pl.right || e[1].right > pr.left) out.push("日曆上方的登機證文字重疊"); }
         const opts = [...document.querySelectorAll(".opt")];
         const ls = new Set(opts.map(o => Math.round(R(o).left))), rs = new Set(opts.map(o => Math.round(R(o).right)));
         if (ls.size > 1 || rs.size > 1) out.push("日期選項左右邊沒對齊");

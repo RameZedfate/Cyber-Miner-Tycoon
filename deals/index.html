@@ -126,6 +126,12 @@
     background:#fff;color:var(--navy);font-weight:800;font-size:15.5px;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.22)}
   .hero-cta .ic{width:18px;height:18px;stroke-width:2.4}
   .hero-dots{position:absolute;right:18px;top:24px;display:flex;gap:6px;z-index:3}
+  @media (min-width:1000px){
+    .hero .slide .in .wrap:last-child{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:0 32px}
+    .hero .slide .in .wrap:first-child{padding:0 32px}
+    .hero h2{font-size:76px;margin:0}
+    .hero .pass{flex:0 0 420px;margin:0}
+  }
   .hero-dots button{width:7px;height:7px;border-radius:999px;border:0;background:rgba(255,255,255,.5);padding:0;transition:width .3s}
   .hero-dots button[aria-current="true"]{width:20px;background:#fff}
   .hero .fb{display:none}
@@ -181,8 +187,15 @@
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
   .scroller::-webkit-scrollbar{display:none}
-  .month{flex:0 0 auto;width:100px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 6px;text-align:center;scroll-snap-align:start}
-  .month .m{font-size:15.5px;font-weight:800;line-height:1.3}
+  .month{flex:0 0 auto;width:112px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px 8px 8px;text-align:left;scroll-snap-align:start;
+    display:flex;align-items:stretch;gap:9px}
+  .month .bar{flex:0 0 6px;height:34px;border-radius:3px;background:var(--soft);display:flex;align-items:flex-end;overflow:hidden}
+  .month .bar i{display:block;width:100%;border-radius:3px;background:#C7CDD6}
+  .month.best .bar i{background:var(--green)}
+  .month[aria-pressed="true"] .bar{background:rgba(255,255,255,.18)}
+  .month[aria-pressed="true"] .bar i{background:var(--yellow)}
+  .month .mt{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .month .m{font-size:15.5px;font-weight:800;line-height:1.3;white-space:nowrap}
   .month .m small{font-size:11px;font-weight:700;color:var(--muted);margin-right:3px}
   .month .p{font-size:12px;margin-top:1px;color:var(--ink-2);font-weight:700;white-space:nowrap}
   .month .p.low{color:var(--green)}
@@ -337,6 +350,19 @@
   .sh-head .cap{left:20px;bottom:16px}
   .sh-body{padding:16px 16px 24px}
   .facts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  /* 價格日曆上方的小登機證：機場代碼、飛行時間、最低價 */
+  .ticket{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 12px;position:relative}
+  .ticket::after{content:"";position:absolute;top:10px;bottom:10px;right:118px;border-left:1.5px dashed var(--line)}
+  .tk-end{display:flex;flex-direction:column;line-height:1.1;flex:0 0 auto}
+  .tk-end b{font-size:21px;font-weight:800;letter-spacing:.4px}
+  .tk-end small{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .tk-mid{position:relative;flex:1 1 auto;display:flex;align-items:center;gap:5px;min-width:30px;padding-bottom:14px}
+  .tk-mid i{flex:1 1 auto;border-top:1.5px dotted #C7CDD6}
+  .tk-plane{width:16px;height:16px;color:var(--gold);transform:rotate(90deg)}
+  .tk-mid small{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:11px;color:var(--muted);white-space:nowrap}
+  .tk-p{flex:0 0 96px;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;margin-left:14px}
+  .tk-p small{font-size:11px;color:var(--muted)}
+  .tk-p strong{font-size:21px;font-weight:800;white-space:nowrap}
   .fact{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;color:var(--ink-2);border:1px solid var(--line)}
   .fact b{font-weight:700;color:var(--ink)}
   .cal{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:12px;border:1px solid var(--line)}
@@ -380,7 +406,25 @@
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:10px 18px;
     border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
-  footer{color:var(--faint);font-size:12px;line-height:1.8;padding:28px 16px 48px;margin-top:20px;border-top:1px solid var(--line)}
+  footer{color:var(--faint);font-size:12px;line-height:1.8;padding:28px 16px 52px}
+  footer p{margin:8px 0 0}
+  .ft-brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .ft-brand img{width:40px;height:40px;border-radius:11px;box-shadow:var(--shadow)}
+  .ft-brand b{display:block;color:var(--ink);font-size:15px;font-weight:800}
+  .ft-brand span{display:block;color:var(--muted);font-size:12.5px}
+  /* 區塊標題上方的英文小字（像雜誌／Apple 的 eyebrow） */
+  h2.sec[data-eb]::before{content:attr(data-eb);display:block;font-family:"Plus Jakarta Sans",var(--font);font-size:11.5px;font-weight:800;
+    letter-spacing:2.2px;color:var(--gold);margin-bottom:5px;line-height:1}
+  /* 雷達：整條深色帶狀區塊，背景有淡淡的點陣 */
+  .band{margin-top:30px;padding:2px 0 40px;color:#fff;
+    background:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.2px) 0 0/22px 22px,
+               radial-gradient(120% 90% at 50% 0%,#16386A 0%,#0B2340 55%,#071A30 100%)}
+  .band h2.sec{color:#fff}
+  .band h2.sec[data-eb]::before{color:var(--yellow)}
+  .band .sub{color:#AFC2DC}
+  .band .radar-wrap{background:transparent;box-shadow:none;padding:0}
+  /* 沒有結果時的小插圖 */
+  .empty-art{display:block;width:120px;height:72px;margin:0 auto 10px}
 
   /* ====================== 動畫（系統設定「減少動態」時全部關掉） ====================== */
   .hero-load{position:relative;height:380px;overflow:hidden;background:linear-gradient(160deg,#13335C,#0B2340 60%,#071A30);display:flex;align-items:center;justify-content:center;color:#C9D6EA;font-weight:700;font-size:15px}
@@ -481,24 +525,24 @@
 
   <div class="wrap">
     <div class="sec-head">
-      <div><h2 class="sec">想去哪？</h2>
+      <div><h2 class="sec" data-eb="EXPLORE">想去哪？</h2>
       <p class="sub" id="tilesSub">點一下只看那個地區</p></div>
       <button class="lucky" id="luckyBtn">幫我選！</button>
     </div>
     <div class="tiles" id="tiles"></div>
 
     <section id="favSec" class="hidden">
-      <h2 class="sec">我收藏的航線</h2>
+      <h2 class="sec" data-eb="SAVED">我收藏的航線</h2>
       <div class="scroller wk-row" id="favList"></div>
     </section>
 
     <section id="picks" class="hidden">
-      <h2 class="sec" id="picksTitle">Adam 今日精選</h2>
+      <h2 class="sec" data-eb="TODAY’S PICK" id="picksTitle">Adam 今日精選</h2>
       <div id="pickList"></div>
     </section>
 
     <div id="listTop">
-      <h2 class="sec" id="fTitle">便宜機票</h2>
+      <h2 class="sec" data-eb="DEALS" id="fTitle">便宜機票</h2>
       <p class="sub" id="fSub">預估最低價</p>
     </div>
 
@@ -530,19 +574,20 @@
     <button class="more hidden" id="moreBtn">查看更多航線</button>
 
     <section id="moreRoutes" class="hidden">
-      <h2 class="sec" id="mrTitle">其他熱門航線</h2>
+      <h2 class="sec" data-eb="MORE ROUTES" id="mrTitle">其他熱門航線</h2>
       <p class="sub" id="mrSub">還沒有預估價，點了直接看 Trip.com 即時價</p>
       <div class="date-note" id="mrDates"></div>
       <div class="rlist" id="routeList"></div>
       <button class="more hidden" id="routesMore">顯示全部</button>
     </section>
-
-    <section id="radarSec" class="hidden">
-      <h2 class="sec">便宜票雷達</h2>
+  </div>
+  <section id="radarSec" class="band hidden">
+    <div class="wrap">
+      <h2 class="sec" data-eb="RADAR">便宜票雷達</h2>
       <p class="sub" id="radarSub">越綠越便宜，點一下看日期</p>
       <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
-    </section>
-  </div>
+    </div>
+  </section>
 </section>
 
 <!-- ===================== 酒店 ===================== -->
@@ -554,11 +599,11 @@
       <div class="prow"><span class="plbl sr-only">地區</span><div class="pctl"><div class="scroller" id="hCountries" role="group" aria-label="地區"></div></div></div>
     </div>
     <section id="hotelPicked" class="hidden">
-      <h2 class="sec">精選酒店</h2>
+      <h2 class="sec" data-eb="STAYS">精選酒店</h2>
       <div class="meta-row"><span id="hUpdated"></span><span id="hCount"></span></div>
       <div class="grid" id="hotelList"></div>
     </section>
-    <h2 class="sec" id="hcTitle">熱門城市酒店</h2>
+    <h2 class="sec" data-eb="HOTELS" id="hcTitle">熱門城市酒店</h2>
     <p class="sub" id="hcSub">每晚參考價，點了看 Trip.com 即時房價</p>
     <div class="grid grid-sm" id="hotelCities"></div>
   </div>
@@ -573,9 +618,9 @@
 </div>
 
 <footer class="wrap">
-  價格為預估最低價，每天自動更新，實際以 Trip.com 為準。<br />
-  本頁訂購連結為 Trip.com 聯盟連結，你付的價格不變，我會獲得少量回饋。謝謝支持！<br />
-  照片：Wikipedia／Wikimedia Commons。本站非 Trip.com 官方網站。
+  <div class="ft-brand"><img src="icon-180.png" alt="" width="40" height="40" /><div><b>HOWTRAVLE 便宜票雷達</b><span>台灣出發・日韓泰越・大陸港・每天自動更新</span></div></div>
+  <p>價格為預估最低價，實際以 Trip.com 為準。本頁訂購連結為 Trip.com 聯盟連結，你付的價格不變，我會獲得少量回饋，謝謝支持！</p>
+  <p>照片：Wikipedia／Wikimedia Commons。本站非 Trip.com 官方網站。</p>
 </footer>
 
 <script>
@@ -1290,12 +1335,15 @@ function renderMonths(){
   const base = baseFiltered();
   const keys = monthKeys(), thisYear = todayTW().slice(0, 4);
   const mins = keys.map(k => { let min = null; for (const f of base) if (f.dep.startsWith(k) && (min === null || f.price < min)) min = f.price; return min; });
-  const low = Math.min(...mins.filter(Boolean));
+  const have = mins.filter(Boolean), low = Math.min(...have), high = Math.max(...have);
+  // 價格長條：越便宜越高（像 Google Flights 的價格圖），最便宜的月份是綠色
+  const bar = (p) => !p ? 0 : high === low ? 100 : Math.round(38 + 62 * (high - p) / (high - low));
   $("#months").innerHTML = keys.map((k, i) => {
     const [y,m] = k.split("-");
     const min = mins[i];
-    return `<button class="month" aria-pressed="${k === state.month}" data-v="${k}">
-      <div class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</div><div class="p${min ? (min === low ? " low" : "") : " none"}">${min ? money(min) + " 起" : "查即時價"}</div></button>`;
+    return `<button class="month${min === low && have.length > 1 ? " best" : ""}" aria-pressed="${k === state.month}" data-v="${k}">
+      <span class="bar" aria-hidden="true"><i style="height:${bar(min)}%"></i></span>
+      <span class="mt"><span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? (min === low ? " low" : "") : " none"}">${min ? money(min) : "查即時價"}</span></span></button>`;
   }).join("");
 }
 function renderChips(){
@@ -1371,11 +1419,11 @@ function renderFlights(){
   const box = $("#flightList");
   const narrowed = state.country || state.filter !== "cheap" || state.budget;
   if (!modeFiltered().length){
-    box.innerHTML = `<div class="empty"><b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
+    box.innerHTML = `<div class="empty"><svg class="empty-art" viewBox="0 0 120 72" aria-hidden="true"><ellipse cx="44" cy="54" rx="30" ry="12" fill="#E8ECF2"/><ellipse cx="78" cy="50" rx="24" ry="10" fill="#EEF1F5"/><path d="M14 40 C 40 34, 70 18, 106 12" fill="none" stroke="#C9D2DE" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/><g transform="translate(88 16) rotate(62) scale(1.1) translate(-12 -12)" fill="#FFC72C"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></g></svg><b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
       <div class="btns"><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else if (!list.length){
     const hol = state.filter === "holiday" && suggestDates().holiday;
-    box.innerHTML = `<div class="empty"><b>這個條件目前沒有預估低價</b>${hol ? "連假票通常比較早賣完，下面的熱門航線已幫你帶入連假日期。" : "下面的熱門航線可以直接看 Trip.com 即時價，或放寬條件看看。"}
+    box.innerHTML = `<div class="empty"><svg class="empty-art" viewBox="0 0 120 72" aria-hidden="true"><ellipse cx="44" cy="54" rx="30" ry="12" fill="#E8ECF2"/><ellipse cx="78" cy="50" rx="24" ry="10" fill="#EEF1F5"/><path d="M14 40 C 40 34, 70 18, 106 12" fill="none" stroke="#C9D2DE" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/><g transform="translate(88 16) rotate(62) scale(1.1) translate(-12 -12)" fill="#FFC72C"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></g></svg><b>這個條件目前沒有預估低價</b>${hol ? "連假票通常比較早賣完，下面的熱門航線已幫你帶入連假日期。" : "下面的熱門航線可以直接看 Trip.com 即時價，或放寬條件看看。"}
       <div class="btns">${narrowed ? `<button class="btn" data-clear>看全部最便宜的票</button>` : ""}</div></div>`;
   } else {
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
@@ -1717,7 +1765,6 @@ function routeSheetHTML(o, d){
   const durs = list.map(f => f.dur).filter(Boolean);
   const facts = [
     `<span class="fact">${icon("clock")}時差 <b>${esc(TZ[c] || "")}</b></span>`,
-    durs.length ? `<span class="fact">${icon("plane")}飛行約 <b>${esc(fmtDur(Math.min(...durs)))}</b></span>` : "",
     CURRENCY_NAME[c] ? `<span class="fact">貨幣 <b>${esc(CURRENCY_NAME[c])}</b></span>` : "",
   ].join("");
   // 價格日曆：每個出發日的最低價，依價格分三級上色
@@ -1755,6 +1802,12 @@ function routeSheetHTML(o, d){
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${sheetRouteSVG()}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[c] || "")}</div></div></div>
     <div class="sh-body">
+      <div class="ticket">
+        <span class="tk-end"><b>${esc(cheapest.oAp || o)}</b><small>${esc(ORIGIN_NAME[o])}</small></span>
+        <span class="tk-mid"><i></i>${icon("plane", "tk-plane")}<i></i><small>${durs.length ? esc(fmtDur(Math.min(...durs))) : (cheapest.direct ? "直飛" : "")}</small></span>
+        <span class="tk-end"><b>${esc(cheapest.dAp || d)}</b><small>${esc(cityName(d))}</small></span>
+        <span class="tk-p"><small>最低</small><strong>${priceHTML(cheapest.price)}</strong></span>
+      </div>
       <div class="facts">${facts}</div>
       ${cal}
       <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
