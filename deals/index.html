@@ -138,8 +138,11 @@
 
   /* ---------- 照片（卡片、磚塊共用） ---------- */
   .ph{position:relative;display:block;overflow:hidden;background:var(--g,linear-gradient(135deg,#1E3A8A,#0EA5E9));text-decoration:none;color:#fff}
-  .ph .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;
-    font-size:24px;letter-spacing:2px;color:rgba(255,255,255,.28);text-align:center;padding:0 12px}
+  /* 照片還沒出來（或抓不到）時：國家漸層＋淡淡的點陣與大飛機＋地標名稱，看起來是刻意的設計 */
+  .ph .fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;
+    font-size:21px;letter-spacing:3px;color:rgba(255,255,255,.62);text-align:center;padding:0 16px;text-shadow:0 1px 8px rgba(0,0,0,.15);
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='rgba(255,255,255,0.14)' d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z' transform='rotate(45 12 12)'/%3E%3C/svg%3E") no-repeat right -8% bottom -18%/58% auto,
+               radial-gradient(rgba(255,255,255,.13) 1px,transparent 1.3px) 0 0/16px 16px}
   .ph .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.55) 100%)}
   .g-JP{--g:linear-gradient(135deg,#BE123C,#F472B6)} .g-KR{--g:linear-gradient(135deg,#1D4ED8,#7C3AED)}
   .g-TH{--g:linear-gradient(135deg,#B45309,#F59E0B)} .g-VN{--g:linear-gradient(135deg,#047857,#14B8A6)}
