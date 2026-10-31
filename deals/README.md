@@ -207,7 +207,7 @@ node deals/check-worker.mjs
 三個都看到 ✅ 才上線。檢查程式用模擬價格與模擬照片測試，不會出現在正式網頁上。
 
 `check-layout.mjs` 會用跟正式網站一樣的字型量寬度（數字的寬度會影響會不會擠）。字型檔放在 repo 根目錄的 `.work/fonts`
-（不會進 git），第一次用時下載：
+（`.gitignore` 已排除 `.work/`，不會進 git），第一次用時下載：
 
 ```
 mkdir -p .work/fonts && cd .work/fonts
@@ -215,4 +215,7 @@ npm pack @fontsource/plus-jakarta-sans@5 @fontsource/noto-sans-tc@5
 mkdir pj nt && tar -xzf fontsource-plus-jakarta-sans-*.tgz -C pj && tar -xzf fontsource-noto-sans-tc-*.tgz -C nt && mv nt/package noto
 ```
 
-沒下載也能跑，只是會提醒「用系統字型量」。也可以用環境變數 `HOWTRAVLE_FONTS` 指定別的資料夾（裡面要有 `pj/` 和 `noto/`）。
+沒下載也能跑，只是會提醒「用系統字型量」。也可以用環境變數 `HOWTRAVLE_FONTS` 指定別的資料夾，裡面要有 `pj/` 和 `noto/`；
+每個資料夾可以是 `pj/package/400.css`（npm pack 解開的樣子）或直接 `pj/400.css`。
+
+`check-layout.mjs` 也會量文字對比：純色底上的字（含價格日曆、標題上方的英文小字）小字至少 4.5:1、大字至少 3:1。

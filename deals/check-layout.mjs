@@ -78,7 +78,9 @@ const base = `http://127.0.0.1:${server.address().port}/`;
 // 本機字型：@fontsource 的 Plus Jakarta Sans、Noto Sans TC（npm pack 解開後的 package 資料夾）。
 // 位置：環境變數 HOWTRAVLE_FONTS（裡面要有 pj/ 和 noto/），預設找 repo 根目錄的 .work/fonts
 const FONT_ROOT = process.env.HOWTRAVLE_FONTS || path.join(DIR, "..", ".work", "fonts");
-const FONT_DIRS = { pj: path.join(FONT_ROOT, "pj", "package"), noto: path.join(FONT_ROOT, "noto") };
+// 每個字型資料夾可以是 pj/package/*.css（npm pack 解開的樣子）或直接 pj/*.css
+const fontDir = (n) => [path.join(FONT_ROOT, n, "package"), path.join(FONT_ROOT, n)].find(d => fs.existsSync(path.join(d, "400.css"))) || path.join(FONT_ROOT, n);
+const FONT_DIRS = { pj: fontDir("pj"), noto: fontDir("noto") };
 function fontCss(tag, weights) {
   return weights.map(w => { const f = path.join(FONT_DIRS[tag], `${w}.css`); return fs.existsSync(f) ? fs.readFileSync(f, "utf8").replace(/url\(\.\/files\//g, `url(https://fonts.local/${tag}/files/`) : ""; }).join("\n");
 }
@@ -133,6 +135,35 @@ async function setup(page) {
     r.fulfill({ contentType: "image/svg+xml", body: svg(w, h, code, "#e11d48") });
   });
   await page.route("https://img.wway.io/**", r => r.fulfill({ status: 404, body: "" }));
+}
+
+// 文字對比：純色底上的字，小字至少 4.5:1、大字至少 3:1（照片、大圖、雷達區塊上的字不算）。
+// 透明度會算進去；區塊標題上方的英文小字（::before）也量。root＝要量的範圍
+async function contrast(page, root = "body", skipSheet = true) {
+  return page.evaluate(([root, skipSheet]) => {
+    const out = [], seen = new Set();
+    const rgb = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 1]; };
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const cs = getComputedStyle(e);
+      if (cs.backgroundImage !== "none") return null; const c = rgb(cs.backgroundColor); if ((c[3] ?? 1) > 0.95) return c; } return [255, 255, 255, 1]; };
+    const opacityOf = (el) => { let o = 1; for (let e = el; e; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity); return o; };
+    const test = (el, cs, label) => {
+      const bg = bgOf(el); if (!bg) return;
+      const op = opacityOf(el); if (op === 0) return;
+      const fg = rgb(cs.color), a = (fg[3] ?? 1) * op;
+      const mix = fg.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a));
+      const L1 = lum(mix), L2 = lum(bg), ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+      const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700, large = size >= 24 || (bold && size >= 18.66);
+      if (ratio < (large ? 3 : 4.5)) { const k = label + "|" + cs.color; if (!seen.has(k)) { seen.add(k); out.push(`文字對比不足 ${ratio.toFixed(2)}：${label}`); } }
+    };
+    for (const el of document.querySelector(root).querySelectorAll("*")) {
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+      if (el.closest(".ph, .hero, .band, .sh-head, .slot, svg, .toast, .sr-only") || (skipSheet && el.closest("#sheet"))) continue;
+      if ([...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) test(el, getComputedStyle(el), `「${el.textContent.trim().slice(0, 14)}」(${el.className || el.tagName})`);
+      if (el.matches("h2.sec[data-eb]")) test(el, getComputedStyle(el, "::before"), `標題英文小字 ${el.dataset.eb}`);
+    }
+    return out;
+  }, [root, skipSheet]);
 }
 
 // 在頁面裡量測
@@ -300,26 +331,6 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl:not(.sr-only)")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
-    // 9c. 文字對比：純色底上的字，小字至少 4.5:1、大字至少 3:1（照片、大圖、雷達區塊上的字不算）
-    {
-      const rgb = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 1]; };
-      const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
-      const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const cs = getComputedStyle(e);
-        if (cs.backgroundImage !== "none") return null; const c = rgb(cs.backgroundColor); if ((c[3] ?? 1) > 0.95) return c; } return [255, 255, 255, 1]; };
-      const seen = new Set();
-      for (const el of document.querySelectorAll("body *")) {
-        if (!vis(el) || el.closest(".ph, .hero, .band, .sh-head, .slot, svg, .toast, .sr-only")) continue;
-        const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
-        if (!own) continue;
-        const cs = getComputedStyle(el); if (parseFloat(cs.opacity) < 1) continue;
-        const bg = bgOf(el); if (!bg) continue;
-        const fg = rgb(cs.color); const a = fg[3] ?? 1;
-        const mix = fg.slice(0, 3).map((v, i) => v * a + bg[i] * (1 - a));
-        const L1 = lum(mix), L2 = lum(bg), ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
-        const size = parseFloat(cs.fontSize), bold = parseInt(cs.fontWeight) >= 700, large = size >= 24 || (bold && size >= 18.66);
-        if (ratio < (large ? 3 : 4.5)) { const k = el.className + "|" + cs.color; if (!seen.has(k)) { seen.add(k); out.push(`文字對比不足 ${ratio.toFixed(2)}：「${el.textContent.trim().slice(0, 14)}」(${el.className || el.tagName})`); } }
-      }
-    }
     // 10. 分頁按鈕三顆等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
@@ -357,7 +368,7 @@ try {
       // 捲動整頁讓延遲載入的照片都載入
       await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 40)); } window.scrollTo(0, 0); });
       await page.waitForTimeout(700);
-      const issues = await measure(page);
+      const issues = [...await measure(page), ...await contrast(page)];
       issues.forEach(i => all.push(`[${w}px ${tab}] ${i}`));
       if (tab === "flights") {
         await page.waitForTimeout(1800); // 等第一次失敗後的重試
@@ -441,6 +452,7 @@ try {
         return out;
       });
       sheetIssues.forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
+      (await contrast(page, "#sheet", false)).forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `sheet-${w}.png`) });
       await page.keyboard.press("Escape");
     }

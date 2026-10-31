@@ -6,7 +6,7 @@
 <title>HOWTRAVLE 便宜票雷達</title>
 <meta name="description" content="台灣出發飛日本、韓國、泰國、越南、中國大陸、香港的預估低價機票與精選便宜酒店，一鍵前往 Trip.com 訂購。" />
 <meta name="theme-color" content="#FFFFFF" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Cg fill='none' stroke='%235B7FB0' stroke-width='2'%3E%3Ccircle cx='32' cy='32' r='13'/%3E%3Ccircle cx='32' cy='32' r='24'/%3E%3C/g%3E%3Cg transform='translate(32 32) rotate(45) scale(1.25) translate(-12 -12)' fill='%23FFC72C'%3E%3Cpath d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B2340'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%234F78B0' stroke-width='5'/%3E%3Cg transform='translate(32 32) rotate(45) scale(1.75) translate(-12 -12)' fill='%23FFC72C'%3E%3Cpath d='M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z'/%3E%3C/g%3E%3C/svg%3E" />
 <!-- 分享預覽（LINE／FB／IG 貼連結時顯示的標題與大圖） -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="HOWTRAVLE 便宜票雷達" />
@@ -33,7 +33,7 @@
      ===================================================================== */
   :root{
     --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#946200; --red:#E11D48;
-    --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#6B7280; --faint:#9CA3AF;
+    --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#646B78; --faint:#9CA3AF;
     --line:#E5E7EB; --soft:#F3F4F6; --blue:#2563EB; --green:#0E7A4F;
     --r-lg:20px; --r:16px;
     --shadow:0 1px 2px rgba(17,24,39,.05),0 4px 14px rgba(17,24,39,.06);
@@ -383,7 +383,7 @@
   .cal h4{margin:0 0 10px;font-size:15px;font-weight:800}
   .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
   .cal-grid .wd{font-size:11px;color:var(--muted);text-align:center;padding-bottom:2px}
-  .day{border:0;border-radius:10px;min-height:46px;padding:4px 0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;color:var(--faint)}
+  .day{border:0;border-radius:10px;min-height:46px;padding:4px 0;background:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;color:var(--muted)}
   .day .n{font-size:12px;font-weight:700;line-height:1.2}
   .day .p{font-size:10.5px;line-height:1.2;margin-top:2px;white-space:nowrap;font-weight:700}
   .day.blank{background:transparent}
@@ -473,7 +473,8 @@
   @keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateX(4px)}}
   /* 登機證上的小飛機沿著虛線前後飄 */
   .anim .pr-plane,.anim .tk-plane{animation:glide 3.2s ease-in-out infinite}
-  @keyframes glide{0%,100%{transform:rotate(90deg) translateY(4px)}50%{transform:rotate(90deg) translateY(-4px)}}
+  .hero.off .pr-plane{animation-play-state:paused}
+  @keyframes glide{0%,100%{translate:-4px 0}50%{translate:4px 0}}
   .brand .ping{display:inline-block;position:relative;width:8px;height:8px;border-radius:999px;background:var(--yellow);margin-right:8px;vertical-align:2px}
   .brand .ping::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--yellow);animation:ping 2s ease-out infinite}
   @keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(3);opacity:0}}
@@ -945,17 +946,19 @@ function commonsUrl(file, size){
 const loadedImg = new Set(); // 這次瀏覽已經載入過的照片網址
 // 指定的照片檔抓不到時，改用這個維基條目的代表照片
 const FILE_FALLBACK = { "File:Hong Kong Skyline Restitch - Dec 2007.jpg": "Victoria Harbour" };
-function photoHTML(wiki, country, label, size, eager){
+// inline＝外層是 <button>／<span> 時用 span 包（button 裡不能放 div）
+function photoHTML(wiki, country, label, size, eager, inline){
   size = stdSize(size);
+  const T = inline ? "span" : "div";
   const lazy = eager ? "" : ' loading="lazy"';
   // 已經載入過：直接放網址並顯示（重畫時不會再淡入一次）
   const known = !wiki ? null : /^File:/.test(wiki) ? commonsUrl(wiki, size) : (imgCache[wiki + "|" + size] || {}).u;
   if (known && loadedImg.has(known))
-    return `<div class="fb">${esc(label || "")}</div><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><div class="shade"></div>`;
+    return `<${T} class="fb">${esc(label || "")}</${T}><img class="bgimg ok" alt="${esc(label || "")}" src="${esc(known)}" data-done="1"${lazy} decoding="async" /><${T} class="shade"></${T}>`;
   const img = !wiki ? "" : /^File:/.test(wiki)
     ? `<img class="bgimg" alt="${esc(label || "")}" data-file="${esc(commonsUrl(wiki, size))}"${FILE_FALLBACK[wiki] ? ` data-fb="${esc(FILE_FALLBACK[wiki])}" data-size="${size}"` : ""}${lazy} decoding="async" />`
     : `<img class="bgimg" alt="${esc(label || "")}" data-wiki="${esc(wiki)}" data-size="${size}"${lazy} decoding="async" />`;
-  return `<div class="fb">${esc(label || "")}</div>${img}<div class="shade"></div>`;
+  return `<${T} class="fb">${esc(label || "")}</${T}>${img}<${T} class="shade"></${T}>`;
 }
 function queueImages(){ revealify(); clearTimeout(imgTimer); imgTimer = setTimeout(loadImages, 30); }
 // 真的抓不到：有備用條目就改抓備用，否則顯示漸層底
@@ -1341,7 +1344,7 @@ function renderTiles(){
     // 像 IG 限時動態：圓形照片；最便宜的地區外圈是漸層色
     const hot = min && c === order[0];
     return `<button class="tile${min || !state.loaded ? "" : " nop"}" data-v="${c}" aria-pressed="${state.country === c}">
-      <span class="ring${hot ? " hot" : ""}"><span class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false)}</span></span>
+      <span class="ring${hot ? " hot" : ""}"><span class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false, true)}</span></span>
       <span class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
     </button>`;
   }).join(""));
@@ -1402,7 +1405,7 @@ function renderMoreRoutes(shown){
       if (!url) continue;
       const lm = landmarkOf(d);
       cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
-        <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false)}</span>
+        <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false, true)}</span>
         <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(ORIGIN_NAME[o])}出發</span><span class="rr-go">看即時價 ›</span></a>`);
     }
   }
@@ -1821,7 +1824,7 @@ function routeSheetHTML(o, d){
       const key = `${m}-${String(dd).padStart(2, "0")}`, f = byDay.get(key), ix = `style="--i:${first + dd}"`;
       cells.push(f
         ? `<button class="day lv${lv(f.price)}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}"><span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
-        : `<div class="day" ${ix}><span class="n" style="color:#94A3B8;font-weight:500">${dd}</span></div>`);
+        : `<div class="day" ${ix}><span class="n" style="font-weight:500">${dd}</span></div>`);
     }
     return `<div class="cal"><h4>${y} 年 ${mm} 月</h4><div class="cal-grid">${cells.join("")}</div></div>`;
   }).join("");
