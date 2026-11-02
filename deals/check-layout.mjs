@@ -458,6 +458,10 @@ try {
         const tk = document.querySelector("#sheet .ticket");
         if (tk) { const e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong"));
           if (e[0].right > pl.left || e[1].left < pl.right || e[1].right > pr.left) out.push("日曆上方的登機證文字重疊"); }
+        // 「訂最便宜」那排固定在面板底部：一打開就看得到
+        const st = document.querySelector("#sheet .sh-sticky");
+        if (!st) out.push("價格日曆沒有固定在底部的訂票按鈕");
+        else { const a = R(st), pp = R(panel); if (Math.abs(a.bottom - Math.min(pp.bottom, innerHeight)) > 2) out.push(`訂票按鈕沒有固定在面板底部（${Math.round(a.bottom)} vs ${Math.round(pp.bottom)}）`); }
         const opts = [...document.querySelectorAll(".opt")];
         const ls = new Set(opts.map(o => Math.round(R(o).left))), rs = new Set(opts.map(o => Math.round(R(o).right)));
         if (ls.size > 1 || rs.size > 1) out.push("日期選項左右邊沒對齊");

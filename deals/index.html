@@ -185,6 +185,7 @@
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .seg{display:inline-flex;background:#EEF0F3;border-radius:12px;padding:3px}
   .seg button{border:0;background:transparent;border-radius:9px;height:34px;padding:0 16px;font-size:14px;font-weight:700;color:var(--ink-2)}
+  .seg-o button{padding:0 14px}
   .seg button[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(17,24,39,.12)}
   select{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);border-radius:12px;height:40px;padding:0 12px;background:#fff;color:var(--ink)}
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
@@ -410,6 +411,8 @@
   .opt.hi{background:#FFF8E1}
   .sh-actions{display:flex;gap:10px;margin-top:14px}
   .sh-actions .cta{flex:1 1 auto}
+  .sh-sticky{position:sticky;bottom:0;z-index:4;margin:14px -16px -24px;padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+    background:rgba(247,247,248,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line)}
   .hotel-x{display:flex;align-items:center;gap:12px;margin-top:12px;padding:14px;border-radius:var(--r);background:#fff;border:1px solid var(--line);color:var(--ink);text-decoration:none}
   .hotel-x > .ic{width:24px;height:24px;flex:0 0 auto;color:var(--gold)}
   .hotel-x span{flex:1 1 auto;min-width:0}
@@ -588,14 +591,11 @@
             <button aria-pressed="true" data-v="rt">來回</button>
             <button aria-pressed="false" data-v="ow">單程</button>
           </div>
-          <select id="origin" aria-label="出發地">
-            <option value="">全部出發地</option>
-            <option value="TPE">台北出發</option>
-            <option value="KHH">高雄出發</option>
-            <option value="RMQ">台中出發</option>
-          </select>
         </div>
       </div>
+      <div class="prow"><span class="plbl sr-only">出發地</span><div class="pctl"><div class="seg seg-o" id="origin" role="group" aria-label="出發地">
+        <button aria-pressed="true" data-v="">全部出發地</button><button aria-pressed="false" data-v="TPE">台北</button><button aria-pressed="false" data-v="KHH">高雄</button><button aria-pressed="false" data-v="RMQ">台中</button>
+      </div></div></div>
       <div class="prow"><span class="plbl sr-only">月份</span><div class="pctl"><div class="scroller" id="months" role="group" aria-label="出發月份"></div></div></div>
       <div class="prow"><span class="plbl sr-only">條件</span><div class="pctl"><div class="scroller" id="filters" role="group" aria-label="條件"></div></div></div>
     </div>
@@ -1740,7 +1740,12 @@ $("#tripType").addEventListener("click", e => {
   $("#tripType").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
   renderHero(); renderFlights();
 });
-$("#origin").addEventListener("change", e => { state.origin = e.target.value; resetPage(); renderHero(); renderFlights(); });
+$("#origin").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.origin = b.dataset.v;
+  $("#origin").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  resetPage(); if (state.flights.length) state.month = bestMonth(); renderHero(); renderFlights();
+});
 $("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
 $("#tiles").addEventListener("click", e => {
   const b = e.target.closest("button.tile"); if (!b) return;
@@ -1871,13 +1876,14 @@ function routeSheetHTML(o, d){
       <div class="facts">${facts}</div>
       ${cal}
       <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
+      ${hotelUrl ? `<a class="hotel-x" href="${esc(hotelUrl)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(d))}的酒店</b><em>${esc(fmtDate(cheapest.dep))}–${esc(fmtDate(cheapest.ret || addDays(cheapest.dep, 3)))}・跟最便宜的機票同天${HOTEL_REF[canon(d)] ? `・平價每晚約 ${money(HOTEL_REF[canon(d)][0])} 起` : ""}</em></span>${ARROW()}</a>` : ""}
       <h3 style="margin:16px 0 8px;font-size:17px">${list.length} 組日期・${state.type === "rt" ? "來回" : "單程"}</h3>
       <div class="opt-list">${opts}</div>
-      <div class="sh-actions">
+      <!-- 固定在面板底部：不管滑到哪都能一鍵訂最便宜的 -->
+      <div class="sh-actions sh-sticky">
         <button class="btn2" data-share="${esc(o)}-${esc(d)}" data-smode="${esc(state.mode)}" data-stype="${esc(state.type)}">${icon("share")}分享</button>
-        <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">看最便宜的 ${money(cheapest.price)}${ARROW()}</a>
+        <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">訂最便宜的 ${money(cheapest.price)}${ARROW()}</a>
       </div>
-      ${hotelUrl ? `<a class="hotel-x" href="${esc(hotelUrl)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(d))}的酒店</b><em>${esc(fmtDate(cheapest.dep))}–${esc(fmtDate(cheapest.ret || addDays(cheapest.dep, 3)))}・跟最便宜的機票同天${HOTEL_REF[canon(d)] ? `・平價每晚約 ${money(HOTEL_REF[canon(d)][0])} 起` : ""}</em></span>${ARROW()}</a>` : ""}
     </div>`;
 }
 function openRoute(o, d){
@@ -1966,6 +1972,7 @@ function lucky(){
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lm = landmarkOf(pick.d), save = savingPct(pick);
+  const luckyHotel = hotelCityUrl(pick.d, pick.dep, pick.ret || addDays(pick.dep, 3));
   const winPhoto = () => photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
   // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
   const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
@@ -1976,7 +1983,8 @@ function lucky(){
       <div class="sh-body"><div class="sh-actions" style="margin-top:0">
         <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
         ${favBtn(pick.o, pick.d, "btn2", true)}
-        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div></div>${confettiHTML()}`);
+        ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div>
+        ${luckyHotel ? `<a class="hotel-x" href="${esc(luckyHotel)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(pick.d))}的酒店</b><em>${esc(fmtDate(pick.dep))}–${esc(fmtDate(pick.ret || addDays(pick.dep, 3)))}・跟這張機票同天</em></span>${ARROW()}</a>` : ""}</div>${confettiHTML()}`);
     clearTimeout(confettiTimer);
     confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }

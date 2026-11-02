@@ -203,6 +203,13 @@ try {
       await page.waitForTimeout(300);
       if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板（返回鍵版本）");
     }
+    // 出發地按鈕：點「高雄」只剩高雄出發的票，點回「全部出發地」恢復
+    await page.click('#origin button[data-v="KHH"]');
+    const froms = await page.$$eval("#flightList .card .an", els => els.map(e => e.textContent));
+    if (!froms.length || froms.some(t => !t.includes("高雄出發"))) problems.push(`點「高雄」後出現非高雄出發的票：${froms.join("／")}`);
+    await checkLinks(page, "高雄出發", sub1);
+    await page.click('#origin button[data-v=""]');
+    if ((await page.evaluate(() => state.origin)) !== "") problems.push("點「全部出發地」沒有恢復");
     // 讓幫我選一定抽到有多組日期的城市（才測得到「全部日期」和返回鍵）
     const pickable = await page.evaluate(() => { const pool = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, 15);
       const i = pool.findIndex(f => routeFlights(f.o, f.d).length > 1); if (i < 0) return false;
