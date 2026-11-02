@@ -363,9 +363,9 @@ try {
     for (const gone of ["#intro", "#quick", "#countdown", "#weekendSec", "#radarRank", "#toFilter", "#shareSite", "#budget", "#countries"])
       if (await page.$(gone)) problems.push(`精簡版不該再有：${gone}`);
     // 換篩選時，地區磚塊的照片不能重畫（重畫會閃一下）
-    await page.evaluate(() => { document.querySelector("#tiles .tile").__mark = 1; });
+    await page.evaluate(() => { document.querySelector("#tiles .tile:not(.tile-all)").__mark = 1; });
     await page.click('#filters button[data-v="direct"]');
-    if (!(await page.evaluate(() => document.querySelector("#tiles .tile").__mark))) problems.push("換篩選時地區磚塊被重畫（照片會閃）");
+    if (!(await page.evaluate(() => document.querySelector("#tiles .tile:not(.tile-all)").__mark))) problems.push("換篩選時地區磚塊被重畫（照片會閃）");
     await page.click('#filters button[data-v="cheap"]');
     // 點地區磚塊 → 出現「✕ 地區」可以清掉
     await page.click('#tiles .tile[data-v="VN"]');
@@ -440,6 +440,18 @@ try {
     await page.waitForSelector("#flightList .card");
     await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => problems.push("資料一直沒有齊全"));
     if (!(await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("收藏的航線降價了卻沒有顯示「比你上次看便宜」");
+    // 收藏不受出發地按鈕影響：收藏的是台北出發，點「高雄」後收藏區還要在
+    await page.click('#origin button[data-v="KHH"]');
+    if (!(await page.isVisible("#favSec")) || !(await page.textContent("#favList")).includes("大阪")) problems.push("選了別的出發地，收藏的航線就不見了");
+    // 選了月份後換出發地：那個月還有票就留在那個月
+    await page.click('#origin button[data-v=""]');
+    const m2 = await page.evaluate(() => { const ks = monthKeys(); return ks.find(k => k !== state.month && baseFiltered().some(f => f.dep.startsWith(k) && f.o === "TPE")); });
+    if (m2) {
+      await page.click(`#months button[data-v="${m2}"]`);
+      await page.click('#origin button[data-v="TPE"]');
+      if ((await page.evaluate(() => state.month)) !== m2) problems.push("換出發地後，原本選的月份（還有票）被換掉了");
+      await page.click('#origin button[data-v=""]');
+    }
     await page.reload(); await page.waitForSelector("#flightList .card");
     await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => {});
     if ((await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("同樣價格重新打開，還顯示降價");

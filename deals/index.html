@@ -175,7 +175,7 @@
   .tile .t span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile.nop .t span{color:var(--muted)}
   .tile.nop .ph{filter:saturate(.55)}
-  .all-ph{background:radial-gradient(circle at 65% 35%,#1B4A85,#0B2340 70%);display:flex !important;align-items:center;justify-content:center;color:var(--yellow)}
+  .tile .all-ph{background:radial-gradient(circle at 65% 35%,#1B4A85,#0B2340 70%);display:flex;align-items:center;justify-content:center;color:var(--yellow)}
   .all-ph .ic{width:42%;height:42%;transform:rotate(45deg)}
   .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
@@ -189,7 +189,6 @@
   .seg button{border:0;background:transparent;border-radius:9px;height:34px;padding:0 16px;font-size:14px;font-weight:700;color:var(--ink-2)}
   .seg-o button{padding:0 14px}
   .seg button[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(17,24,39,.12)}
-  select{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);border-radius:12px;height:40px;padding:0 12px;background:#fff;color:var(--ink)}
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
   .scroller::-webkit-scrollbar{display:none}
@@ -1749,10 +1748,10 @@ $("#tripType").addEventListener("click", e => {
   renderHero(); renderFlights();
 });
 $("#origin").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
+  const b = e.target.closest("button"); if (!b || b.dataset.v === state.origin) return; // 點已選的那顆不做事
   state.origin = b.dataset.v;
   $("#origin").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-  resetPage(); if (state.flights.length) state.month = bestMonth(); renderHero(); renderFlights();
+  resetPage(); monthWithResults(); renderHero(); renderFlights(); // 這個月還有票就留在這個月
 });
 $("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
 $("#tiles").addEventListener("click", e => {
@@ -1870,7 +1869,6 @@ function routeSheetHTML(o, d){
       <div class="pp"><strong>${priceHTML(f.price)}</strong><span>訂這組 →</span></div></a>`;
   }).join("");
   const url = flightUrl(cheapest);
-  const hotelUrl = hotelCityUrl(d, cheapest.dep, cheapest.ret || addDays(cheapest.dep, 3));
   return `
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${sheetRouteSVG()}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[c] || "")}</div></div></div>
@@ -1884,7 +1882,7 @@ function routeSheetHTML(o, d){
       <div class="facts">${facts}</div>
       ${cal}
       <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
-      ${hotelUrl ? `<a class="hotel-x" href="${esc(hotelUrl)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(d))}的酒店</b><em>${esc(fmtDate(cheapest.dep))}–${esc(fmtDate(cheapest.ret || addDays(cheapest.dep, 3)))}・跟最便宜的機票同天${HOTEL_REF[canon(d)] ? `・平價每晚約 ${money(HOTEL_REF[canon(d)][0])} 起` : ""}</em></span>${ARROW()}</a>` : ""}
+      ${hotelCrossSell(cheapest, "跟最便宜的機票同天")}
       <h3 style="margin:16px 0 8px;font-size:17px">${list.length} 組日期・${state.type === "rt" ? "來回" : "單程"}</h3>
       <div class="opt-list">${opts}</div>
       <!-- 固定在面板底部：不管滑到哪都能一鍵訂最便宜的 -->
@@ -1959,6 +1957,13 @@ function passHTML(f){
               </span>
             </a>`;
 }
+// 「順便看○○的酒店」：入住／退房跟那張機票同一天（價格日曆、幫我選共用）
+function hotelCrossSell(f, note){
+  const ci = f.dep, co = f.ret || addDays(f.dep, 3), url = hotelCityUrl(f.d, ci, co);
+  if (!url) return "";
+  const ref = HOTEL_REF[canon(f.d)];
+  return `<a class="hotel-x" href="${esc(url)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(f.d))}的酒店</b><em>${esc(fmtDate(ci))}–${esc(fmtDate(co))}・${esc(note)}${ref ? `・平價每晚約 ${money(ref[0])} 起` : ""}</em></span>${ARROW()}</a>`;
+}
 // 抽中時灑彩帶（品牌色）
 function confettiHTML(){
   if (!MOTION) return "";
@@ -1980,7 +1985,6 @@ function lucky(){
   const names = pool.map(f => cityName(f.d));
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const lm = landmarkOf(pick.d), save = savingPct(pick);
-  const luckyHotel = hotelCityUrl(pick.d, pick.dep, pick.ret || addDays(pick.dep, 3));
   const winPhoto = () => photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
   // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
   const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
@@ -1992,7 +1996,7 @@ function lucky(){
         <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
         ${favBtn(pick.o, pick.d, "btn2", true)}
         ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div>
-        ${luckyHotel ? `<a class="hotel-x" href="${esc(luckyHotel)}" target="_blank" rel="noopener sponsored">${icon("bed")}<span><b>順便看${esc(cityName(pick.d))}的酒店</b><em>${esc(fmtDate(pick.dep))}–${esc(fmtDate(pick.ret || addDays(pick.dep, 3)))}・跟這張機票同天</em></span>${ARROW()}</a>` : ""}</div>${confettiHTML()}`);
+        ${hotelCrossSell(pick, "跟這張機票同天")}</div>${confettiHTML()}`);
     clearTimeout(confettiTimer);
     confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
@@ -2097,7 +2101,10 @@ function renderFavs(){
   if (!state.loaded || !favs.length){ sec.classList.add("hidden"); return; }
   const drops = [];
   favShown = 0;
-  const cards = favs.map(k => {
+  // 收藏不受「出發地」按鈕影響（選台北時，高雄出發的收藏也要在）
+  const origin0 = state.origin; state.origin = "";
+  let cards;
+  try { cards = favs.map(k => {
     const [o, d] = k.split("-");
     const list = routeFlights(o, d);
     if (!list.length) return "";
@@ -2109,7 +2116,7 @@ function renderFavs(){
     else if (diff >= 100) badge = `<span class="badge">${icon("up")}比上次貴 ${money(diff)}</span>`;
     if (dataSettled) saveFavPrice(k, Math.round(f.price));
     return miniCard(f, { mp: `最便宜・${list.length} 組`, badge });
-  }).join("");
+  }).join(""); } finally { state.origin = origin0; }
   if (drops.length && !favDropToasted){
     favDropToasted = true;
     const [d, v] = drops.sort((a, b) => b[1] - a[1])[0];
