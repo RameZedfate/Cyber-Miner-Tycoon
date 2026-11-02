@@ -376,6 +376,11 @@ try {
       await page.click("#flightList [data-clear]");
       if (!(await page.$("#flightList .card"))) problems.push("按「看全部最便宜的票」後沒有恢復");
     }
+    // 「全部」圓圈：選了地區後點它要回到全部
+    await page.click('#tiles .tile[data-v="JP"]');
+    await page.click('#tiles .tile[data-v=""]');
+    if (await page.evaluate(() => state.country)) problems.push("點「全部」圓圈沒有回到全部地區");
+    if ((await page.$eval('#tiles .tile[data-v=""]', b => b.getAttribute("aria-pressed"))) !== "true") problems.push("「全部」圓圈沒有標成選取");
     await page.click('#tiles .tile[data-v="JP"]');
     await page.click("#clearC");
     if (await page.evaluate(() => state.country)) problems.push("按清除後地區沒有清掉");

@@ -175,6 +175,8 @@
   .tile .t span{display:block;font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile.nop .t span{color:var(--muted)}
   .tile.nop .ph{filter:saturate(.55)}
+  .all-ph{background:radial-gradient(circle at 65% 35%,#1B4A85,#0B2340 70%);display:flex !important;align-items:center;justify-content:center;color:var(--yellow)}
+  .all-ph .ic{width:42%;height:42%;transform:rotate(45deg)}
   .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
 
@@ -1340,7 +1342,13 @@ function renderTiles(){
   for (const f of base) if (!mins[f.country] || f.price < mins[f.country]) mins[f.country] = f.price;
   // 有價格的排前面（便宜的先），沒有價格的放後面
   const order = cs.slice().sort((a, b) => (mins[a] || 1e9) - (mins[b] || 1e9) || cs.indexOf(a) - cs.indexOf(b));
-  setHTML($("#tiles"), order.map(c => {
+  // 最前面一顆「全部」：想看全部地區時一點就回來
+  const allMin = Math.min(...Object.values(mins));
+  const allTile = `<button class="tile tile-all" data-v="" aria-pressed="${!state.country}">
+      <span class="ring"><span class="ph all-ph">${icon("plane")}</span></span>
+      <span class="t"><b>全部</b><span>${isFinite(allMin) ? money(allMin) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
+    </button>`;
+  setHTML($("#tiles"), allTile + order.map(c => {
     const min = mins[c] || null;
     const p = COUNTRY_PHOTO[c];
     // 像 IG 限時動態：圓形照片；最便宜的地區外圈是漸層色
@@ -1749,7 +1757,7 @@ $("#origin").addEventListener("click", e => {
 $("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
 $("#tiles").addEventListener("click", e => {
   const b = e.target.closest("button.tile"); if (!b) return;
-  state.country = state.country === b.dataset.v ? "" : b.dataset.v; resetPage();
+  state.country = state.country === b.dataset.v ? "" : b.dataset.v; resetPage(); // 再點一次同一區也會回到全部
   if (state.flights.length) state.month = bestMonth();
   renderFlights(); scrollToList();
 });
