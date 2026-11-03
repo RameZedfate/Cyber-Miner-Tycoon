@@ -362,6 +362,21 @@ try {
     if (await page.isVisible("#picks")) problems.push("沒有手動精選時不該顯示精選區");
     for (const gone of ["#intro", "#quick", "#countdown", "#weekendSec", "#radarRank", "#toFilter", "#shareSite", "#budget", "#countries"])
       if (await page.$(gone)) problems.push(`精簡版不該再有：${gone}`);
+    // 讓人想出國的小資訊：季節對到對的城市、平均氣溫、當地時間、城市一句話
+    const seasonCases = await page.evaluate(() => [
+      ["TYO", 11, "賞楓季"], ["OKA", 11, "暖冬避寒"], ["OKA", 2, "緋寒櫻季"], ["CJU", 1, null], ["SEL", 1, "滑雪季"],
+      ["BKK", 4, "潑水節"], ["SPK", 2, "雪祭"], ["HKG", 12, "聖誕燈飾"], ["DAD", 5, "海灘季"], ["TYO", 6, null],
+    ].map(([c, m, want]) => { const got = (seasonOf(c, m) || {}).t || null; return got === want ? "" : `${c} ${m}月 應為 ${want}，實際 ${got}`; }).filter(Boolean));
+    if (seasonCases.length) problems.push("季節標籤對錯城市：" + seasonCases.join("；"));
+    if ((await page.evaluate(() => tempOf("NRT", 1))) !== 5) problems.push("機場代碼查不到城市的平均氣溫");
+    if (!/^\d\d:\d\d$/.test(await page.evaluate(() => localTime("BKK")))) problems.push("當地時間格式不對");
+    if (!(await page.$("#flightList .card .mood"))) problems.push("機票卡照片上沒有季節／氣溫小標");
+    if (!(await page.$("#hero .slide .vibe"))) problems.push("大圖沒有城市一句話");
+    await page.click("#flightList .when.tap");
+    await page.waitForSelector("#sheet:not(.hidden) .facts", { timeout: 3000 }).catch(() => {});
+    const facts = await page.textContent("#sheet .facts").catch(() => "");
+    for (const w of ["當地現在", "月平均"]) if (!facts.includes(w)) problems.push(`價格日曆缺少「${w}」`);
+    await page.keyboard.press("Escape");
     // 換篩選時，地區磚塊的照片不能重畫（重畫會閃一下）
     await page.evaluate(() => { document.querySelector("#tiles .tile:not(.tile-all)").__mark = 1; });
     await page.click('#filters button[data-v="direct"]');

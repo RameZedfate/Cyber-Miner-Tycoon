@@ -129,6 +129,7 @@
   @media (min-width:1000px){
     .hero .slide .in .wrap.has-pass{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:0 32px}
     .hero .slide .in .wrap{padding:0 32px}
+    .hero .slide .in .wrap:first-child{padding-right:110px}
     .hero h2{font-size:76px;margin:0}
     .hero .pass{flex:0 0 420px;margin:0}
   }
@@ -228,6 +229,20 @@
   .card .ph .bgimg{transition:opacity .5s ease, transform .6s ease}
   .card .ph .shade{background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,0) 32%)}
   @media (hover:hover){ .card:hover .ph .bgimg.ok{transform:scale(1.04)} .card:hover .cty{text-decoration:underline;text-underline-offset:3px} }
+  /* 照片左下角：當季活動＋平均氣溫（毛玻璃小標） */
+  .mood{position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
+    background:rgba(10,20,40,.42);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;pointer-events:none}
+  .mood .ic{width:14px;height:14px;color:#FFD66B}
+  .mood i{font-style:normal;font-weight:600;opacity:.92}
+  /* 大圖上方一排小標：右邊留位置給輪播圓點，放不下就換行 */
+  .hero .slide .in .wrap:first-child{display:flex;flex-wrap:wrap;gap:6px;padding-right:96px}
+  .eyebrow.mood-e i{font-style:normal}
+  .eyebrow.mood-e .ic{color:#FFD66B}
+  .h2w{min-width:0}
+  .vibe{font-size:14.5px;font-weight:600;margin-top:4px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .win .vibe{margin-top:2px}
+  .fact.season{background:#FFF6D6;border-color:#F6DE8A;color:#7A5600}
+  .fact.season .ic{color:#B7791F}
   .badges{position:absolute;top:12px;left:12px;right:60px;display:flex;gap:6px;flex-wrap:wrap;z-index:2;pointer-events:none}
   .badge{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:700;
     background:rgba(255,255,255,.95);color:var(--ink);white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12)}
@@ -847,6 +862,14 @@ const ICONS = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   grid: '<rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9.5h18M9 9.5V21M15 9.5V21M3 15h18"/>',
   down: 'F<path d="M12 3c.6 0 1 .4 1 1v12.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 1.4-1.4l4.3 4.3V4c0-.6.4-1 1-1z"/>',
+  // 季節小圖示
+  flower: 'F<path d="M12 3.2c1.3 0 2.2 1.5 2 3.1 1.2-1 3-.9 3.6.3.7 1.2-.2 2.7-1.7 3.2 1.5.5 2.4 2 1.7 3.2-.6 1.2-2.4 1.3-3.6.3.2 1.6-.7 3.1-2 3.1s-2.2-1.5-2-3.1c-1.2 1-3 .9-3.6-.3-.7-1.2.2-2.7 1.7-3.2-1.5-.5-2.4-2-1.7-3.2.6-1.2 2.4-1.3 3.6-.3-.2-1.6.7-3.1 2-3.1zM12 8.4a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8z"/>',
+  leaf: 'F<path d="M12 2.5l1.7 3.6 2.6-1.2-.6 3.3 3.4-.4-1.9 2.6 3 1.2-3.1 1.4 1.4 2.5-3.3-.4.3 3.3-2.6-1.6L12 20l-.9-3.2-2.6 1.6.3-3.3-3.3.4 1.4-2.5-3.1-1.4 3-1.2-1.9-2.6 3.4.4-.6-3.3 2.6 1.2z"/><path d="M11.4 19.5h1.2v2.5h-1.2z"/>',
+  snow: '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/>',
+  sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  wave: '<path d="M3 15c2 0 2-2 4.5-2s2.5 2 4.5 2 2-2 4.5-2 2.5 2 4.5 2M3 19c2 0 2-2 4.5-2s2.5 2 4.5 2 2-2 4.5-2 2.5 2 4.5 2M12 4c-2 2.4-3 4-3 5.4a3 3 0 0 0 6 0C15 8 14 6.4 12 4z"/>',
+  spark: 'F<path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
   up: 'F<path d="M12 21c-.6 0-1-.4-1-1V7.4l-4.3 4.3a1 1 0 0 1-1.4-1.4l6-6a1 1 0 0 1 1.4 0l6 6a1 1 0 0 1-1.4 1.4L13 7.4V20c0 .6-.4 1-1 1z"/>',
   radar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6.4-6.4"/><circle cx="16.5" cy="9" r="1.2" fill="currentColor" stroke="none"/>',
   bolt: 'F<path d="M13.5 2 4.5 13.5h6L9.5 22l9-11.5h-6z"/>',
@@ -1223,6 +1246,7 @@ function flightCard(f, opt = {}){
     <div class="ph g-${esc(f.country || "")}">
       ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 800, false)}
       <div class="badges">${badge}</div>
+      ${moodChip(f)}
     </div>
     ${opt.pick ? "" : favBtn(f.o, f.d)}
     <div class="cb">
@@ -1286,9 +1310,9 @@ function renderHero(){
       <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
         ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}
         <div class="in">
-          <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span></div>
+          <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span>${moodChip(f).replace('class="mood"', 'class="eyebrow mood-e"')}</div>
           <div class="wrap has-pass">
-            <h2>${esc(cityName(f.d))}</h2>
+            <div class="h2w"><h2>${esc(cityName(f.d))}</h2>${CITY_VIBE[canon(f.d)] ? `<div class="vibe">${esc(CITY_VIBE[canon(f.d)])}</div>` : ""}</div>
             ${passHTML(f)}
           </div>
         </div>
@@ -1826,6 +1850,64 @@ function toast(msg){
   const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
 }
+/* ====================================================================
+   讓人想出國的小資訊：每個城市一句「去玩什麼」、當季活動、平均氣溫、當地時間
+   （都是一般常識整理的固定資料，不連網；要改就改這裡）
+   ==================================================================== */
+const CITY_VIBE = {
+  TYO:"拉麵、晴空塔、逛不完的藥妝", OSA:"道頓堀美食、環球影城、大阪燒", FUK:"屋台拉麵、天神逛街、太宰府",
+  OKA:"湛藍海灘、美國村、美麗海水族館", SPK:"海鮮丼、小樽運河、雪景", NGO:"名古屋城、味噌豬排、樂高樂園",
+  KMJ:"熊本城、熊本熊、阿蘇火山", HIJ:"嚴島神社、廣島燒", ISG:"川平灣、浮潛、星空", KOJ:"櫻島火山、黑豬肉、砂浴",
+  SDJ:"牛舌、松島、溫泉", HKD:"夜景、朝市海鮮、五稜郭", TAK:"讚岐烏龍麵、栗林公園", OKJ:"後樂園、桃太郎、倉敷美觀",
+  SEL:"弘大、明洞美妝、炸雞配啤酒", PUS:"海雲台、甘川洞、新鮮生魚片", CJU:"漢拿山、城山日出峰、橘子園",
+  BKK:"夜市、泰式按摩、水上市場", CNX:"古城寺廟、大象保護營、週日夜市", HKT:"跳島浮潛、海灘日落、泰式按摩",
+  USM:"椰林海灘、度假村、跳島", KBV:"萊利海灘、攀岩、四島跳島",
+  DAD:"美溪沙灘、巴拿山黃金橋、會安古鎮", SGN:"法式建築、越南河粉、咖啡館", HAN:"還劍湖、下龍灣、蛋咖啡",
+  CXR:"海灘、泥漿浴、海鮮", PQC:"白沙灘、跳島浮潛、夕陽",
+  HKG:"維港夜景、茶餐廳、迪士尼", SHA:"外灘夜景、小籠包、迪士尼", BJS:"故宮、長城、北京烤鴨",
+  CAN:"早茶、廣州塔、珠江夜遊", SZX:"購物、海濱、港式點心", CTU:"熊貓、火鍋、寬窄巷子", CKG:"洪崖洞夜景、火鍋、輕軌穿樓",
+  XMN:"鼓浪嶼、沙茶麵、環島路", HGH:"西湖、龍井茶、靈隱寺", XIY:"兵馬俑、古城牆、回民街小吃",
+};
+// 各月平均氣溫（°C，1～12 月，一般氣候資料約略值）
+const CLIMATE = {
+  TYO:[5,6,9,15,19,22,26,27,24,18,13,8], OSA:[6,6,10,15,20,23,27,29,25,19,14,9], FUK:[7,8,11,16,20,23,28,29,25,20,15,9],
+  OKA:[17,17,19,21,24,27,29,29,27,25,22,19], SPK:[-3,-3,1,7,13,17,21,22,18,12,5,-1], NGO:[5,5,9,15,19,23,27,28,25,19,13,7],
+  SEL:[-2,1,6,13,18,23,25,26,22,15,7,0], PUS:[4,6,10,14,18,21,25,27,23,18,12,6], CJU:[7,7,10,14,18,22,26,27,23,19,14,9],
+  BKK:[27,28,30,31,30,29,29,29,28,28,28,27], CNX:[22,24,27,30,29,28,27,27,27,26,24,22], HKT:[28,28,29,29,29,28,28,28,28,27,27,28],
+  DAD:[22,23,25,27,29,30,30,29,28,26,24,22], SGN:[27,28,29,30,29,28,28,28,27,27,27,27], HAN:[17,18,21,24,28,30,30,29,28,26,22,18],
+  HKG:[16,17,19,23,26,28,29,29,28,26,22,18], SHA:[5,7,10,16,21,25,29,29,25,20,14,8], BJS:[-3,0,7,15,21,25,27,26,21,14,5,-1],
+};
+// 當季活動：[國家或城市代碼, 月份們, 文字, 圖示]（城市寫在國家前面，先找到的先用）
+const SEASONS = [
+  ["OKA",[1,2],"緋寒櫻季","flower"], ["OKA",[4,5,6,7,8,9,10],"海灘季","wave"], ["OKA",[11,12,3],"暖冬避寒","sun"],
+  ["SPK",[2],"雪祭","snow"], ["SPK",[12,1,3],"滑雪季","snow"], ["SPK",[7],"薰衣草季","flower"],
+  ["JP",[3,4],"櫻花季","flower"], ["JP",[11],"賞楓季","leaf"], ["JP",[12],"聖誕燈飾","spark"],
+  ["CJU",[3,4],"油菜花季","flower"], ["SEL",[12,1,2],"滑雪季","snow"],
+  ["KR",[4],"櫻花季","flower"], ["KR",[10,11],"賞楓季","leaf"],
+  ["TH",[4],"潑水節","wave"], ["TH",[11,12,1,2],"涼季最舒服","sun"],
+  ["DAD",[3,4,5,6,7,8],"海灘季","wave"], ["PQC",[11,12,1,2,3],"海島旺季","wave"], ["VN",[12,1,2,3],"乾季好天氣","sun"],
+  ["HK",[12],"聖誕燈飾","spark"], ["HK",[10,11],"秋高氣爽","sun"],
+  ["SHA",[10,11],"大閘蟹季","sun"], ["CN",[4,5],"春遊","flower"], ["CN",[10],"秋遊","leaf"],
+];
+function seasonOf(code, month){
+  const c = canon(code), co = countryOf(c);
+  for (const [k, ms, t, ic] of SEASONS) if ((k === c || k === co) && ms.includes(month)) return { t, ic };
+  return null;
+}
+function tempOf(code, month){ const t = CLIMATE[canon(code)]; return t ? t[month - 1] : null; }
+const UTC_OFFSET = { JP:9, KR:9, TH:7, VN:7, CN:8, HK:8 };
+// 目的地現在幾點（例如「14:32」）
+function localTime(code){
+  const off = UTC_OFFSET[countryOf(canon(code))]; if (off == null) return "";
+  const t = new Date(Date.now() + off * 3600e3);
+  return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`;
+}
+// 照片上的小標：「賞楓季・15°C」或只有「15°C」（出發那個月）
+function moodChip(f){
+  const m = Number(f.dep.slice(5, 7)), s = seasonOf(f.d, m), t = tempOf(f.d, m);
+  if (!s && t == null) return "";
+  return `<span class="mood">${s ? `${icon(s.ic)}${esc(s.t)}` : icon("thermo")}${t != null ? `<i>${s ? "・" : ""}${t}°C</i>` : ""}</span>`;
+}
 const TZ = { JP:"比台灣快 1 小時", KR:"比台灣快 1 小時", TH:"比台灣慢 1 小時", VN:"比台灣慢 1 小時", CN:"跟台灣一樣", HK:"跟台灣一樣" };
 const CURRENCY_NAME = { JP:"日圓", KR:"韓元", TH:"泰銖", VN:"越南盾", CN:"人民幣", HK:"港幣" };
 
@@ -1835,8 +1917,12 @@ function routeSheetHTML(o, d){
   const c = countryOf(d), lm = landmarkOf(d);
   const cheapest = list.reduce((a, b) => b.price < a.price ? b : a);
   const durs = list.map(f => f.dur).filter(Boolean);
+  const cm = Number(cheapest.dep.slice(5, 7)), cs = seasonOf(d, cm), ct = tempOf(d, cm), lt = localTime(d);
   const facts = [
-    `<span class="fact">${icon("clock")}時差 <b>${esc(TZ[c] || "")}</b></span>`,
+    lt ? `<span class="fact">${icon("clock")}當地現在 <b>${esc(lt)}</b></span>` : "",
+    ct != null ? `<span class="fact">${icon("thermo")}${cm} 月平均 <b>${ct}°C</b></span>` : "",
+    cs ? `<span class="fact season">${icon(cs.ic)}<b>${esc(cs.t)}</b></span>` : "",
+    `<span class="fact">時差 <b>${esc(TZ[c] || "")}</b></span>`,
     CURRENCY_NAME[c] ? `<span class="fact">貨幣 <b>${esc(CURRENCY_NAME[c])}</b></span>` : "",
   ].join("");
   // 價格日曆：每個出發日的最低價，依價格分三級上色
@@ -1871,7 +1957,7 @@ function routeSheetHTML(o, d){
   const url = flightUrl(cheapest);
   return `
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${sheetRouteSVG()}
-      <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(lm ? lm[1] + "・" : "")}${esc(COUNTRIES[c] || "")}</div></div></div>
+      <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(CITY_VIBE[canon(d)] || ((lm ? lm[1] + "・" : "") + (COUNTRIES[c] || "")))}</div></div></div>
     <div class="sh-body">
       <div class="ticket">
         <span class="tk-end"><b>${esc(cheapest.oAp || o)}</b><small>${esc(ORIGIN_NAME[o])}</small></span>
@@ -1989,7 +2075,7 @@ function lucky(){
   // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
   const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
         <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
-          <h3>就決定是${esc(cityName(pick.d))}了！</h3>
+          <h3>就決定是${esc(cityName(pick.d))}了！</h3>${CITY_VIBE[canon(pick.d)] ? `<div class="vibe">${esc(CITY_VIBE[canon(pick.d)])}</div>` : ""}
           <div class="win-sub">${esc([`${ORIGIN_NAME[pick.o]}出發`, airlineLabel(pick.airline), save ? `比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}` : ""].filter(Boolean).join("・"))}</div>
           ${passHTML(pick)}</div></div>
       <div class="sh-body"><div class="sh-actions" style="margin-top:0">
