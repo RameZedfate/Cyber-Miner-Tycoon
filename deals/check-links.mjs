@@ -203,6 +203,13 @@ try {
       await page.waitForTimeout(300);
       if (await page.isVisible("#sheet")) problems.push("按 X 沒有關閉面板（返回鍵版本）");
     }
+    // 出發地按鈕：點「高雄」只剩高雄出發的票，點回「全部出發地」恢復
+    await page.click('#origin button[data-v="KHH"]');
+    const froms = await page.$$eval("#flightList .card .an", els => els.map(e => e.textContent));
+    if (!froms.length || froms.some(t => !t.includes("高雄出發"))) problems.push(`點「高雄」後出現非高雄出發的票：${froms.join("／")}`);
+    await checkLinks(page, "高雄出發", sub1);
+    await page.click('#origin button[data-v=""]');
+    if ((await page.evaluate(() => state.origin)) !== "") problems.push("點「全部出發地」沒有恢復");
     // 讓幫我選一定抽到有多組日期的城市（才測得到「全部日期」和返回鍵）
     const pickable = await page.evaluate(() => { const pool = cheapestPerCity(modeFiltered()).filter(f => flightUrl(f)).slice(0, 15);
       const i = pool.findIndex(f => routeFlights(f.o, f.d).length > 1); if (i < 0) return false;
@@ -211,6 +218,9 @@ try {
     await page.click("#luckyBtn");
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
     await checkLinks(page, "幫我選", sub1);
+    const boba = await page.textContent("#sheet .boba").catch(() => "");
+    const bp = await page.evaluate(() => { const t = document.querySelector("#sheet .pass strong[data-v]"); return t ? Number(t.dataset.v) : 0; });
+    if (!boba.includes(`${Math.max(1, Math.round(bp / 60))} 杯珍奶`)) problems.push(`幫我選的珍奶換算不對：${boba}（票價 ${bp}）`);
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
     // 幫我選結果上的「收藏」：按了變「已收藏」，關掉後上面出現收藏區；再按一次取消
@@ -355,10 +365,25 @@ try {
     if (await page.isVisible("#picks")) problems.push("沒有手動精選時不該顯示精選區");
     for (const gone of ["#intro", "#quick", "#countdown", "#weekendSec", "#radarRank", "#toFilter", "#shareSite", "#budget", "#countries"])
       if (await page.$(gone)) problems.push(`精簡版不該再有：${gone}`);
+    // 讓人想出國的小資訊：季節對到對的城市、平均氣溫、當地時間、城市一句話
+    const seasonCases = await page.evaluate(() => [
+      ["TYO", 11, "賞楓季"], ["OKA", 11, "暖冬避寒"], ["OKA", 2, "緋寒櫻季"], ["CJU", 1, null], ["SEL", 1, "滑雪季"],
+      ["BKK", 4, "潑水節"], ["SPK", 2, "雪祭"], ["HKG", 12, "聖誕燈飾"], ["DAD", 5, "海灘季"], ["TYO", 6, null],
+    ].map(([c, m, want]) => { const got = (seasonOf(c, m) || {}).t || null; return got === want ? "" : `${c} ${m}月 應為 ${want}，實際 ${got}`; }).filter(Boolean));
+    if (seasonCases.length) problems.push("季節標籤對錯城市：" + seasonCases.join("；"));
+    if ((await page.evaluate(() => tempOf("NRT", 1))) !== 5) problems.push("機場代碼查不到城市的平均氣溫");
+    if (!/^\d\d:\d\d$/.test(await page.evaluate(() => localTime("BKK")))) problems.push("當地時間格式不對");
+    if (!(await page.$("#flightList .card .mood"))) problems.push("機票卡照片上沒有季節／氣溫小標");
+    if (!(await page.$("#hero .slide .vibe"))) problems.push("大圖沒有城市一句話");
+    await page.click("#flightList .when.tap");
+    await page.waitForSelector("#sheet:not(.hidden) .facts", { timeout: 3000 }).catch(() => {});
+    const facts = await page.textContent("#sheet .facts").catch(() => "");
+    for (const w of ["當地現在", "月平均"]) if (!facts.includes(w)) problems.push(`價格日曆缺少「${w}」`);
+    await page.keyboard.press("Escape");
     // 換篩選時，地區磚塊的照片不能重畫（重畫會閃一下）
-    await page.evaluate(() => { document.querySelector("#tiles .tile").__mark = 1; });
+    await page.evaluate(() => { document.querySelector("#tiles .tile:not(.tile-all)").__mark = 1; });
     await page.click('#filters button[data-v="direct"]');
-    if (!(await page.evaluate(() => document.querySelector("#tiles .tile").__mark))) problems.push("換篩選時地區磚塊被重畫（照片會閃）");
+    if (!(await page.evaluate(() => document.querySelector("#tiles .tile:not(.tile-all)").__mark))) problems.push("換篩選時地區磚塊被重畫（照片會閃）");
     await page.click('#filters button[data-v="cheap"]');
     // 點地區磚塊 → 出現「✕ 地區」可以清掉
     await page.click('#tiles .tile[data-v="VN"]');
@@ -369,6 +394,11 @@ try {
       await page.click("#flightList [data-clear]");
       if (!(await page.$("#flightList .card"))) problems.push("按「看全部最便宜的票」後沒有恢復");
     }
+    // 「全部」圓圈：選了地區後點它要回到全部
+    await page.click('#tiles .tile[data-v="JP"]');
+    await page.click('#tiles .tile[data-v=""]');
+    if (await page.evaluate(() => state.country)) problems.push("點「全部」圓圈沒有回到全部地區");
+    if ((await page.$eval('#tiles .tile[data-v=""]', b => b.getAttribute("aria-pressed"))) !== "true") problems.push("「全部」圓圈沒有標成選取");
     await page.click('#tiles .tile[data-v="JP"]');
     await page.click("#clearC");
     if (await page.evaluate(() => state.country)) problems.push("按清除後地區沒有清掉");
@@ -392,6 +422,7 @@ try {
       await page.click("#sheet [data-share]");
       const shareUrl = await page.$eval(".share-url", i => i.value).catch(() => null);
       if (!shareUrl || !/route=[A-Z]{3}-[A-Z]{3}&src=share/.test(shareUrl)) problems.push(`分享失敗時沒有跳出連結：${shareUrl}`);
+      if (!(await page.textContent("#sheet .sub").catch(() => "")).includes("杯珍奶")) problems.push("分享文字沒有珍奶換算");
       await page.keyboard.press("Escape");
     }
     await page.close();
@@ -428,6 +459,18 @@ try {
     await page.waitForSelector("#flightList .card");
     await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => problems.push("資料一直沒有齊全"));
     if (!(await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("收藏的航線降價了卻沒有顯示「比你上次看便宜」");
+    // 收藏不受出發地按鈕影響：收藏的是台北出發，點「高雄」後收藏區還要在
+    await page.click('#origin button[data-v="KHH"]');
+    if (!(await page.isVisible("#favSec")) || !(await page.textContent("#favList")).includes("大阪")) problems.push("選了別的出發地，收藏的航線就不見了");
+    // 選了月份後換出發地：那個月還有票就留在那個月
+    await page.click('#origin button[data-v=""]');
+    const m2 = await page.evaluate(() => { const ks = monthKeys(); return ks.find(k => k !== state.month && baseFiltered().some(f => f.dep.startsWith(k) && f.o === "TPE")); });
+    if (m2) {
+      await page.click(`#months button[data-v="${m2}"]`);
+      await page.click('#origin button[data-v="TPE"]');
+      if ((await page.evaluate(() => state.month)) !== m2) problems.push("換出發地後，原本選的月份（還有票）被換掉了");
+      await page.click('#origin button[data-v=""]');
+    }
     await page.reload(); await page.waitForSelector("#flightList .card");
     await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => {});
     if ((await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("同樣價格重新打開，還顯示降價");
