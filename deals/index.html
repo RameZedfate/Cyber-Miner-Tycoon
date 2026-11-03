@@ -241,6 +241,8 @@
   .h2w{min-width:0}
   .vibe{font-size:14.5px;font-weight:600;margin-top:4px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .win .vibe{margin-top:2px}
+  .boba{display:inline-flex;align-items:center;gap:6px;margin:8px 0 2px;padding:5px 11px;border-radius:999px;background:rgba(255,214,107,.95);color:#4A3200;font-size:13px;font-weight:700}
+  .boba .ic{width:16px;height:16px}
   .fact.season{background:#FFF6D6;border-color:#F6DE8A;color:#7A5600}
   .fact.season .ic{color:#B7791F}
   .badges{position:absolute;top:12px;left:12px;right:60px;display:flex;gap:6px;flex-wrap:wrap;z-index:2;pointer-events:none}
@@ -869,6 +871,7 @@ const ICONS = {
   sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
   wave: '<path d="M3 15c2 0 2-2 4.5-2s2.5 2 4.5 2 2-2 4.5-2 2.5 2 4.5 2M3 19c2 0 2-2 4.5-2s2.5 2 4.5 2 2-2 4.5-2 2.5 2 4.5 2M12 4c-2 2.4-3 4-3 5.4a3 3 0 0 0 6 0C15 8 14 6.4 12 4z"/>',
   spark: 'F<path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  cup: '<path d="M6 7h12l-1.6 13.2a1 1 0 0 1-1 .8H8.6a1 1 0 0 1-1-.8z"/><path d="M5 7h14M14 7l2-4"/><circle cx="10" cy="17" r="1" fill="currentColor" stroke="none"/><circle cx="13" cy="15.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1" fill="currentColor" stroke="none"/>',
   thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
   up: 'F<path d="M12 21c-.6 0-1-.4-1-1V7.4l-4.3 4.3a1 1 0 0 1-1.4-1.4l6-6a1 1 0 0 1 1.4 0l6 6a1 1 0 0 1-1.4 1.4L13 7.4V20c0 .6-.4 1-1 1z"/>',
   radar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6.4-6.4"/><circle cx="16.5" cy="9" r="1.2" fill="currentColor" stroke="none"/>',
@@ -1894,6 +1897,9 @@ function seasonOf(code, month){
   for (const [k, ms, t, ic] of SEASONS) if ((k === c || k === co) && ms.includes(month)) return { t, ic };
   return null;
 }
+// 好玩的換算：一張機票等於幾杯珍奶（一杯約 NT$60）
+const BOBA_PRICE = 60;
+function bobaCups(price){ return Math.max(1, Math.round(price / BOBA_PRICE)); }
 function tempOf(code, month){ const t = CLIMATE[canon(code)]; return t ? t[month - 1] : null; }
 const UTC_OFFSET = { JP:9, KR:9, TH:7, VN:7, CN:8, HK:8 };
 // 目的地現在幾點（例如「14:32」）
@@ -1994,7 +2000,7 @@ async function shareRoute(o, d, mode, type){
   const { min, rt, fsc } = mode ? withMode(mode, type || state.type, calc) : calc();
   // 網址帶上分頁（傳統航空）和單程，朋友打開看到的是同一種票
   const url = `${location.origin}${location.pathname}?route=${encodeURIComponent(o + "-" + d)}${fsc ? "&m=fsc" : ""}${rt ? "" : "&t=ow"}&src=share`;
-  const text = `${ORIGIN_NAME[o]}飛${cityName(d)}${isFinite(min) ? ` ${rt ? "來回" : "單程"} ${money(min)} 起` : ""}！HOWTRAVLE 便宜票雷達`;
+  const text = `${ORIGIN_NAME[o]}飛${cityName(d)}${isFinite(min) ? ` ${rt ? "來回" : "單程"} ${money(min)} 起（大約 ${bobaCups(min)} 杯珍奶的錢）` : ""}！HOWTRAVLE 便宜票雷達`;
   return shareLink(text, url);
 }
 // 分享：手機用系統分享選單；不行就複製；再不行（IG／LINE 內建瀏覽器）就跳出可長按複製的連結
@@ -2076,6 +2082,7 @@ function lucky(){
   const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
         <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
           <h3>就決定是${esc(cityName(pick.d))}了！</h3>${CITY_VIBE[canon(pick.d)] ? `<div class="vibe">${esc(CITY_VIBE[canon(pick.d)])}</div>` : ""}
+          <div class="boba">${icon("cup")}這張機票大約 <b>${bobaCups(pick.price)} 杯珍奶</b> 的錢</div>
           <div class="win-sub">${esc([`${ORIGIN_NAME[pick.o]}出發`, airlineLabel(pick.airline), save ? `比平常便宜 ${Math.min(save, 60)}%${save > 60 ? "+" : ""}` : ""].filter(Boolean).join("・"))}</div>
           ${passHTML(pick)}</div></div>
       <div class="sh-body"><div class="sh-actions" style="margin-top:0">

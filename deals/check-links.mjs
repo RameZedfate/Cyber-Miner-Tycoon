@@ -218,6 +218,9 @@ try {
     await page.click("#luckyBtn");
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => problems.push("幫我選沒有抽出結果"));
     await checkLinks(page, "幫我選", sub1);
+    const boba = await page.textContent("#sheet .boba").catch(() => "");
+    const bp = await page.evaluate(() => { const t = document.querySelector("#sheet .pass strong[data-v]"); return t ? Number(t.dataset.v) : 0; });
+    if (!boba.includes(`${Math.max(1, Math.round(bp / 60))} 杯珍奶`)) problems.push(`幫我選的珍奶換算不對：${boba}（票價 ${bp}）`);
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
     // 幫我選結果上的「收藏」：按了變「已收藏」，關掉後上面出現收藏區；再按一次取消
@@ -419,6 +422,7 @@ try {
       await page.click("#sheet [data-share]");
       const shareUrl = await page.$eval(".share-url", i => i.value).catch(() => null);
       if (!shareUrl || !/route=[A-Z]{3}-[A-Z]{3}&src=share/.test(shareUrl)) problems.push(`分享失敗時沒有跳出連結：${shareUrl}`);
+      if (!(await page.textContent("#sheet .sub").catch(() => "")).includes("杯珍奶")) problems.push("分享文字沒有珍奶換算");
       await page.keyboard.press("Escape");
     }
     await page.close();
