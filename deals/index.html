@@ -233,6 +233,7 @@
   .mood{position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
     background:rgba(10,20,40,.42);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;pointer-events:none}
   .mood .ic{width:14px;height:14px;color:#FFD66B}
+  .hc .mood{top:10px;bottom:auto} /* 酒店卡左下角已有價格標，季節放左上 */
   .mood i{font-style:normal;font-weight:600;opacity:.92}
   /* 大圖上方一排小標：右邊留位置給輪播圓點，放不下就換行 */
   .hero .slide .in .wrap:first-child{display:flex;flex-wrap:wrap;gap:6px;padding-right:96px}
@@ -1442,7 +1443,7 @@ function renderMoreRoutes(shown){
       const lm = landmarkOf(d);
       cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
         <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false, true)}</span>
-        <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(ORIGIN_NAME[o])}出發</span><span class="rr-go">看即時價 ›</span></a>`);
+        <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc([`${ORIGIN_NAME[o]}出發`, CITY_VIBE[canon(d)]].filter(Boolean).join("・"))}</span><span class="rr-go">看即時價 ›</span></a>`);
     }
   }
   // 先放 6 個（電腦 9 個），清單很少時多放
@@ -1625,7 +1626,7 @@ function renderHotelCities(){
     return `<article class="card hc">
       <a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(cityName(c))}酒店，看 Trip.com 房價"></a>
       <div class="ph g-${esc(co || "")}">${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}
-        ${ref ? `<span class="pbadge"><strong>${priceHTML(ref[0])}</strong><small>／晚起</small></span>` : ""}</div>
+        ${ref ? `<span class="pbadge"><strong>${priceHTML(ref[0])}</strong><small>／晚起</small></span>` : ""}${moodChip({ d: c, dep: checkin })}</div>
       <div class="cb">
         <div class="top-row"><span class="cty">${esc(cityName(c))}</span></div>
         <div class="air"><span class="an">${esc([COUNTRIES[co], `${nights} 晚參考`].filter(Boolean).join("・"))}</span></div>
