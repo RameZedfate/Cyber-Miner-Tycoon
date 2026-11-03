@@ -221,6 +221,7 @@ try {
     const boba = await page.textContent("#sheet .boba").catch(() => "");
     const bp = await page.evaluate(() => { const t = document.querySelector("#sheet .pass strong[data-v]"); return t ? Number(t.dataset.v) : 0; });
     if (!boba.includes(`${Math.max(1, Math.round(bp / 60))} 杯珍奶`)) problems.push(`幫我選的珍奶換算不對：${boba}（票價 ${bp}）`);
+    if (!(await page.$("#sheet .trip"))) problems.push("幫我選的結果沒有整趟旅費");
     await page.click("#again").catch(() => problems.push("沒有「再抽一次」"));
     await page.waitForSelector("#sheet:not(.hidden) .win .pass", { timeout: 5000 }).catch(() => {});
     // 幫我選結果上的「收藏」：按了變「已收藏」，關掉後上面出現收藏區；再按一次取消
@@ -354,6 +355,23 @@ try {
     await page.close();
   }
 
+  // 季節特效（要開動畫才看得到）：日本 11 月飄楓葉、首爾 1 月下雪、香港 11 月（秋高氣爽）不飄東西
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "no-preference" });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card");
+    const fx = await page.evaluate(() => [seasonFX("NRT", 11), seasonFX("SEL", 1), seasonFX("HKG", 11), seasonFX("OKA", 2), seasonFX("HKG", 12), seasonFX("NRT", 11)]);
+    if (!fx[0].includes("fx-leaf")) problems.push("東京 11 月應該飄楓葉");
+    if (!fx[1].includes("fx-snow")) problems.push("首爾 1 月應該下雪");
+    if (fx[2] !== "") problems.push("香港 11 月不該有飄落特效");
+    if (!fx[3].includes("fx-petal")) problems.push("沖繩 2 月應該飄櫻花瓣");
+    if (!fx[4].includes("fx-spark")) problems.push("香港 12 月應該有聖誕閃光");
+    if (fx[0] !== fx[5]) problems.push("同一個城市的飄落位置每次不一樣（重畫會跳）");
+    await page.close();
+  }
+
   // 精簡版：沒有手動精選就不顯示精選區；清除地區、沒票時的按鈕、連假日期、分享失敗時的連結框
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -373,12 +391,41 @@ try {
     if (seasonCases.length) problems.push("季節標籤對錯城市：" + seasonCases.join("；"));
     if ((await page.evaluate(() => tempOf("NRT", 1))) !== 5) problems.push("機場代碼查不到城市的平均氣溫");
     if (!/^\d\d:\d\d$/.test(await page.evaluate(() => localTime("BKK")))) problems.push("當地時間格式不對");
+    // 整趟旅費：機票＋平價酒店每晚參考價 × 晚數（東京 4 晚 × 2,000）
+    const tc = await page.evaluate(() => tripCost({ d: "NRT", price: 6890, dep: "2026-11-14", ret: "2026-11-18" }));
+    if (!tc || tc.nights !== 4 || tc.hotel !== 8000 || tc.total !== 14890 || tc.pair !== 10890) problems.push(`整趟旅費算錯：${JSON.stringify(tc)}`);
+    const tcOw = await page.evaluate(() => tripCost({ d: "BKK", price: 3000, dep: "2026-11-14" }));
+    if (!tcOw || tcOw.nights !== 3) problems.push(`單程的整趟旅費應以 3 晚估：${JSON.stringify(tcOw)}`);
+    if (await page.evaluate(() => tripCost({ d: "VDO", price: 3000, dep: "2026-11-14" })) !== null) problems.push("沒有酒店參考價的城市不該顯示整趟旅費");
+    // 系統設定「減少動態」時，照片上不能有飄落的楓葉／雪
+    if (await page.$(".fx")) problems.push("減少動態時還有季節飄落特效");
+    // 雷達預算：拉到某個價錢，超過的城市變淡，文字說能飛幾個城市
+    if (await page.isVisible("#rbud")) {
+      const bud = await page.evaluate(() => {
+        const inp = document.querySelector("#rbudIn"); inp.value = "1"; inp.dispatchEvent(new Event("input", { bubbles: true }));
+        const b = budgetSteps[1], pts = [...document.querySelectorAll("#radar .pt")];
+        const wrong = pts.filter(g => g.classList.contains("over") !== (Number(g.dataset.p) > b)).length;
+        return { b, wrong, out: document.querySelector("#rbudOut").textContent, n: radarAll.filter(f => f.price <= b).length, st: state.radarBudget };
+      });
+      if (bud.wrong) problems.push(`雷達預算：${bud.wrong} 個城市變淡不對（預算 ${bud.b}）`);
+      if (!bud.out.includes(`可以飛 ${bud.n} 個城市`)) problems.push(`雷達預算文字不對：${bud.out}（應為 ${bud.n} 個）`);
+      if (bud.st !== bud.b) problems.push("雷達預算沒有記住");
+      // 換分頁再回來（雷達重畫）要保留預算
+      await page.click('.tabs button[data-tab="fsc"]');
+      await page.click('.tabs button[data-tab="flights"]');
+      const kept = await page.evaluate(() => state.radarBudget);
+      if (kept !== bud.b) problems.push(`換分頁後雷達預算不見了：${kept}`);
+      await page.evaluate(() => { const inp = document.querySelector("#rbudIn"); inp.value = inp.max; inp.dispatchEvent(new Event("input", { bubbles: true })); });
+      if ((await page.textContent("#rbudV")) !== "不限" || await page.$("#radar .pt.over")) problems.push("雷達預算拉到底沒有回到「不限」");
+    } else problems.push("沒有雷達預算拉桿");
     if (!(await page.$("#flightList .card .mood"))) problems.push("機票卡照片上沒有季節／氣溫小標");
     if (!(await page.$("#hero .slide .vibe"))) problems.push("大圖沒有城市一句話");
     await page.click("#flightList .when.tap");
     await page.waitForSelector("#sheet:not(.hidden) .facts", { timeout: 3000 }).catch(() => {});
     const facts = await page.textContent("#sheet .facts").catch(() => "");
     for (const w of ["當地現在", "月平均"]) if (!facts.includes(w)) problems.push(`價格日曆缺少「${w}」`);
+    const trip = await page.textContent("#sheet .trip").catch(() => "");
+    if (!trip.includes("整趟約")) problems.push("價格日曆沒有整趟旅費");
     await page.keyboard.press("Escape");
     // 換篩選時，地區磚塊的照片不能重畫（重畫會閃一下）
     await page.evaluate(() => { document.querySelector("#tiles .tile:not(.tile-all)").__mark = 1; });

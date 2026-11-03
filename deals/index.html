@@ -475,6 +475,42 @@
   .band h2.sec[data-eb]::before{color:var(--yellow)}
   .band .sub{color:#AFC2DC}
   .band .radar-wrap{background:transparent;box-shadow:none;padding:0}
+  /* 雷達預算拉桿 */
+  .rbud{max-width:560px;margin:4px auto 6px;padding:12px 14px 10px;border-radius:var(--r);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
+  .rbud label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13.5px;color:#C9D6EA;font-weight:600}
+  .rbud label b{font-size:17px;color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
+  .rbud input{-webkit-appearance:none;appearance:none;display:block;width:100%;height:28px;margin:6px 0 2px;background:transparent;cursor:pointer;--fill:100%}
+  .rbud input::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,#22C55E 0,#FACC15 var(--fill),rgba(255,255,255,.18) var(--fill))}
+  .rbud input::-moz-range-track{height:6px;border-radius:99px;background:linear-gradient(90deg,#22C55E 0,#FACC15 var(--fill),rgba(255,255,255,.18) var(--fill))}
+  .rbud input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#FFC72C;border:3px solid #0B2340;box-shadow:0 0 0 2px #FFC72C,0 4px 12px rgba(0,0,0,.35)}
+  .rbud input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#FFC72C;border:3px solid #0B2340;box-shadow:0 0 0 2px #FFC72C}
+  .rbud input:focus-visible{outline:2px solid #FFC72C;outline-offset:4px;border-radius:8px}
+  .rbud-out{margin:2px 0 0;min-height:20px;font-size:13.5px;color:#C9D6EA}
+  .rbud-out b{color:#FFD66B;font-weight:800;margin:0 2px}
+  #radar .pt{transition:opacity .3s ease}
+  #radar .pt.over{opacity:.18}
+  #radar .pt.over .pulse{display:none}
+  /* 整趟旅費：機票＋酒店，下面一行是整趟 */
+  .trip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:12px;padding:12px 14px;border-radius:var(--r);background:var(--soft);border:1px dashed var(--line)}
+  .trip .tc{display:flex;flex-direction:column;min-width:0}
+  .trip .tc small{font-size:12px;color:var(--muted);font-weight:600}
+  .trip .tc b{font-size:16px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .trip .tc.sum{flex:1 0 100%;flex-direction:row;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px;padding-top:8px;border-top:1px dashed var(--line)}
+  .trip .tc.sum small{font-size:13px;color:var(--ink);font-weight:700}
+  .trip .tc.sum b{font-size:19px;color:var(--navy);background:linear-gradient(transparent 58%,rgba(255,199,44,.6) 58%);padding:0 2px}
+  .trip > i{font-style:normal;color:var(--muted);font-weight:700}
+  .trip em{flex:1 0 100%;font-style:normal;font-size:12.5px;color:var(--muted)}
+  /* 照片上的季節特效（楓葉、花瓣、雪、閃光） */
+  .fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .fx i{position:absolute;top:-24px;width:var(--s);height:var(--s);animation:fxfall var(--dur) linear var(--dl) infinite;will-change:transform}
+  .fx-leaf i{background:#E8542B;clip-path:polygon(50% 0,62% 30%,95% 22%,76% 50%,100% 66%,64% 68%,58% 100%,50% 80%,42% 100%,36% 68%,0 66%,24% 50%,5% 22%,38% 30%);opacity:.85}
+  .fx-leaf i:nth-child(3n){background:#F59E0B}.fx-leaf i:nth-child(3n+1){background:#C2410C}
+  .fx-petal i{background:#FBCFE8;border-radius:80% 0 80% 0;opacity:.9}
+  .fx-petal i:nth-child(2n){background:#F9A8D4}
+  .fx-snow i{background:#fff;border-radius:50%;opacity:.85;filter:blur(.3px)}
+  .fx-spark i{background:radial-gradient(circle,#FFF7CC 0,#FFD66B 40%,rgba(255,214,107,0) 70%);border-radius:50%;animation:tw var(--dur) ease-in-out var(--dl) infinite}
+  @keyframes fxfall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--sw),220px) rotate(calc(var(--rot) / 2))}100%{transform:translate(calc(var(--sw) * -0.4),480px) rotate(var(--rot))}}
+  .hero.off .fx i, .slide:not(.act) .fx i{animation-play-state:paused}
   /* 沒有結果時的小插圖 */
   .empty-art{display:block;width:120px;height:72px;margin:0 auto 10px}
 
@@ -638,6 +674,11 @@
     <div class="wrap">
       <h2 class="sec" data-eb="RADAR">便宜票雷達</h2>
       <p class="sub" id="radarSub">越綠越便宜，點一下看日期</p>
+      <div class="rbud" id="rbud">
+        <label for="rbudIn"><span>我的機票預算</span><b id="rbudV">不限</b></label>
+        <input type="range" id="rbudIn" min="0" max="100" step="1" value="100" aria-describedby="rbudOut" />
+        <p class="rbud-out" id="rbudOut" aria-live="polite"></p>
+      </div>
       <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
     </div>
   </section>
@@ -1312,7 +1353,7 @@ function renderHero(){
       const lm = landmarkOf(f.d);
       return `
       <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
-        ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}
+        ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}${seasonFX(f.d, Number(f.dep.slice(5, 7)))}
         <div class="in">
           <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span>${moodChip(f).replace('class="mood"', 'class="eyebrow mood-e"')}</div>
           <div class="wrap has-pass">
@@ -1915,6 +1956,38 @@ function moodChip(f){
   if (!s && t == null) return "";
   return `<span class="mood">${s ? `${icon(s.ic)}${esc(s.t)}` : icon("thermo")}${t != null ? `<i>${s ? "・" : ""}${t}°C</i>` : ""}</span>`;
 }
+// 照片上的季節特效：賞楓季飄楓葉、櫻花季飄花瓣、雪季下雪、聖誕燈飾閃光（只在可以有動畫時）
+const FX_KIND = { leaf:"leaf", flower:"petal", snow:"snow", spark:"spark" };
+function seasonFX(code, month){
+  if (!MOTION) return "";
+  const s = seasonOf(code, month), k = s && FX_KIND[s.ic];
+  if (!k) return "";
+  const n = k === "snow" ? 16 : k === "spark" ? 10 : 9;
+  let h = "";
+  for (let i = 0; i < n; i++){
+    // 固定的亂數（同一個城市每次看起來一樣，重畫也不會跳）
+    const r = (j) => { const x = Math.sin((i + 1) * 12.9898 + j * 78.233) * 43758.5453; return x - Math.floor(x); };
+    const left = Math.round(r(1) * 100), dur = (k === "snow" ? 7 : 9) + r(2) * 6, dl = -r(3) * dur, sz = k === "snow" ? 3 + r(4) * 4 : k === "spark" ? 4 + r(4) * 5 : 10 + r(4) * 8;
+    const top = k === "spark" ? `top:${Math.round(8 + r(5) * 60)}%;` : "";
+    h += `<i style="left:${left}%;${top}--s:${sz.toFixed(1)}px;--dur:${dur.toFixed(1)}s;--dl:${dl.toFixed(1)}s;--sw:${Math.round(r(6) * 60 - 30)}px;--rot:${Math.round(r(7) * 540 - 270)}deg"></i>`;
+  }
+  return `<div class="fx fx-${k}" aria-hidden="true">${h}</div>`;
+}
+// 整趟旅費：機票＋酒店（平價雙人房參考價 × 晚數），讓人一眼知道「這趟大概要多少」
+function tripCost(f){
+  const ref = HOTEL_REF[canon(f.d)]; if (!ref || !(f.price > 0)) return null;
+  const nights = f.ret ? Math.max(1, diffDays(f.dep, f.ret)) : 3;
+  const hotel = ref[0] * nights;
+  return { nights, hotel, total: f.price + hotel, pair: Math.round(f.price + hotel / 2) };
+}
+function tripCostHTML(f){
+  const t = tripCost(f); if (!t) return "";
+  return `<div class="trip" role="group" aria-label="整趟旅費估算：機票 ${money(f.price)}，酒店 ${t.nights} 晚約 ${money(t.hotel)}，一個人整趟約 ${money(t.total)}">
+    <span class="tc"><small>機票</small><b>${priceHTML(f.price)}</b></span><i aria-hidden="true">＋</i>
+    <span class="tc"><small>酒店 ${t.nights} 晚</small><b>${priceHTML(t.hotel)}</b></span>
+    <span class="tc sum"><small>一個人整趟約</small><b>${priceHTML(t.total)}</b></span>
+    <em>酒店用平價參考價・兩人同住每人約 ${money(t.pair)}</em></div>`;
+}
 const TZ = { JP:"比台灣快 1 小時", KR:"比台灣快 1 小時", TH:"比台灣慢 1 小時", VN:"比台灣慢 1 小時", CN:"跟台灣一樣", HK:"跟台灣一樣" };
 const CURRENCY_NAME = { JP:"日圓", KR:"韓元", TH:"泰銖", VN:"越南盾", CN:"人民幣", HK:"港幣" };
 
@@ -1963,7 +2036,7 @@ function routeSheetHTML(o, d){
   }).join("");
   const url = flightUrl(cheapest);
   return `
-    <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${sheetRouteSVG()}
+    <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${seasonFX(d, cm)}${sheetRouteSVG()}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(CITY_VIBE[canon(d)] || ((lm ? lm[1] + "・" : "") + (COUNTRIES[c] || "")))}</div></div></div>
     <div class="sh-body">
       <div class="ticket">
@@ -1973,6 +2046,7 @@ function routeSheetHTML(o, d){
         <span class="tk-p"><small>最低</small><strong>${priceHTML(cheapest.price)}</strong></span>
       </div>
       <div class="facts">${facts}</div>
+      ${tripCostHTML(cheapest)}
       ${cal}
       <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
       ${hotelCrossSell(cheapest, "跟最便宜的機票同天")}
@@ -2080,7 +2154,7 @@ function lucky(){
   const lm = landmarkOf(pick.d), save = savingPct(pick);
   const winPhoto = () => photoHTML(lm && lm[0], pick.country, lm ? lm[1] : cityName(pick.d), 1280, true);
   // 抽中的結果：城市照片上一張登機證（像中獎的機票）＋出發地、航空公司、特價
-  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}
+  const show = () => { openSheet(`<div class="win ph g-${esc(pick.country || "")}">${winPhoto()}${seasonFX(pick.d, Number(pick.dep.slice(5, 7)))}
         <div class="win-in"><span class="eyebrow">${icon("dice")}從最便宜的 ${pool.length} 個地方抽中</span>
           <h3>就決定是${esc(cityName(pick.d))}了！</h3>${CITY_VIBE[canon(pick.d)] ? `<div class="vibe">${esc(CITY_VIBE[canon(pick.d)])}</div>` : ""}
           <div class="boba">${icon("cup")}這張機票大約 <b>${bobaCups(pick.price)} 杯珍奶</b> 的錢</div>
@@ -2090,6 +2164,7 @@ function lucky(){
         <button class="btn2" id="again" style="flex:1 1 auto">${icon("dice")}再抽一次</button>
         ${favBtn(pick.o, pick.d, "btn2", true)}
         ${routeFlights(pick.o, pick.d).length > 1 ? `<button class="btn2" data-route="${esc(pick.o)}-${esc(pick.d)}" style="flex:1 1 auto">${icon("grid")}全部日期</button>` : ""}</div>
+        ${tripCostHTML(pick)}
         ${hotelCrossSell(pick, "跟這張機票同天")}</div>${confettiHTML()}`);
     clearTimeout(confettiTimer);
     confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
@@ -2321,7 +2396,7 @@ function renderRadar(){
   const rankOf = new Map([...items].sort((a, b) => a.f.price - b.f.price).map((it, i) => [it, i]));
   for (const it of [...items].sort((a, b) => b.f.price - a.f.price)){
     const { f, x, y, l } = it, name = cityName(f.d), s = SIZE[l], label = labelOf.get(it) || "";
-    dots += `<g class="pt" style="--i:${rankOf.get(it)}" data-route="${esc(f.o)}-${esc(f.d)}" tabindex="0" role="button" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(name)} ${money(f.price)} 起">
+    dots += `<g class="pt" style="--i:${rankOf.get(it)}" data-p="${Math.round(f.price)}" data-route="${esc(f.o)}-${esc(f.d)}" tabindex="0" role="button" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(name)} ${money(f.price)} 起">
       <circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14"/>
       ${top3.has(f) ? `<circle class="pulse" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" stroke="${COLOR[l]}"/>` : ""}
       <circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" fill="${COLOR[l]}"/>${label}</g>`;
@@ -2329,7 +2404,38 @@ function renderRadar(){
   svg += dots + regions; // 地區名稱畫在最上層
   svg += `<g class="home"><circle cx="${C}" cy="${C}" r="5" fill="#FFC72C"/><circle cx="${C}" cy="${C}" r="9" fill="none" stroke="#FFC72C" stroke-opacity=".5"/><text x="${C}" y="${C + 22}" text-anchor="middle">台灣</text></g>`;
   $("#radar").innerHTML = svg;
+  radarAll = all;
+  setupBudget();
 }
+// 雷達預算：拉到多少錢，超過預算的城市變淡，告訴你這個預算能飛幾個城市、最遠到哪
+let radarAll = [], budgetSteps = [];
+function setupBudget(){
+  const ps = radarAll.map(f => f.price); if (!ps.length) return;
+  const lo = Math.ceil(Math.min(...ps) / 500) * 500, hi = Math.ceil(Math.max(...ps) / 500) * 500;
+  budgetSteps = []; for (let v = lo; v < hi; v += 500) budgetSteps.push(v);
+  const inp = $("#rbudIn"); inp.max = String(budgetSteps.length);
+  $("#rbud").classList.toggle("hidden", budgetSteps.length < 2); // 價格都差不多就不用拉
+  // 重畫時保留原本選的預算（換分頁、換月份價格變了就找最接近的）
+  const want = state.radarBudget;
+  let idx = want == null ? budgetSteps.length : budgetSteps.findIndex(v => v >= want);
+  if (idx < 0) idx = budgetSteps.length;
+  inp.value = String(idx);
+  applyBudget(false);
+}
+function applyBudget(user){
+  const inp = $("#rbudIn"), idx = Number(inp.value), b = idx >= budgetSteps.length ? null : budgetSteps[idx];
+  if (user) state.radarBudget = b;
+  inp.style.setProperty("--fill", `${budgetSteps.length ? idx / budgetSteps.length * 100 : 100}%`);
+  inp.setAttribute("aria-valuetext", b == null ? "不限" : `${money(b)} 以內`);
+  $("#rbudV").textContent = b == null ? "不限" : `${money(b)} 以內`;
+  document.querySelectorAll("#radar .pt").forEach(g => g.classList.toggle("over", b != null && Number(g.dataset.p) > b));
+  const ok = b == null ? radarAll : radarAll.filter(f => f.price <= b);
+  const far = ok.reduce((m, f) => { const [la, lo] = COORDS[canon(f.d)], d = geo(la, lo).d; return d > m.d ? { d, f } : m; }, { d: 0, f: null });
+  $("#rbudOut").innerHTML = b == null ? `拉一下，看看你的預算能飛去哪`
+    : ok.length ? `可以飛 <b>${ok.length}</b> 個城市${far.f ? `，最遠到<b>${esc(cityName(far.f.d))}</b>（${(Math.round(far.d / 100) * 100).toLocaleString("en-US")} km）` : ""}`
+    : `這個預算還飛不到，再拉高一點`;
+}
+$("#rbudIn").addEventListener("input", () => applyBudget(true));
 document.addEventListener("keydown", e => {
   const g = e.target.closest && e.target.closest("#radar .pt");
   if (g && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); const [o, d] = g.dataset.route.split("-"); openRoute(o, d); }

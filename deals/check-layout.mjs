@@ -414,6 +414,19 @@ try {
       return { out, n: svg.querySelectorAll(".pt").length, labels: svg.querySelectorAll(".pt text").length };
     });
     radar.out.forEach(i => all.push(`[${w}px 雷達] ${i}`));
+    // 雷達預算拉桿：在畫面內、文字不截斷；拉一半時一行說明不超出框
+    const bud = await page.evaluate(() => {
+      const out = [], R = (e) => e.getBoundingClientRect(), box = document.querySelector("#rbud");
+      if (!box || box.classList.contains("hidden")) return ["沒有預算拉桿"];
+      const inp = box.querySelector("input"); inp.value = String(Math.floor(Number(inp.max) / 2)); inp.dispatchEvent(new Event("input", { bubbles: true }));
+      const b = R(box); if (b.left < 0 || b.right > document.documentElement.clientWidth) out.push("預算拉桿超出畫面");
+      if (R(inp).height < 24) out.push("預算拉桿太小，手指不好拉");
+      for (const el of box.querySelectorAll("label span, label b, .rbud-out")) { const a = R(el); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`預算文字超出：${el.textContent}`); }
+      const lb = box.querySelector("label"); if (lb.scrollWidth > lb.clientWidth + 1) out.push("預算標題被擠到");
+      inp.value = inp.max; inp.dispatchEvent(new Event("input", { bubbles: true }));
+      return out;
+    });
+    bud.forEach(i => all.push(`[${w}px 雷達預算] ${i}`));
     console.log(`[${w}px] 雷達：${radar.n} 個城市，${radar.labels} 個有標籤`);
     if (SHOTS) await (await page.$("#radarSec")).screenshot({ path: path.join(SHOTS, `radar-${w}.png`) });
     await page.locator("#radar .pt").last().click(); // 最便宜的點畫在最上層
@@ -450,9 +463,9 @@ try {
             if (Math.abs(Math.round(R(d).left) - wds[want]) > 1) { out.push(`日曆 ${m}/${i + 1} 不在星期${"日一二三四五六"[want]}那一欄`); break; }
           }
         }
-        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city")) {
+        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city, .trip .tc b, .trip em")) {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
-          const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
+          const p = el.closest(".day,.opt,.facts,.sh-head,.trip"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
         }
         // 小登機證：代碼、飛機、價格不互相重疊
         const tk = document.querySelector("#sheet .ticket");
