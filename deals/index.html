@@ -33,7 +33,7 @@
      ===================================================================== */
   :root{
     --navy:#0B2340; --navy-2:#13335C; --yellow:#FFC72C; --gold:#946200; --red:#E11D48;
-    --bg:#F7F7F8; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#646B78; --faint:#9CA3AF;
+    --bg:#F5F3EE; --card:#FFFFFF; --ink:#111827; --ink-2:#374151; --muted:#646B78; --faint:#9CA3AF;
     --line:#E5E7EB; --soft:#F3F4F6; --blue:#2563EB; --green:#0E7A4F;
     --r-lg:20px; --r:16px;
     --shadow:0 1px 2px rgba(17,24,39,.05),0 4px 14px rgba(17,24,39,.06);
@@ -43,7 +43,14 @@
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  body{overflow-x:hidden}
+  body{overflow-x:hidden;isolation:isolate}
+  /* 背景質感：暖白底＋左上淡藍、右上淡金的光暈＋很細的顆粒（固定不動，畫在內容下面） */
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      radial-gradient(70vmax 50vmax at 0% 0%,rgba(37,99,235,.09),transparent 70%),
+      radial-gradient(60vmax 45vmax at 100% 8%,rgba(255,199,44,.14),transparent 70%),
+      radial-gradient(70vmax 50vmax at 50% 110%,rgba(225,29,72,.05),transparent 70%)}
   a{color:inherit}
   button{font:inherit;color:inherit;cursor:pointer}
   img{display:block}
@@ -126,6 +133,26 @@
     background:#fff;color:var(--navy);font-weight:800;font-size:15.5px;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.22)}
   .hero-cta .ic{width:18px;height:18px;stroke-width:2.4}
   .hero-dots{position:absolute;right:18px;top:24px;display:flex;gap:6px;z-index:3}
+  /* ---------- 大圖 3D 卡片輪播（#hero 有多張時加 .cf） ---------- */
+  .hero.cf{--sw:84%;background:transparent;border-radius:0;overflow:hidden;margin:4px 0 0}
+  @media (max-width:379px){ .hero.cf{--sw:86%} }
+  @media (min-width:760px){ .hero.cf{--sw:74%} }
+  @media (min-width:1000px){ .hero.cf{--sw:70%} }
+  .cf .hero-track{position:relative;gap:12px;padding:14px calc((100% - var(--sw)) / 2) 46px}
+  /* 軌道左右留白＝(100% - 卡片寬)/2，卡片＝軌道內容寬的 100%，第一張剛好在正中間 */
+  .slide > .s3d{position:absolute;inset:0;overflow:hidden}
+  .cf .slide{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;overflow:visible}
+  .cf .s3d{border-radius:var(--r-lg);background-color:var(--navy);
+    box-shadow:0 22px 40px -14px rgba(11,35,64,.55),0 6px 14px -6px rgba(11,35,64,.25);transform-origin:50% 50%}
+  .cf .s3d::after{content:"";position:absolute;inset:0;background:#0B2340;opacity:var(--dim,0);pointer-events:none;z-index:5;border-radius:inherit}
+  .cf .slide .in .wrap{padding:0 16px}
+  .hero.cf .slide .in .wrap:first-child{padding-right:16px}
+  .cf .hero-dots{position:static;justify-content:center;margin:-32px 0 2px}
+  .cf .hero-dots button{background:rgba(11,35,64,.2)}
+  .cf .hero-dots button[aria-current="true"]{background:var(--navy)}
+  .cf .fp{transition:opacity .25s ease;overflow:hidden;border-radius:var(--r-lg) var(--r-lg) 0 0}
+  .cf.moving .fp{opacity:0}
+  @media (min-width:1000px){ .cf .slide .in .wrap.has-pass, .cf .slide .in .wrap{padding:0 28px} .cf .hero h2, .hero.cf h2{font-size:64px} }
   @media (min-width:1000px){
     .hero .slide .in .wrap.has-pass{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;padding:0 32px}
     .hero .slide .in .wrap{padding:0 32px}
@@ -189,6 +216,9 @@
   .seg{display:inline-flex;background:#EEF0F3;border-radius:12px;padding:3px}
   .seg button{border:0;background:transparent;border-radius:9px;height:34px;padding:0 16px;font-size:14px;font-weight:700;color:var(--ink-2)}
   .seg-o button{padding:0 14px}
+  .segs{gap:8px}
+  .segs .seg{flex:0 0 auto}
+  .segs .seg button{padding:0 13px}
   .seg button[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(17,24,39,.12)}
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 16px;margin:0 -16px;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding-inline:16px}
@@ -225,20 +255,12 @@
   .card{position:relative;display:flex;flex-direction:column;min-width:0}
   .card .card-link{position:absolute;inset:0;z-index:1;border-radius:var(--r)}
   .card .card-link:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
-  .card .ph{aspect-ratio:3/2;border-radius:var(--r);box-shadow:var(--shadow)}
+  .card .ph{aspect-ratio:16/10;border-radius:var(--r);box-shadow:var(--shadow)}
   .card .ph .bgimg{transition:opacity .5s ease, transform .6s ease}
   .card .ph .shade{background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,rgba(0,0,0,0) 32%)}
   @media (hover:hover){ .card:hover .ph .bgimg.ok{transform:scale(1.04)} .card:hover .cty{text-decoration:underline;text-underline-offset:3px} }
-  /* 照片左下角：當季活動＋平均氣溫（毛玻璃小標） */
-  .mood{position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;
-    background:rgba(10,20,40,.42);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;pointer-events:none}
-  .mood .ic{width:14px;height:14px;color:#FFD66B}
-  .hc .mood{top:10px;bottom:auto} /* 酒店卡左下角已有價格標，季節放左上 */
-  .mood i{font-style:normal;font-weight:600;opacity:.92}
-  /* 大圖上方一排小標：右邊留位置給輪播圓點，放不下就換行 */
+  /* 大圖上方的小標：單張大圖時右上有圓點，右邊留位置（3D 輪播時圓點在下面，見 .hero.cf） */
   .hero .slide .in .wrap:first-child{display:flex;flex-wrap:wrap;gap:6px;padding-right:96px}
-  .eyebrow.mood-e i{font-style:normal}
-  .eyebrow.mood-e .ic{color:#FFD66B}
   .h2w{min-width:0}
   .vibe{font-size:14.5px;font-weight:600;margin-top:4px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .win .vibe{margin-top:2px}
@@ -367,7 +389,7 @@
   .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
   .empty .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .empty .btn{display:inline-flex;align-items:center;height:44px;background:var(--ink);color:#fff;text-decoration:none;font-weight:700;padding:0 20px;border-radius:12px;border:0;font:inherit;font-weight:700}
-  .skel .a{aspect-ratio:3/2;border-radius:var(--r);background:linear-gradient(110deg,#ECEEF1 8%,#F6F7F9 18%,#ECEEF1 33%);background-size:200% 100%;animation:sh 1.4s linear infinite}
+  .skel .a{aspect-ratio:16/10;border-radius:var(--r);background:linear-gradient(110deg,#ECEEF1 8%,#F6F7F9 18%,#ECEEF1 33%);background-size:200% 100%;animation:sh 1.4s linear infinite}
   .skel .b{height:58px;margin-top:10px;border-radius:8px;background:linear-gradient(110deg,#ECEEF1 8%,#F6F7F9 18%,#ECEEF1 33%);background-size:200% 100%;animation:sh 1.4s linear infinite;width:70%}
   @keyframes sh{to{background-position:-200% 0}}
 
@@ -464,15 +486,11 @@
   .ft-brand img{width:40px;height:40px;border-radius:11px;box-shadow:var(--shadow)}
   .ft-brand b{display:block;color:var(--ink);font-size:15px;font-weight:800}
   .ft-brand span{display:block;color:var(--muted);font-size:12.5px}
-  /* 區塊標題上方的英文小字（像雜誌／Apple 的 eyebrow） */
-  h2.sec[data-eb]::before{content:attr(data-eb);content:attr(data-eb) / "";display:block;font-family:var(--font);font-size:11.5px;font-weight:800;
-    letter-spacing:2.2px;color:var(--gold);margin-bottom:5px;line-height:1}
   /* 雷達：整條深色帶狀區塊，背景有淡淡的點陣 */
   .band{margin-top:30px;padding:2px 0 40px;color:#fff;
     background:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.2px) 0 0/22px 22px,
                radial-gradient(120% 90% at 50% 0%,#16386A 0%,#0B2340 55%,#071A30 100%)}
   .band h2.sec{color:#fff}
-  .band h2.sec[data-eb]::before{color:var(--yellow)}
   .band .sub{color:#AFC2DC}
   .band .radar-wrap{background:transparent;box-shadow:none;padding:0}
   /* 雷達預算拉桿 */
@@ -529,7 +547,7 @@
   @keyframes fly{0%{transform:translate(0,30px) rotate(-8deg)}50%{transform:translate(calc(50vw + 30px),-14px) rotate(-4deg)}100%{transform:translate(calc(100vw + 120px),10px) rotate(-10deg)}}
   @keyframes drift{from{transform:translateX(110vw)}to{transform:translateX(-40vw)}}
   @keyframes dots{0%,80%,100%{opacity:.2}40%{opacity:1}}
-  .fp{position:absolute;left:0;right:0;top:0;height:42%;width:100%;z-index:2;pointer-events:none;overflow:visible}
+  .fp{position:absolute;left:0;top:0;z-index:2;pointer-events:none;overflow:visible}
   .fp .fp-line{fill:none;stroke:rgba(255,255,255,.5);stroke-width:1.5;stroke-dasharray:4 7;stroke-linecap:round}
   .fp .fp-glow{fill:none;stroke:rgba(255,199,44,.35);stroke-width:5;stroke-linecap:round;stroke-dasharray:60 900;animation:trail 7s linear infinite}
   .fp .fp-plane{fill:var(--yellow);filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
@@ -559,10 +577,19 @@
   .badge.top .ic{animation:flick 1.2s ease-in-out infinite alternate;transform-origin:50% 90%}
   @keyframes flick{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
   @keyframes glowop{0%,100%{opacity:0}50%{opacity:1}}
-  .tile,.mini,.chip,.month,.cta,.hero-cta,.lucky{transition:transform .15s ease}
-  .tile:active,.mini:active,.chip:active,.month:active,.lucky:active{transform:scale(.96)}
-  .card:has(> .card-link:active) .ph{transform:scale(.985)}
-  .card .ph{transition:transform .15s ease}
+  /* 點擊感：按下去縮一下、放開彈回來；按鈕上有水波。用 scale 屬性（不跟捲動浮現的 transform 打架） */
+  .tile,.mini,.chip,.month,.cta,.hero-cta,.lucky,.btn2,.more,.seg button,.tabs button,.rrow,.opt,.pass,.card,.hotel-x{transition:scale .4s cubic-bezier(.2,1.5,.4,1)}
+  .anim .rv.in:is(.card,.tile,.mini){transition:opacity .5s ease, transform .5s cubic-bezier(.2,.7,.2,1), scale .4s cubic-bezier(.2,1.5,.4,1);transition-delay:var(--d,0s),var(--d,0s),0s}
+  .press{transition-duration:.09s !important}
+  .tile.press,.mini.press,.chip.press,.month.press,.lucky.press,.seg button.press,.tabs button.press{scale:.94}
+  .cta.press,.hero-cta.press,.btn2.press,.more.press,.hotel-x.press{scale:.96}
+  .card.press,.pass.press{scale:.97}
+  .card.press .ph{filter:brightness(.92)}
+  .card .ph{transition:filter .2s ease}
+  .rrow.press,.opt.press{scale:.985;background:rgba(17,24,39,.04)}
+  .rip-host{position:relative;overflow:hidden}
+  .rip{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.18;transform:scale(0);animation:rip .55s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes rip{to{transform:scale(1);opacity:0}}
   @media (hover:hover){ .tile:hover .bgimg.ok,.mini:hover .bgimg.ok{transform:scale(1.06)} .tile .bgimg,.mini .bgimg{transition:opacity .5s ease, transform .6s ease} }
   .fav-btn.pop .ic{animation:heart .55s cubic-bezier(.2,1.6,.4,1)}
   .fav-btn.pop::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:999px;border:2px solid var(--red);animation:burst .55s ease-out forwards}
@@ -617,39 +644,37 @@
 
   <div class="wrap">
     <div class="sec-head">
-      <div><h2 class="sec" data-eb="EXPLORE">想去哪？</h2>
-      <p class="sub" id="tilesSub">點一下只看那個地區</p></div>
+      <div><h2 class="sec">想去哪？</h2>
+      <p class="sub hidden" id="tilesSub"></p></div>
       <button class="lucky" id="luckyBtn">幫我選！</button>
     </div>
     <div class="tiles" id="tiles"></div>
 
     <section id="favSec" class="hidden">
-      <h2 class="sec" data-eb="SAVED">我收藏的航線</h2>
+      <h2 class="sec">我收藏的航線</h2>
       <div class="scroller wk-row" id="favList"></div>
     </section>
 
     <section id="picks" class="hidden">
-      <h2 class="sec" data-eb="TODAY’S PICK" id="picksTitle">Adam 今日精選</h2>
+      <h2 class="sec" id="picksTitle">Adam 今日精選</h2>
       <div id="pickList"></div>
     </section>
 
     <div id="listTop">
-      <h2 class="sec" data-eb="DEALS" id="fTitle">便宜機票</h2>
+      <h2 class="sec" id="fTitle">便宜機票</h2>
       <p class="sub" id="fSub">預估最低價</p>
     </div>
 
     <div class="panel">
-      <div class="prow">
-        <span class="plbl sr-only">行程</span>
-        <div class="pctl row">
-          <div class="seg" id="tripType" role="group" aria-label="來回或單程">
-            <button aria-pressed="true" data-v="rt">來回</button>
-            <button aria-pressed="false" data-v="ow">單程</button>
-          </div>
+      <!-- 來回／單程、出發地放同一排（放不下時可以左右滑） -->
+      <div class="prow"><span class="plbl sr-only">行程與出發地</span><div class="pctl"><div class="scroller segs">
+        <div class="seg" id="tripType" role="group" aria-label="來回或單程">
+          <button aria-pressed="true" data-v="rt">來回</button>
+          <button aria-pressed="false" data-v="ow">單程</button>
         </div>
-      </div>
-      <div class="prow"><span class="plbl sr-only">出發地</span><div class="pctl"><div class="seg seg-o" id="origin" role="group" aria-label="出發地">
-        <button aria-pressed="true" data-v="">全部出發地</button><button aria-pressed="false" data-v="TPE">台北</button><button aria-pressed="false" data-v="KHH">高雄</button><button aria-pressed="false" data-v="RMQ">台中</button>
+        <div class="seg seg-o" id="origin" role="group" aria-label="出發地">
+          <button aria-pressed="true" data-v="" aria-label="全部出發地">全台</button><button aria-pressed="false" data-v="TPE">台北</button><button aria-pressed="false" data-v="KHH">高雄</button><button aria-pressed="false" data-v="RMQ">台中</button>
+        </div>
       </div></div></div>
       <div class="prow"><span class="plbl sr-only">月份</span><div class="pctl"><div class="scroller" id="months" role="group" aria-label="出發月份"></div></div></div>
       <div class="prow"><span class="plbl sr-only">條件</span><div class="pctl"><div class="scroller" id="filters" role="group" aria-label="條件"></div></div></div>
@@ -663,7 +688,7 @@
     <button class="more hidden" id="moreBtn">查看更多航線</button>
 
     <section id="moreRoutes" class="hidden">
-      <h2 class="sec" data-eb="MORE ROUTES" id="mrTitle">其他熱門航線</h2>
+      <h2 class="sec" id="mrTitle">其他熱門航線</h2>
       <p class="sub" id="mrSub">還沒有預估價，點了直接看 Trip.com 即時價</p>
       <div class="date-note" id="mrDates"></div>
       <div class="rlist" id="routeList"></div>
@@ -672,7 +697,7 @@
   </div>
   <section id="radarSec" class="band hidden">
     <div class="wrap">
-      <h2 class="sec" data-eb="RADAR">便宜票雷達</h2>
+      <h2 class="sec">便宜票雷達</h2>
       <p class="sub" id="radarSub">越綠越便宜，點一下看日期</p>
       <div class="rbud" id="rbud">
         <label for="rbudIn"><span>我的機票預算</span><b id="rbudV">不限</b></label>
@@ -693,11 +718,11 @@
       <div class="prow"><span class="plbl sr-only">地區</span><div class="pctl"><div class="scroller" id="hCountries" role="group" aria-label="地區"></div></div></div>
     </div>
     <section id="hotelPicked" class="hidden">
-      <h2 class="sec" data-eb="STAYS">精選酒店</h2>
+      <h2 class="sec">精選酒店</h2>
       <div class="meta-row"><span id="hUpdated"></span><span id="hCount"></span></div>
       <div class="grid" id="hotelList"></div>
     </section>
-    <h2 class="sec" data-eb="HOTELS" id="hcTitle">熱門城市酒店</h2>
+    <h2 class="sec" id="hcTitle">熱門城市酒店</h2>
     <p class="sub" id="hcSub">每晚參考價，點了看 Trip.com 即時房價</p>
     <div class="grid grid-sm" id="hotelCities"></div>
   </div>
@@ -827,7 +852,7 @@ const LANDMARKS = {
   SGN:["Saigon Notre-Dame Basilica","西貢紅教堂"], HAN:["Hoàn Kiếm Lake","還劍湖"], DAD:["Golden Bridge (Vietnam)","黃金橋"],
   CXR:["Nha Trang","芽莊海灘"], PQC:["Phú Quốc","富國島"], HPH:["Cát Bà Island","吉婆島"], DLI:["Da Lat","大叻"],
   VCA:["Cần Thơ","芹苴"], HUI:["Imperial City of Huế","順化皇城"], VDO:["Hạ Long Bay","下龍灣"],
-  HKG:["File:Hong Kong Skyline Restitch - Dec 2007.jpg","維多利亞港"],
+  HKG:["File:13-08-09-peak-by-RalfR-04.jpg","維多利亞港"],
   SHA:["File:2014.11.15.190758 View Night Pudong Bund Shanghai.jpg","外灘・東方明珠"], BJS:["Temple of Heaven","天壇"], CAN:["Canton Tower","廣州塔"], SZX:["Ping An Finance Center","平安金融中心"],
   CTU:["Chengdu Research Base of Giant Panda Breeding","熊貓基地"], CKG:["Hongyadong","洪崖洞"], XMN:["Gulangyu","鼓浪嶼"],
   HGH:["West Lake","西湖"], NKG:["Sun Yat-sen Mausoleum","中山陵"], TAO:["Zhanqiao","棧橋"], WUH:["Yellow Crane Tower","黃鶴樓"],
@@ -838,7 +863,7 @@ const LANDMARKS = {
 // 「依地區探索」磚塊的代表照
 const COUNTRY_PHOTO = {
   JP:["Mount Fuji","富士山"], KR:["Bukchon Hanok Village","北村韓屋村"], TH:["Grand Palace","大皇宮"],
-  VN:["Golden Bridge (Vietnam)","黃金橋"], CN:["Great Wall of China","萬里長城"], HK:["File:Hong Kong Skyline Restitch - Dec 2007.jpg","維多利亞港"],
+  VN:["Golden Bridge (Vietnam)","黃金橋"], CN:["Great Wall of China","萬里長城"], HK:["File:13-08-09-peak-by-RalfR-04.jpg","維多利亞港"],
 };
 // 卡片顯示的航空公司名稱（傳統航空＋常見廉航）。不在名單裡的會顯示航空代碼。
 const AIRLINE_NAMES = {
@@ -1029,7 +1054,8 @@ function commonsUrl(file, size){
 }
 const loadedImg = new Set(); // 這次瀏覽已經載入過的照片網址
 // 指定的照片檔抓不到時，改用這個維基條目的代表照片
-const FILE_FALLBACK = { "File:Hong Kong Skyline Restitch - Dec 2007.jpg": "Victoria Harbour" };
+// 香港：從太平山頂拍的維港夜景（維基共享資源精選圖片，3:2 一般比例；舊的超寬全景圖放大後會糊）。抓不到就改用維港條目照片
+const FILE_FALLBACK = { "File:13-08-09-peak-by-RalfR-04.jpg": "Victoria Harbour" };
 // inline＝外層是 <button>／<span> 時用 span 包（button 裡不能放 div）
 function photoHTML(wiki, country, label, size, eager, inline){
   size = stdSize(size);
@@ -1291,7 +1317,6 @@ function flightCard(f, opt = {}){
     <div class="ph g-${esc(f.country || "")}">
       ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 800, false)}
       <div class="badges">${badge}</div>
-      ${moodChip(f)}
     </div>
     ${opt.pick ? "" : favBtn(f.o, f.d)}
     <div class="cb">
@@ -1352,29 +1377,33 @@ function renderHero(){
     slides = top.map((f, i) => {
       const lm = landmarkOf(f.d);
       return `
-      <div class="slide ph g-${esc(f.country || "")}" style="display:block" data-i="${i}">
+      <div class="slide" style="display:block" data-i="${i}"><div class="s3d ph g-${esc(f.country || "")}">
         ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 1280, true)}${seasonFX(f.d, Number(f.dep.slice(5, 7)))}
         <div class="in">
-          <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "現在最便宜"}・第 ${i + 1} 名</span>${moodChip(f).replace('class="mood"', 'class="eyebrow mood-e"')}</div>
+          <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "最便宜"}・第 ${i + 1} 名</span></div>
           <div class="wrap has-pass">
-            <div class="h2w"><h2>${esc(cityName(f.d))}</h2>${CITY_VIBE[canon(f.d)] ? `<div class="vibe">${esc(CITY_VIBE[canon(f.d)])}</div>` : ""}</div>
+            <div class="h2w"><h2>${esc(cityName(f.d))}</h2></div>
             ${passHTML(f)}
           </div>
         </div>
-      </div>`;
+      </div></div>`;
     });
   }
-  // 台灣 → 目的地的虛線航線，小飛機沿著飛（只在可以有動畫時）
-  // 用實際的寬高畫，飛機不會被拉長變形
-  const W = Math.max(240, box.clientWidth || innerWidth - 32), Hh = Math.round((innerWidth >= 760 ? 440 : 380) * 0.42);
-  const P = (x, y) => `${Math.round(x * W)} ${Math.round(y * Hh)}`;
-  const d = `M${P(-0.05, 0.78)} C ${P(0.27, 0.72)}, ${P(0.55, 0.3)}, ${P(1.05, 0.34)}`;
-  const fp = !MOTION ? "" : `<svg class="fp" viewBox="0 0 ${W} ${Hh}" aria-hidden="true">
+  // 多張時用 3D 卡片輪播（中間那張正面、左右兩張往後轉，露出一點邊）
+  const cf = slides.length > 1;
+  box.classList.toggle("cf", cf);
+  box.innerHTML = `<div class="hero-track" id="heroTrack">${slides.join("")}</div>` +
+    (cf ? `<div class="hero-dots" id="heroDots">${slides.map((_, i) => `<button aria-label="第 ${i+1} 張" aria-current="${i === 0}" data-i="${i}"></button>`).join("")}</div>` : "");
+  // 台灣 → 目的地的虛線航線，小飛機沿著飛（只在可以有動畫時）；照中間那張卡片的實際寬高畫，飛機不會變形
+  if (MOTION){
+    const s0 = box.querySelector(".slide"), W = Math.max(200, s0.offsetWidth), Hh = Math.round(s0.offsetHeight * 0.42);
+    const P = (x, y) => `${Math.round(x * W)} ${Math.round(y * Hh)}`;
+    const d = `M${P(-0.05, 0.78)} C ${P(0.27, 0.72)}, ${P(0.55, 0.3)}, ${P(1.05, 0.34)}`;
+    box.insertAdjacentHTML("beforeend", `<svg class="fp" viewBox="0 0 ${W} ${Hh}" style="width:${W}px;height:${Hh}px;left:${s0.offsetLeft}px;top:${s0.offsetTop}px" aria-hidden="true">
       <path id="fpPath" class="fp-line" d="${d}"/><path class="fp-glow" d="${d}"/>
       <g class="fp-plane"><g transform="rotate(90) scale(${innerWidth >= 760 ? 1 : .8}) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
-        <animateMotion dur="${innerWidth >= 760 ? 9 : 7}s" repeatCount="indefinite" rotate="auto"><mpath href="#fpPath"/></animateMotion></g></svg>`;
-  box.innerHTML = `<div class="hero-track" id="heroTrack">${slides.join("")}</div>` + fp +
-    (slides.length > 1 ? `<div class="hero-dots" id="heroDots">${slides.map((_, i) => `<button aria-label="第 ${i+1} 張" aria-current="${i === 0}" data-i="${i}"></button>`).join("")}</div>` : "");
+        <animateMotion dur="${innerWidth >= 760 ? 9 : 7}s" repeatCount="indefinite" rotate="auto"><mpath href="#fpPath"/></animateMotion></g></svg>`);
+  }
   queueImages();
   // 目前這張：文字依序浮上來、價格跳數字
   const slideEls = [...box.querySelectorAll(".slide")];
@@ -1389,10 +1418,29 @@ function renderHero(){
   else requestAnimationFrame(() => activate(0));
   if (slides.length < 2) return;
   const track = $("#heroTrack"), dots = [...document.querySelectorAll("#heroDots button")];
-  let paused = false;
-  const cur = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
-  const go = (i) => track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
-  track.addEventListener("scroll", () => { const i = cur(); dots.forEach((d, k) => d.setAttribute("aria-current", k === i)); activate(i); }, { passive: true });
+  let paused = false, raf = 0, stopT = 0;
+  // 每張卡片離中間多遠（0＝正中間，1＝隔壁那張的位置）
+  const offs = () => { const mid = track.scrollLeft + track.clientWidth / 2;
+    return slideEls.map(el => (el.offsetLeft + el.offsetWidth / 2 - mid) / (el.offsetWidth + 12)); };
+  const cur = () => { const o = offs(); let b = 0; o.forEach((v, k) => { if (Math.abs(v) < Math.abs(o[b])) b = k; }); return b; };
+  const go = (i) => { const el = slideEls[i]; track.scrollTo({ left: el.offsetLeft - (track.clientWidth - el.offsetWidth) / 2, behavior: "smooth" }); };
+  // 3D：旁邊的卡片往後轉、縮小、變暗；有「減少動態」時只縮小不旋轉。
+  // 轉的是裡面那層 .s3d：外層 .slide 不動，瀏覽器才會停在正中間（停靠位置是用外框算的）
+  const tilt = () => { raf = 0;
+    offs().forEach((p, k) => { const a = Math.min(1.4, Math.abs(p)), el = slideEls[k];
+      // 停在正中間的那張不加 3D（毛玻璃登機證在 3D 圖層裡有些瀏覽器會畫出色塊）
+      // 旁邊的卡片往中間靠一點，關掉動態時也看得到隔壁那張的邊
+      const q = Math.max(-1.4, Math.min(1.4, p));
+      el.firstElementChild.style.transform = a < 0.01 ? "" : `translateX(${(-q * el.offsetWidth * (MOTION ? (el.offsetWidth < 330 ? 0.16 : 0.14) : 0.055)).toFixed(1)}px) ${MOTION ? `perspective(1100px) rotateY(${(-q * 32).toFixed(2)}deg) ` : ""}scale(${(1 - Math.min(1, a) * 0.12).toFixed(3)})`;
+      el.firstElementChild.style.setProperty("--dim", (Math.min(1, a) * 0.5).toFixed(3)); }); };
+  tilt();
+  track.addEventListener("scroll", () => {
+    if (!raf) raf = requestAnimationFrame(tilt);
+    box.classList.add("moving"); clearTimeout(stopT); stopT = setTimeout(() => box.classList.remove("moving"), 160);
+    const i = cur(); dots.forEach((d, k) => d.setAttribute("aria-current", k === i)); activate(i); }, { passive: true });
+  // 點旁邊露出來的卡片：先轉到中間，不直接打開訂票
+  track.addEventListener("click", e => { const sl = e.target.closest(".slide"); if (!sl) return;
+    const k = slideEls.indexOf(sl); if (k !== cur()){ e.preventDefault(); paused = true; heroTouched = true; go(k); setTimeout(() => { paused = false; }, 4000); } });
   ["pointerdown","touchstart","mouseenter"].forEach(ev => track.addEventListener(ev, () => { paused = true; if (ev !== "mouseenter") heroTouched = true; }, { passive: true }));
   ["mouseleave","touchend"].forEach(ev => track.addEventListener(ev, () => { setTimeout(() => { paused = false; }, 4000); }, { passive: true }));
   $("#heroDots").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(Number(b.dataset.i)); });
@@ -1484,7 +1532,7 @@ function renderMoreRoutes(shown){
       const lm = landmarkOf(d);
       cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
         <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false, true)}</span>
-        <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc([`${ORIGIN_NAME[o]}出發`, CITY_VIBE[canon(d)]].filter(Boolean).join("・"))}</span><span class="rr-go">看即時價 ›</span></a>`);
+        <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(`${ORIGIN_NAME[o]}出發`)}</span><span class="rr-go">看即時價 ›</span></a>`);
     }
   }
   // 先放 6 個（電腦 9 個），清單很少時多放
@@ -1511,7 +1559,8 @@ function renderFlights(){
   const where = state.country ? COUNTRIES[state.country] : "";
   $("#fTitle").textContent = (fsc ? "傳統航空" : "便宜機票") + (where ? `・${where}` : "");
   $("#fSub").textContent = `${Number(m)}月出發・${state.type === "rt" ? "來回" : "單程"}・預估最低價（含稅）`;
-  $("#tilesSub").textContent = fsc ? "只看華航、長榮、國泰等傳統航空" : "點一下只看那個地區";
+  $("#tilesSub").textContent = fsc ? "只看華航、長榮、國泰等傳統航空" : "";
+  $("#tilesSub").classList.toggle("hidden", !fsc);
   const cc = $("#clearC");
   cc.classList.toggle("hidden", !state.country);
   cc.innerHTML = state.country ? `${esc(COUNTRIES[state.country])} ${icon("close")}` : "";
@@ -1667,7 +1716,7 @@ function renderHotelCities(){
     return `<article class="card hc">
       <a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(cityName(c))}酒店，看 Trip.com 房價"></a>
       <div class="ph g-${esc(co || "")}">${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}
-        ${ref ? `<span class="pbadge"><strong>${priceHTML(ref[0])}</strong><small>／晚起</small></span>` : ""}${moodChip({ d: c, dep: checkin })}</div>
+        ${ref ? `<span class="pbadge"><strong>${priceHTML(ref[0])}</strong><small>／晚起</small></span>` : ""}</div>
       <div class="cb">
         <div class="top-row"><span class="cty">${esc(cityName(c))}</span></div>
         <div class="air"><span class="an">${esc([COUNTRIES[co], `${nights} 晚參考`].filter(Boolean).join("・"))}</span></div>
@@ -1950,12 +1999,6 @@ function localTime(code){
   const t = new Date(Date.now() + off * 3600e3);
   return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`;
 }
-// 照片上的小標：「賞楓季・15°C」或只有「15°C」（出發那個月）
-function moodChip(f){
-  const m = Number(f.dep.slice(5, 7)), s = seasonOf(f.d, m), t = tempOf(f.d, m);
-  if (!s && t == null) return "";
-  return `<span class="mood">${s ? `${icon(s.ic)}${esc(s.t)}` : icon("thermo")}${t != null ? `<i>${s ? "・" : ""}${t}°C</i>` : ""}</span>`;
-}
 // 照片上的季節特效：賞楓季飄楓葉、櫻花季飄花瓣、雪季下雪、聖誕燈飾閃光（只在可以有動畫時）
 const FX_KIND = { leaf:"leaf", flower:"petal", snow:"snow", spark:"spark" };
 function seasonFX(code, month){
@@ -2181,6 +2224,31 @@ function lucky(){
   };
   clearTimeout(slotTimer); slotTimer = setTimeout(tick, delay);
 }
+
+// 點擊感：按下去時加 .press（縮一下）、按鈕加水波；Android 輕震一下
+const PRESS = ".card, .pass, .tile, .mini, .chip, .month, .lucky, .cta, .hero-cta, .btn2, .more, .seg button, .tabs button, .rrow, .opt, .hotel-x";
+const RIPPLE = ".cta, .btn2:not(.fav-btn), .more, .rrow, .opt, .chip, .month, .lucky, .hotel-x";
+let pressed = null;
+const unpress = () => { if (pressed){ pressed.classList.remove("press"); pressed = null; } };
+document.addEventListener("pointerdown", e => {
+  if (e.button > 0) return;
+  const el = e.target.closest && e.target.closest(PRESS); if (!el) return;
+  // 卡片上的愛心有自己的動畫，不要整張卡片縮
+  if (el.classList.contains("card") && e.target.closest(".fav-btn, .when, .more-d")) return;
+  unpress(); pressed = el; el.classList.add("press");
+  if (e.pointerType === "touch" && navigator.vibrate && (el.matches(".card, .pass, .cta, .hero-cta"))) { try { navigator.vibrate(8); } catch(err) {} }
+  const r = el.matches(RIPPLE) && MOTION ? el : null;
+  if (r){
+    const b = r.getBoundingClientRect(), size = Math.max(b.width, b.height) * 2.2;
+    r.classList.add("rip-host");
+    const sp = document.createElement("span"); sp.className = "rip";
+    sp.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - b.left - size / 2}px;top:${e.clientY - b.top - size / 2}px`;
+    r.appendChild(sp); setTimeout(() => sp.remove(), 600);
+  }
+}, { passive: true });
+["pointerup", "pointercancel", "dragstart"].forEach(ev => document.addEventListener(ev, () => setTimeout(unpress, 90), { passive: true }));
+// 手指開始滑動就不算按（左右滑輪播、上下捲頁面時卡片不會縮）
+document.addEventListener("scroll", unpress, { passive: true, capture: true });
 
 document.addEventListener("click", e => {
   const t = e.target;
