@@ -187,10 +187,10 @@ async function measure(page) {
         out.push(`照片沒填滿框：${img.alt}（照片 ${img.offsetWidth}x${img.offsetHeight}，框 ${pe.clientWidth}x${pe.clientHeight}）`);
       if (getComputedStyle(img).objectFit !== "cover") out.push(`照片不是 cover：${img.alt}`);
     }
-    // 2. 卡片照片框比例一致（機票卡 3:2、酒店城市卡 1:1）
+    // 2. 卡片照片框比例一致（機票卡 16:10、酒店城市卡 1:1）
     for (const ph of document.querySelectorAll(".card .ph")) {
       if (!vis(ph)) continue;
-      const r = R(ph), want = ph.closest(".card.hc") ? 1 : 1.5;
+      const r = R(ph), want = ph.closest(".card.hc") ? 1 : 1.6;
       if (Math.abs(r.width / r.height - want) > 0.02) out.push(`卡片照片比例不對：${(r.width / r.height).toFixed(2)}（應為 ${want.toFixed(2)}）`);
     }
     // 3. 航空公司標誌：框大小一致、圖在框內、跟文字垂直置中
@@ -282,6 +282,7 @@ async function measure(page) {
     for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
+        const s3 = el.closest(".s3d"); if (s3 && s3.style.transform) continue; // 3D 轉到旁邊的輪播卡片不量
         if (el.scrollWidth > el.clientWidth + 1) out.push(`文字被截斷：${sel}「${el.textContent.trim().slice(0, 20)}」`);
         const p = el.closest(".card,.tile,.slide,.tabs,.month,.mini,.rrow,.win");
         if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`文字超出外框：${sel}「${el.textContent.trim().slice(0, 20)}」`); }
@@ -300,19 +301,33 @@ async function measure(page) {
       const a = R(l), c = R(card);
       if (Math.abs(a.width - c.width) > 1 || Math.abs(a.height - c.height) > 1) out.push("整張可點的連結沒有蓋住整張卡片");
     }
-    // 8. 大圖輪播：每張跟畫面同寬、內容不超出
+    // 8. 大圖：單張時跟大圖框同寬、框左右留邊；3D 卡片輪播（.cf）時每張一樣寬、停住的那張在正中間且左右露出隔壁卡片
     for (const s of document.querySelectorAll(".slide")) {
-      const r = R(s);
       if (s.closest("section.hidden")) continue;
-      const hr = R(s.closest(".hero"));
-      if (!near(r.width, hr.width, 1.5)) out.push(`輪播圖寬度 ${r.width} ≠ 大圖框 ${hr.width}`);
-      if (hr.left < 15 || hr.right > W - 15) out.push(`大圖框沒有留邊（${hr.left}–${hr.right} / ${W}）`);
+      const hero = s.closest(".hero"), hr = R(hero);
+      const s3 = s.querySelector(".s3d"); if (s3 && s3.style.transform) continue; // 轉到旁邊的卡片（3D 角度）不量
+      const r = R(s);
+      if (hero.classList.contains("cf")) {
+        const w0 = hero.querySelector(".slide").offsetWidth;
+        if (Math.abs(s.offsetWidth - w0) > 1) out.push(`輪播卡片寬度不一：${s.offsetWidth} vs ${w0}`);
+        if (Math.abs((r.left - hr.left) - (hr.right - r.right)) > 2) out.push(`停住的輪播卡片沒有在正中間（左 ${Math.round(r.left - hr.left)}，右 ${Math.round(hr.right - r.right)}）`);
+        if (r.left - hr.left < 14) out.push(`輪播卡片旁邊沒露出隔壁那張（只剩 ${Math.round(r.left - hr.left)}px）`);
+        // 隔壁那張（3D 轉過去的）要露出一點邊，但不能蓋到中間這張
+        const nx = s.nextElementSibling && s.nextElementSibling.querySelector(".s3d");
+        if (nx && nx.style.transform) { const n = R(nx);
+          if (n.left < r.right + 2) out.push(`隔壁的輪播卡片蓋到中間那張（${Math.round(n.left)} < ${Math.round(r.right)}）`);
+          if (n.left > hr.right - 6) out.push(`隔壁的輪播卡片完全看不到（左邊在 ${Math.round(n.left)}，畫面寬 ${Math.round(hr.right)}）`); }
+      } else {
+        if (!near(r.width, hr.width, 1.5)) out.push(`輪播圖寬度 ${r.width} ≠ 大圖框 ${hr.width}`);
+        if (hr.left < 15 || hr.right > W - 15) out.push(`大圖框沒有留邊（${hr.left}–${hr.right} / ${W}）`);
+      }
       for (const el of s.querySelectorAll(".in > .wrap")) { const a = R(el); if (a.bottom > r.bottom + 1 || a.top < r.top - 1) out.push("輪播文字超出圖片"); }
       const cta = s.querySelector(".hero-cta"); if (cta) { const a = R(cta); if (a.right > r.right + 1 || a.left < r.left - 1) out.push("輪播按鈕超出圖片"); }
     }
     // 登機證卡片：在大圖裡、缺口對準撕線、日期和價格不重疊、代碼不壓到中間的飛機
     for (const ps of document.querySelectorAll("#hero .pass, #hotelHero .pass, #sheet .win .pass")) {
       if (!vis(ps)) continue; // 酒店分頁時大圖藏起來
+      const host = ps.closest(".s3d"); if (host && host.style.transform) continue; // 3D 轉到旁邊的不量
       const sl = R(ps.closest(".slide, .win")), r = R(ps), isKey = ps.classList.contains("key");
       if (r.left < sl.left - 1 || r.right > sl.right + 1 || r.bottom > sl.bottom + 1) out.push("登機證卡片超出大圖");
       const route = R(ps.querySelector(".pass-route")), tear = parseFloat(getComputedStyle(ps).getPropertyValue("--tear"));
@@ -326,7 +341,7 @@ async function measure(page) {
     for (const b of document.querySelectorAll(".pbadge")) { if (!vis(b)) continue; const r = R(b), ph = R(b.closest(".ph"));
       if (r.right > ph.right - 4 || r.bottom > ph.bottom) out.push("酒店價格標超出照片");
     }
-    // 輪播圓點（右上）不能壓到左上的小標或登機證
+    // 輪播圓點不能壓到小標或登機證（3D 輪播時圓點在卡片下面）
     { const d = document.querySelector("#hero .hero-dots"), s0 = document.querySelector("#hero .slide");
       if (d && s0 && vis(d)) { const a = R(d); for (const el of s0.querySelectorAll(".eyebrow, .pass")) { const b = R(el);
         if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) out.push(`輪播圓點壓到${el.classList.contains("pass") ? "登機證" : "小標"}`); } } }
@@ -414,6 +429,19 @@ try {
       return { out, n: svg.querySelectorAll(".pt").length, labels: svg.querySelectorAll(".pt text").length };
     });
     radar.out.forEach(i => all.push(`[${w}px 雷達] ${i}`));
+    // 雷達預算拉桿：在畫面內、文字不截斷；拉一半時一行說明不超出框
+    const bud = await page.evaluate(() => {
+      const out = [], R = (e) => e.getBoundingClientRect(), box = document.querySelector("#rbud");
+      if (!box || box.classList.contains("hidden")) return ["沒有預算拉桿"];
+      const inp = box.querySelector("input"); inp.value = String(Math.floor(Number(inp.max) / 2)); inp.dispatchEvent(new Event("input", { bubbles: true }));
+      const b = R(box); if (b.left < 0 || b.right > document.documentElement.clientWidth) out.push("預算拉桿超出畫面");
+      if (R(inp).height < 24) out.push("預算拉桿太小，手指不好拉");
+      for (const el of box.querySelectorAll("label span, label b, .rbud-out")) { const a = R(el); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`預算文字超出：${el.textContent}`); }
+      const lb = box.querySelector("label"); if (lb.scrollWidth > lb.clientWidth + 1) out.push("預算標題被擠到");
+      inp.value = inp.max; inp.dispatchEvent(new Event("input", { bubbles: true }));
+      return out;
+    });
+    bud.forEach(i => all.push(`[${w}px 雷達預算] ${i}`));
     console.log(`[${w}px] 雷達：${radar.n} 個城市，${radar.labels} 個有標籤`);
     if (SHOTS) await (await page.$("#radarSec")).screenshot({ path: path.join(SHOTS, `radar-${w}.png`) });
     await page.locator("#radar .pt").last().click(); // 最便宜的點畫在最上層
@@ -450,9 +478,9 @@ try {
             if (Math.abs(Math.round(R(d).left) - wds[want]) > 1) { out.push(`日曆 ${m}/${i + 1} 不在星期${"日一二三四五六"[want]}那一欄`); break; }
           }
         }
-        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city")) {
+        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city, .trip .tc b, .trip em")) {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
-          const p = el.closest(".day,.opt,.facts,.sh-head"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
+          const p = el.closest(".day,.opt,.facts,.sh-head,.trip"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
         }
         // 小登機證：代碼、飛機、價格不互相重疊
         const tk = document.querySelector("#sheet .ticket");
