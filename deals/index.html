@@ -477,6 +477,19 @@
   .slot{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:22px 22px 0 0}
   .slot .s1{font-size:13px;color:#C9D6EA;letter-spacing:2px}
   .slot .s2{font-size:40px;font-weight:900;margin-top:6px;letter-spacing:2px}
+  /* 機場翻牌看板 */
+  .slot{background:radial-gradient(120% 120% at 50% 0%,#13335C,#0B2340 60%,#071A30)}
+  .slot .s1{display:flex;align-items:center;gap:6px;font-weight:700;color:#FFD66B}
+  .slot .s1 .ic{width:14px;height:14px}
+  .slot .s2{display:flex;gap:5px;perspective:400px;margin-top:12px}
+  .flap{position:relative;display:inline-flex;align-items:center;justify-content:center;width:46px;height:58px;border-radius:7px;
+    background:linear-gradient(180deg,#1F2937 0%,#111827 49%,#0B1220 51%,#1F2937 100%);color:#FFC72C;font-size:34px;font-weight:900;letter-spacing:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 10px rgba(0,0,0,.35);transform-origin:50% 0}
+  .flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.65);box-shadow:0 1px 0 rgba(255,255,255,.06)}
+  .anim .flap{animation:flapin .16s cubic-bezier(.3,.6,.5,1) both;animation-delay:calc(var(--fi) * 18ms)}
+  .anim .flap.last{animation:flapin .42s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--fi) * 70ms)}
+  @keyframes flapin{from{transform:rotateX(-88deg);filter:brightness(.6)}to{transform:none;filter:none}}
+  @media (max-width:359px){ .flap{width:40px;height:52px;font-size:30px} }
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:10px 18px;
     border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
@@ -529,6 +542,8 @@
   .fx-spark i{background:radial-gradient(circle,#FFF7CC 0,#FFD66B 40%,rgba(255,214,107,0) 70%);border-radius:50%;animation:tw var(--dur) ease-in-out var(--dl) infinite}
   @keyframes fxfall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--sw),220px) rotate(calc(var(--rot) / 2))}100%{transform:translate(calc(var(--sw) * -0.4),480px) rotate(var(--rot))}}
   .hero.off .fx i, .slide:not(.act) .fx i{animation-play-state:paused}
+  /* 捲出畫面的區塊：裡面一直重複的動畫先暫停（省電、捲動更順） */
+  .offscreen *, .offscreen *::before, .offscreen *::after{animation-play-state:paused !important}
   /* 沒有結果時的小插圖 */
   .empty-art{display:block;width:120px;height:72px;margin:0 auto 10px}
 
@@ -598,7 +613,6 @@
   .confetti{position:absolute;left:0;right:0;top:0;height:420px;overflow:hidden;z-index:5;pointer-events:none}
   .confetti i{position:absolute;top:-10px;width:8px;height:12px;border-radius:2px;opacity:0;animation:fall 1.6s cubic-bezier(.25,.6,.45,1) forwards;animation-delay:var(--dl)}
   @keyframes fall{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),340px) rotate(var(--r))}}
-  .slot .s2.tk{animation:slotpop .22s ease}
   @keyframes slotpop{from{transform:translateY(-8px);opacity:.4}to{transform:none;opacity:1}}
   .anim .cal .day{animation:dayin .4s ease both;animation-delay:calc(var(--i,0) * 10ms)}
   @keyframes dayin{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
@@ -635,7 +649,9 @@
   /* 前 1.5 秒掃過去，之後停 4.5 秒再掃 */
   @keyframes glare{0%{opacity:0;transform:translateX(-120%) skewX(-12deg)}4%{opacity:1}25%,100%{opacity:0;transform:translateX(330%) skewX(-12deg)}}
   /* 機票卡照片：捲動時照片比框慢一點移動（景深） */
-  .anim .card .ph .bgimg{scale:1.12;translate:0 var(--py,0px)}
+  .anim .card .ph .bgimg{scale:1.12}
+  .anim .card .ph.pvis .bgimg{will-change:translate} /* 只有畫面上看得到的照片放到獨立圖層（省重畫） */
+  .progress i, .progress b{will-change:transform}
   /* 點訂票連結：一架小飛機從手指的位置起飛 */
   .takeoff{position:fixed;z-index:120;width:30px;height:30px;margin:-15px 0 0 -15px;pointer-events:none;color:var(--yellow);
     filter:drop-shadow(0 4px 8px rgba(11,35,64,.35));animation:takeoff .9s cubic-bezier(.5,0,.75,0) forwards}
@@ -645,9 +661,9 @@
   @keyframes takeoff{0%{transform:translate(0,0) scale(.6);opacity:0}12%{opacity:1;transform:translate(0,0) scale(1.1)}100%{transform:translate(160px,-220px) scale(.5);opacity:0}}
   /* 分頁下面的細進度條：小飛機跟著你往下捲 */
   .progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none}
-  .progress i{position:absolute;left:0;top:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(var(--p,0));
+  .progress i{position:absolute;left:0;top:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);
     background:linear-gradient(90deg,#FFC72C,#FF8A00,#E11D48)}
-  .progress b{position:absolute;top:-7px;left:0;width:16px;height:16px;color:#FF8A00;transform:translateX(calc(var(--px,0px) - 8px)) rotate(90deg);opacity:var(--po,0);transition:opacity .3s}
+  .progress b{position:absolute;top:-7px;left:0;width:16px;height:16px;color:#FF8A00;transform:translateX(-8px) rotate(90deg);opacity:0;transition:opacity .3s}
   .progress b svg{width:100%;height:100%;display:block}
   /* 最便宜地區的漸層外圈慢慢轉 */
   .ring.hot{position:relative;isolation:isolate;background:transparent}
@@ -657,6 +673,14 @@
   .month .bar i{transform-origin:50% 100%}
   .anim .month .bar i{animation:grow .7s cubic-bezier(.2,1.2,.4,1) both;animation-delay:calc(var(--mi,0) * 70ms)}
   @keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+  /* 電腦滑鼠移到機票卡照片上：照片跟著滑鼠微微傾斜，上面有一層光 */
+  @media (hover:hover) and (pointer:fine){
+    .anim .card .ph{transition:transform .25s ease, filter .2s ease;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+    .anim .card .ph::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .25s ease;
+      background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.35),transparent 55%)}
+    .anim .card.tilt .ph::after{opacity:1}
+    .anim .card.tilt .ph{transition:transform .08s linear, filter .2s ease}
+  }
   /* 大圖圓點：目前那張像 IG 限時動態一樣慢慢填滿，滿了換下一張 */
   .cf .hero-dots button{position:relative;overflow:hidden}
   .anim .cf .hero-dots button[aria-current="true"]{width:28px;background:rgba(11,35,64,.2)}
@@ -669,6 +693,23 @@
   .anim .sh-sticky .cta::after, .anim .hero-cta::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;
     background:linear-gradient(105deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-150%) skewX(-15deg);animation:ctashine 4.5s ease-in-out 1.2s infinite}
   @keyframes ctashine{0%{transform:translateX(-150%) skewX(-15deg)}30%,100%{transform:translateX(320%) skewX(-15deg)}}
+  /* 卡片照片變成價格日曆大照片的轉場 */
+  ::view-transition-group(tripph){animation-duration:.42s;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+  ::view-transition-old(tripph),::view-transition-new(tripph){height:100%;object-fit:cover;overflow:hidden}
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.3s}
+  /* 價格日曆：最便宜的那天有一圈光一直呼吸 */
+  .day.best{position:relative;box-shadow:inset 0 0 0 2px #16A34A}
+  .anim .day.best::after{content:"";position:absolute;inset:-3px;border-radius:inherit;border:2px solid rgba(34,197,94,.7);pointer-events:none;animation:breathe 1.8s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.2;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+  /* 雷達區塊：深藍夜空上的星星眨眼 */
+  .band{position:relative;overflow:hidden}
+  .band > .stars{inset:0;z-index:0}
+  .band > .wrap{position:relative;z-index:1}
+  /* 收藏：愛心一顆顆噴出來 */
+  .hburst{position:fixed;z-index:120;width:0;height:0;pointer-events:none}
+  .hburst i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;color:var(--red);animation:hfly .8s cubic-bezier(.2,.8,.3,1) forwards;animation-delay:var(--hd,0s)}
+  .hburst i svg{width:100%;height:100%;display:block}
+  @keyframes hfly{0%{transform:translate(0,0) scale(.3);opacity:0}15%{opacity:1}100%{transform:translate(var(--hx),var(--hy)) scale(var(--hs,1)) rotate(var(--hr,0deg));opacity:0}}
   /* 「幫我選」的骰子偶爾晃一下 */
   .anim .lucky .ic{animation:wig 5s ease-in-out 2s infinite}
   @keyframes wig{0%,86%,100%{transform:none}89%{transform:rotate(-18deg) scale(1.1)}92%{transform:rotate(16deg) scale(1.1)}95%{transform:rotate(-8deg)}}
@@ -1028,14 +1069,16 @@ function heroLoading(){
 function countUp(el, to, fromK = 0.62, dur = 750){
   if (!el || !MOTION) return;
   const from = Math.round(to * fromK), t0 = performance.now();
+  el.innerHTML = priceHTML(from);
+  const num = el.lastChild; // 「NT$」後面那段數字（只改這段文字，不重建整個價格）
   const step = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-    el.innerHTML = priceHTML(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
+    num.nodeValue = Math.round(from + (to - from) * e).toLocaleString("en-US"); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 // 捲到才浮上來：卡片、小卡、磚塊、標題…（面板裡、左右滑的列不用）
 // 新內容放進畫面的同一刻就加上 rv（不會先出現再消失）；進入畫面時依「這一批」的順序錯開浮上來；
 // 浮完就把 rv 拿掉，卡片恢復原本的滑鼠效果
-let revealObs = null;
+let revealObs = null, countingNow = 0;
 const revealWatched = new Set();
 function revealify(){
   if (!MOTION || !("IntersectionObserver" in window)) return;
@@ -1049,7 +1092,8 @@ function revealify(){
       el.classList.add("in");
       // 機票卡浮上來時，價格從小跳到正確的數字
       const pv = el.matches(".card") && el.querySelector(".price strong[data-v]");
-      if (pv) setTimeout(() => countUp(pv, Number(pv.dataset.v), 0.8, 650), d + 120);
+      // 同時最多 2 張在跳（快速往下滑時直接顯示，不拖慢捲動）
+      if (pv && countingNow < 2){ countingNow++; setTimeout(() => { countUp(pv, Number(pv.dataset.v), 0.8, 650); setTimeout(() => countingNow--, 700); }, d + 120); }
       setTimeout(() => { el.classList.remove("rv", "in"); el.style.removeProperty("--d"); }, 560 + d);
     }
   }, { rootMargin: "0px 0px -4% 0px" });
@@ -2139,7 +2183,7 @@ function routeSheetHTML(o, d){
     for (let dd = 1; dd <= nDays; dd++){
       const key = `${m}-${String(dd).padStart(2, "0")}`, f = byDay.get(key), ix = `style="--i:${first + dd}"`;
       cells.push(f
-        ? `<button class="day lv${lv(f.price)}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}"><span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
+        ? `<button class="day lv${lv(f.price)}${f.price === prices[0] ? " best" : ""}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}${f.price === prices[0] ? "（最便宜）" : ""}"><span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
         : `<div class="day" ${ix}><span class="n" style="font-weight:500">${dd}</span></div>`);
     }
     return `<div class="cal"><h4>${y} 年 ${mm} 月</h4><div class="cal-grid">${cells.join("")}</div></div>`;
@@ -2176,6 +2220,20 @@ function routeSheetHTML(o, d){
         <a class="cta" href="${esc(url)}" target="_blank" rel="noopener sponsored">訂最便宜的 ${money(cheapest.price)}${ARROW()}</a>
       </div>
     </div>`;
+}
+// 從機票卡打開價格日曆：卡片照片放大變成面板上方的大照片（瀏覽器支援 View Transitions 才有；不支援就直接打開）
+function openRouteFrom(el, o, d){
+  const ph = el.closest(".card") && el.closest(".card").querySelector(".ph");
+  if (!MOTION || !document.startViewTransition || !ph || !$("#sheet").classList.contains("hidden")){ openRoute(o, d); return; }
+  ph.style.viewTransitionName = "tripph";
+  let head = null;
+  const vt = document.startViewTransition(() => {
+    ph.style.viewTransitionName = "";
+    openRoute(o, d);
+    head = document.querySelector("#sheet .sh-head"); if (head) head.style.viewTransitionName = "tripph";
+  });
+  const clean = () => { ph.style.viewTransitionName = ""; if (head) head.style.viewTransitionName = ""; };
+  vt.finished.then(clean, clean);
 }
 function openRoute(o, d){
   const html = routeSheetHTML(o, d);
@@ -2260,6 +2318,10 @@ function confettiHTML(){
   }
   return `<div class="confetti" aria-hidden="true">${h}</div>`;
 }
+// 機場翻牌看板：每個字一塊翻牌，換字時從上往下翻（last＝最後停下來的那一次，翻慢一點）
+function flapHTML(name, last){
+  return [...String(name)].map((ch, i) => `<span class="flap${last ? " last" : ""}" style="--fi:${i}">${esc(ch)}</span>`).join("");
+}
 // 幫我選！：從目前分頁最便宜的 15 個城市隨機抽一個
 let slotTimer = null;
 let confettiTimer = null;
@@ -2288,13 +2350,12 @@ function lucky(){
     confettiTimer = setTimeout(() => { const c = document.querySelector("#sheet .confetti"); if (c) c.remove(); }, 2200); };
   if (reduce){ show(); return; }
   // 拉霸轉的時候先偷偷抓結果的照片，結果出來時照片已經好了
-  openSheet(`<div class="slot"><div class="s1">幫你抽一個地方</div><div class="s2" id="slotName">${esc(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto()}</div>`);
+  openSheet(`<div class="slot"><div class="s1">${icon("plane")}DEPARTURES・幫你抽一個地方</div><div class="s2" id="slotName" aria-live="off">${flapHTML(names[0])}</div></div><div class="sh-body"></div><div class="win-pre" aria-hidden="true">${winPhoto()}</div>`);
   let i = 0, delay = 60, t0 = Date.now();
   const tick = () => {
     const el = $("#slotName"); if (!el) return;
-    el.textContent = names[i++ % names.length];
-    if (MOTION){ el.classList.remove("tk"); void el.offsetWidth; el.classList.add("tk"); }
-    if (Date.now() - t0 > 1500){ el.textContent = cityName(pick.d); slotTimer = setTimeout(show, 450); return; }
+    el.innerHTML = flapHTML(names[i++ % names.length]);
+    if (Date.now() - t0 > 1500){ el.innerHTML = flapHTML(cityName(pick.d), true); slotTimer = setTimeout(show, 650); return; }
     delay *= 1.12; slotTimer = setTimeout(tick, delay);
   };
   clearTimeout(slotTimer); slotTimer = setTimeout(tick, delay);
@@ -2328,7 +2389,7 @@ document.addEventListener("scroll", unpress, { passive: true, capture: true });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.closest("[data-close]")){ closeSheet(); return; }
-  const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); openRoute(o, d); return; }
+  const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); openRouteFrom(r, o, d); return; }
   const sh = t.closest("[data-share]"); if (sh){ const [o, d] = sh.dataset.share.split("-"); shareRoute(o, d, sh.dataset.smode, sh.dataset.stype); return; }
   if (t.closest("#luckyBtn") || t.closest("#again")){ lucky(); return; }
   if (t.closest("[data-clear]")){ clearFilters(); return; }
@@ -2392,12 +2453,27 @@ function favBtn(o, d, cls = "", withText = false){
   const on = isFav(o, d);
   return `<button class="fav-btn${cls ? " " + cls : ""}" data-fav="${esc(o)}-${esc(d)}" aria-pressed="${on}" aria-label="${on ? "取消收藏" : "收藏"} ${esc(cityName(d))}">${icon(on ? "heartF" : "heart")}${withText ? `<span class="fav-t">${on ? "已收藏" : "收藏"}</span>` : ""}</button>`;
 }
+// 收藏時從愛心噴出 8 顆小愛心（只在可以有動畫時）
+let lastFavBtn = null;
+function heartBurst(btn){
+  if (!MOTION) return;
+  const r = btn.getBoundingClientRect(), box = document.createElement("span");
+  box.className = "hburst"; box.setAttribute("aria-hidden", "true");
+  box.style.left = (r.left + r.width / 2) + "px"; box.style.top = (r.top + r.height / 2) + "px";
+  let h = "";
+  for (let i = 0; i < 8; i++){
+    const a = (i / 8) * Math.PI * 2 - Math.PI / 2, dist = 34 + (i % 3) * 12;
+    h += `<i style="--hx:${(Math.cos(a) * dist).toFixed(1)}px;--hy:${(Math.sin(a) * dist - 18).toFixed(1)}px;--hs:${(0.6 + (i % 3) * 0.25).toFixed(2)};--hr:${(i % 2 ? 1 : -1) * (20 + i * 6)}deg;--hd:${(i * 0.02).toFixed(2)}s"><svg viewBox="0 0 24 24" fill="currentColor">${ICONS.heartF.replace(/^F/, "")}</svg></i>`;
+  }
+  box.innerHTML = h; document.body.appendChild(box); setTimeout(() => box.remove(), 1000);
+}
 function toggleFav(o, d){
   const k = favKey(o, d);
   favs = isFav(o, d) ? favs.filter(x => x !== k) : [k, ...favs].slice(0, 30);
   if (isFav(o, d)){ const l = routeFlights(o, d); if (l.length){ const p = Math.round(Math.min(...l.map(x => x.price))); saveFavPrice(k, p); favPriceAtLoad[favPK(k)] = { p, t: Date.now() }; } }
   try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e) {}
   toast(isFav(o, d) ? `已收藏${cityName(d)}，下次打開會在最上面` : `已取消收藏${cityName(d)}`);
+  if (isFav(o, d) && lastFavBtn && lastFavBtn.isConnected) heartBurst(lastFavBtn);
   // 原地更新（卡片的圓形愛心、幫我選的「收藏」按鈕各自保留樣子）
   const on = isFav(o, d);
   for (const b of document.querySelectorAll(`[data-fav="${o}-${d}"]`)){
@@ -2441,7 +2517,7 @@ function renderFavs(){
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-fav]"); if (!b) return;
   e.preventDefault(); e.stopPropagation();
-  const [o, d] = b.dataset.fav.split("-"); toggleFav(o, d);
+  const [o, d] = b.dataset.fav.split("-"); lastFavBtn = b; toggleFav(o, d);
 }, true);
 
 /* ====================================================================
@@ -2604,6 +2680,11 @@ if (MOTION && "IntersectionObserver" in window){
     const svg = e.target.querySelector(".fp"); if (svg && svg.pauseAnimations) e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations(); } }).observe($("#hero"));
 }
 // ====================== 特效（第 3 輪） ======================
+// 捲出畫面的區塊加 .offscreen，裡面重複播放的動畫（星星、旋轉外圈、骰子、雷達）暫停
+if (MOTION && "IntersectionObserver" in window){
+  const offIO = new IntersectionObserver(es => { for (const e of es) e.target.classList.toggle("offscreen", !e.isIntersecting); });
+  for (const el of [document.querySelector("#flights .sec-head"), $("#tiles"), $("#radarSec")]) if (el) offIO.observe(el);
+}
 // 分段切換的白色滑塊：哪顆被選就滑過去（不管是點的、程式改的、分享連結帶的）
 function segThumb(box, attr){
   if (!box) return;
@@ -2625,20 +2706,57 @@ if (MOTION){
   const pg = document.querySelector(".progress"); pg.querySelector("b").innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${ICONS.plane.slice(1)}</svg>`;
   // 機票卡照片的景深：只算畫面上看得到的
   const vis = new Set();
-  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => { for (const e of es) e.isIntersecting ? vis.add(e.target) : vis.delete(e.target); kick(); }, { rootMargin: "60px 0px" }) : null;
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => { for (const e of es){ e.isIntersecting ? vis.add(e.target) : vis.delete(e.target); e.target.classList.toggle("pvis", e.isIntersecting); } kick(); }, { rootMargin: "60px 0px" }) : null;
   const watched = new WeakSet();
   const watch = () => { if (!io) return; for (const ph of document.querySelectorAll(".card .ph")) if (!watched.has(ph)){ watched.add(ph); io.observe(ph); } };
   let raf = 0;
+  // 先全部讀（位置、高度），再全部寫（樣式），瀏覽器才不會每張卡片重算一次版面
+  let pgW = pg.clientWidth, docH = document.documentElement.scrollHeight;
+  const pgBar = pg.querySelector("i"), pgPlane = pg.querySelector("b");
   const frame = () => { raf = 0;
-    const h = document.documentElement, max = Math.max(1, h.scrollHeight - innerHeight), p = Math.min(1, Math.max(0, scrollY / max));
-    pg.style.setProperty("--p", p.toFixed(4)); pg.style.setProperty("--px", (p * pg.clientWidth).toFixed(1) + "px"); pg.style.setProperty("--po", p > 0.01 && p < 0.995 ? "1" : "0");
+    const max = Math.max(1, docH - innerHeight), p = Math.min(1, Math.max(0, scrollY / max));
+    const reads = [];
     for (const ph of vis){ if (!ph.isConnected){ vis.delete(ph); continue; }
-      const r = ph.getBoundingClientRect(), k = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
-      ph.style.setProperty("--py", (Math.max(-1, Math.min(1, k)) * -14).toFixed(1) + "px"); } };
+      const r = ph.getBoundingClientRect(); reads.push([ph, (r.top + r.height / 2 - innerHeight / 2) / innerHeight]); }
+    // 直接寫在會動的元素上（寫在外層的 CSS 變數會讓裡面每個元素都重算樣式）
+    pgBar.style.transform = `scaleX(${p.toFixed(4)})`;
+    pgPlane.style.transform = `translateX(${(p * pgW - 8).toFixed(1)}px) rotate(90deg)`;
+    const po = p > 0.01 && p < 0.995 ? "1" : "0"; if (pgPlane.style.opacity !== po) pgPlane.style.opacity = po;
+    pg.dataset.p = p.toFixed(4);
+    for (const [ph, k] of reads){ const v = (Math.max(-1, Math.min(1, k)) * -14).toFixed(1);
+      if (ph.__py !== v){ ph.__py = v; ph.dataset.py = v; const im = ph.querySelector(".bgimg"); if (im) im.style.translate = `0 ${v}px`; } } };
+  // 頁面高度、進度條寬度只在內容或視窗變了才重量
+  const remeasure = () => { pgW = pg.clientWidth; docH = document.documentElement.scrollHeight; };
+  if ("ResizeObserver" in window) new ResizeObserver(() => { remeasure(); kick(); }).observe(document.body);
   const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
   addEventListener("scroll", kick, { passive: true }); addEventListener("resize", kick);
   new MutationObserver(() => { watch(); kick(); }).observe($("#flightList"), { childList: true });
   watch(); kick();
+  // 電腦滑鼠：機票卡照片跟著滑鼠傾斜
+  if (matchMedia("(hover:hover) and (pointer:fine)").matches){
+    let tc = null;
+    document.addEventListener("pointermove", e => {
+      if (e.pointerType !== "mouse") return;
+      const c = e.target.closest && e.target.closest(".card");
+      if (tc && tc !== c){ tc.classList.remove("tilt"); const ph0 = tc.querySelector(".ph"); if (ph0){ ph0.style.removeProperty("--rx"); ph0.style.removeProperty("--ry"); } tc = null; }
+      if (!c) return;
+      const ph = c.querySelector(".ph"); if (!ph) return;
+      const r = ph.getBoundingClientRect();
+      if (e.clientY > r.bottom){ c.classList.remove("tilt"); ph.style.removeProperty("--rx"); ph.style.removeProperty("--ry"); tc = c; return; }
+      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      tc = c; c.classList.add("tilt");
+      ph.style.setProperty("--ry", ((x - 0.5) * 9).toFixed(2) + "deg"); ph.style.setProperty("--rx", ((0.5 - y) * 7).toFixed(2) + "deg");
+      ph.style.setProperty("--gx", (x * 100).toFixed(1) + "%"); ph.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+    }, { passive: true });
+  }
+  // 雷達夜空的星星
+  const band = $("#radarSec");
+  if (band && !band.querySelector(":scope > .stars")){
+    let st = "";
+    for (let i = 0; i < 26; i++){ const r = (j) => { const x = Math.sin((i + 1) * 91.7 + j * 47.3) * 43758.5453; return x - Math.floor(x); };
+      st += `<i style="left:${(r(1) * 100).toFixed(1)}%;top:${(r(2) * 100).toFixed(1)}%;animation-delay:${(r(3) * 2.6).toFixed(2)}s;transform:scale(${(0.5 + r(4) * 0.7).toFixed(2)})"></i>`; }
+    band.insertAdjacentHTML("afterbegin", `<div class="stars" aria-hidden="true">${st}</div>`);
+  }
   // 點去 Trip.com 的連結：小飛機從手指的位置起飛
   document.addEventListener("click", e => {
     if (e.defaultPrevented) return; // 例如點旁邊的輪播卡片只是轉過來，沒有打開連結
