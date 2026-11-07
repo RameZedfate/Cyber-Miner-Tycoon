@@ -163,11 +163,15 @@ try {
     await page.click('.tabs button[data-tab="flights"]');
     await page.click('#filters button[data-v="cheap"]');
     // 找到有「看全部日期」的月份
-    let routeBtn = await page.$("#flightList [data-route]");
+    // 優先挑有酒店城市代碼的目的地（才測得到「順便看酒店」）；哪張卡排第一會隨日期變
+    const pickRoute = () => page.evaluateHandle(() => {
+      const bs = [...document.querySelectorAll("#flightList [data-route]")];
+      return bs.find(b => HOTEL_CITY[canon(b.dataset.route.split("-")[1])]) || bs[0] || null; }).then(h => h.asElement());
+    let routeBtn = await pickRoute();
     for (const m of await page.$$eval("#months button", bs => bs.map(b => b.dataset.v))) {
       if (routeBtn) break;
       await page.click(`#months button[data-v="${m}"]`);
-      routeBtn = await page.$("#flightList [data-route]");
+      routeBtn = await pickRoute();
     }
     if (!routeBtn) problems.push("卡片沒有「看全部日期」按鈕：" + JSON.stringify(await page.evaluate(() => ({ mode: state.mode, type: state.type, tab: state.tab, budget: state.budget, origin: state.origin, country: state.country, filter: state.filter, n: state.flights.length, osa: routeFlights("TPE", "OSA").length, cards: document.querySelectorAll("#flightList .card").length }))));
     else {
@@ -379,6 +383,7 @@ try {
     await page.$eval("#hero .slide:nth-child(2) .pass", a => a.click());
     await page.waitForTimeout(900);
     if (pops.length) problems.push("點旁邊的輪播卡片直接打開了訂票頁（應該先轉到中間）");
+    if (await page.$(".takeoff")) problems.push("點旁邊的輪播卡片（沒打開連結）不該放起飛小飛機");
     const mid = await page.$eval("#hero .slide:nth-child(2) .s3d", e => e.style.transform);
     if (mid) problems.push(`點旁邊的輪播卡片後沒有轉到中間：${mid}`);
     // 點擊感：手指按下卡片時縮一下，放開後恢復；按鈕有水波
@@ -400,6 +405,47 @@ try {
       if (!(await more.$(".rip"))) problems.push("按鈕按下去沒有水波");
       await page.mouse.up();
     }
+    // 第 3 輪特效
+    // 分頁的白色滑塊：點「傳統航空」後滑到那顆上面
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.click('.tabs button[data-tab="fsc"]'); await page.waitForTimeout(600);
+    const th = await page.evaluate(() => { const t = document.querySelector(".tabs .thumb"), b = document.querySelector('.tabs button[data-tab="fsc"]');
+      return t ? { w: parseFloat(t.style.width), x: Number((t.style.transform.match(/-?[\d.]+/) || [NaN])[0]), bw: b.offsetWidth, bx: b.offsetLeft } : null; });
+    if (!th || Math.abs(th.w - th.bw) > 1 || Math.abs(th.x - th.bx) > 1) problems.push(`分頁滑塊沒有滑到選的那顆：${JSON.stringify(th)}`);
+    await page.click('.tabs button[data-tab="flights"]'); await page.waitForTimeout(300);
+    // 出發地滑塊：用程式改選取（例如分享連結）也要跟著動
+    await page.click('#origin button[data-v="KHH"]'); await page.waitForTimeout(500);
+    const oth = await page.evaluate(() => { const t = document.querySelector("#origin .thumb"), b = document.querySelector('#origin button[data-v="KHH"]');
+      return Math.abs(Number((t.style.transform.match(/-?[\d.]+/) || [NaN])[0]) - b.offsetLeft); });
+    if (!(oth <= 1)) problems.push(`出發地滑塊沒有跟著選取移動（差 ${oth}px）`);
+    await page.click('#origin button[data-v=""]'); await page.waitForTimeout(300);
+    // 進度條：往下捲會變長；卡片照片有景深位移
+    await page.evaluate(() => scrollTo(0, 1200)); await page.waitForTimeout(400);
+    const pr = await page.$eval(".progress", p => Number(p.style.getPropertyValue("--p")));
+    if (!(pr > 0.05)) problems.push(`往下捲後進度條沒有變長：${pr}`);
+    if (!(await page.evaluate(() => [...document.querySelectorAll(".card .ph")].some(e => e.style.getPropertyValue("--py")))))
+      problems.push("機票卡照片沒有捲動景深");
+    // 點訂票連結：小飛機起飛，一下就消失
+    const cl = await page.$("#flightList .card .card-link"); await cl.scrollIntoViewIfNeeded();
+    const clb = await cl.boundingBox();
+    const popP = page.waitForEvent("popup", { timeout: 3000 }).catch(() => null);
+    // 點卡片正中間（卡片可能剛好捲到最上面、被固定的分頁列蓋住上緣）
+    await page.mouse.click(clb.x + clb.width / 2, clb.y + clb.height / 2);
+    if ((await page.$$(".takeoff")).length !== 1) problems.push("點訂票連結沒有小飛機起飛");
+    await page.waitForTimeout(1100);
+    if ((await page.$$(".takeoff")).length) problems.push("起飛的小飛機沒有自己消失");
+    const pp = await popP; if (pp) await pp.close();
+    // 大圖圓點像限時動態一樣填滿；頂部張數跳完要是正確數字；訂票按鈕有光掃過
+    await page.evaluate(() => scrollTo(0, 0)); await page.mouse.move(5, 5); await page.waitForTimeout(300);
+    const dotAnim = await page.$eval('#heroDots button[aria-current="true"]', b => getComputedStyle(b, "::after").animationName);
+    if (dotAnim !== "fill") problems.push(`大圖圓點沒有限時動態的填滿動畫：${dotAnim}`);
+    const want = await page.evaluate(() => { const t = todayTW(); return state.flights.filter(f => f.dep > t).length.toLocaleString("en-US"); });
+    const got = await page.textContent("#brandTag b").catch(() => "");
+    if (got !== want) problems.push(`頂部低價票張數跳完不對：${got}（應為 ${want}）`);
+    await page.evaluate(() => openRoute("TPE", "OSA")); await page.waitForTimeout(400);
+    const ctaAnim = await page.$eval("#sheet .sh-sticky .cta", a => getComputedStyle(a, "::after").animationName).catch(() => "none");
+    if (ctaAnim !== "ctashine") problems.push(`訂票按鈕沒有光掃過：${ctaAnim}`);
+    await page.keyboard.press("Escape");
     // 香港照片：維港夜景（一般比例的精選照片，不是會糊的超寬全景圖）
     if (!(await page.evaluate(() => LANDMARKS.HKG[0] === "File:13-08-09-peak-by-RalfR-04.jpg" && COUNTRY_PHOTO.HK[0] === LANDMARKS.HKG[0])))
       problems.push("香港照片沒換成維港夜景");
@@ -433,6 +479,10 @@ try {
     if (await page.evaluate(() => tripCost({ d: "VDO", price: 3000, dep: "2026-11-14" })) !== null) problems.push("沒有酒店參考價的城市不該顯示整趟旅費");
     // 系統設定「減少動態」時，照片上不能有飄落的楓葉／雪
     if (await page.$(".fx")) problems.push("減少動態時還有季節飄落特效");
+    // 減少動態時：分段滑塊照樣對準（只是不滑），點連結不放小飛機、卡片價格不跳數字
+    const thr = await page.evaluate(() => { const t = document.querySelector("#tripType .thumb"), b = document.querySelector('#tripType button[aria-pressed="true"]');
+      return t && b ? Math.abs(parseFloat(t.style.width) - b.offsetWidth) : -1; });
+    if (!(thr >= 0 && thr <= 1)) problems.push(`減少動態時來回／單程的滑塊沒對準：${thr}`);
     // 雷達預算：拉到某個價錢，超過的城市變淡，文字說能飛幾個城市
     if (await page.isVisible("#rbud")) {
       const bud = await page.evaluate(() => {
