@@ -485,6 +485,72 @@ try {
     await page.close();
   }
 
+  // 再次打開秒開：第一次存下資料；第二次網路很慢時先用存的畫出卡片，新資料到了整個換掉（舊價格不留）
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const p1 = await ctx.newPage();
+    await p1.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await p1.goto(base); await p1.waitForSelector("#flightList .card");
+    const saved = await p1.evaluate(() => { try { return JSON.parse(localStorage.getItem("howtravle_data_v1")).rows.length; } catch(e) { return 0; } });
+    if (!saved) problems.push("第一次打開沒有存下資料（再次打開不會秒開）");
+    await p1.close();
+    // 新資料：富國島那條航線沒了（傳統航空資料也沒有富國島）、大阪變便宜
+    const FRESH = { updated_at: new Date().toISOString(), rows: MOCK.rows.filter(r => r.destination !== "PQC").map(r => r.destination === "OSA" ? { ...r, price: r.price - 1000 } : r) };
+    let release; const gate = new Promise(r => { release = r; });
+    const p2 = await ctx.newPage();
+    await p2.route("**/*workers.dev/**", async r => { await gate; r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : FRESH) }); });
+    await p2.goto(base);
+    await p2.waitForSelector("#flightList .card", { timeout: 1500 }).catch(() => problems.push("再次打開時網路慢，沒有先用存的資料畫出卡片"));
+    if (!(await p2.textContent("#updated")).includes("正在更新")) problems.push("用存的資料時沒有標示「正在更新」");
+    if (!(await p2.evaluate(() => state.flights.some(f => canon(f.d) === "PQC")))) problems.push("存的資料裡應該還有富國島");
+    release();
+    await p2.waitForFunction(() => !document.querySelector("#updated").textContent.includes("正在更新"), null, { timeout: 5000 }).catch(() => problems.push("新資料到了沒有換掉「正在更新」"));
+    const after = await p2.evaluate(() => ({ sel: state.flights.some(f => canon(f.d) === "PQC"),
+      osa: Math.min(...state.flights.filter(f => canon(f.d) === "OSA").map(f => f.price)) }));
+    if (after.sel) problems.push("新資料到了，已經沒有的航線（富國島）還留在畫面資料裡");
+    if (after.osa !== 4980) problems.push(`新資料到了，大阪價格沒有更新：${after.osa}`);
+    // 超過 6 小時的舊資料不用
+    await p2.evaluate(() => { const c = JSON.parse(localStorage.getItem("howtravle_data_v1")); c.t = Date.now() - 7 * 3600e3; localStorage.setItem("howtravle_data_v1", JSON.stringify(c)); });
+    const p3 = await ctx.newPage();
+    await p3.route("**/*workers.dev/**", r => new Promise(() => {})); // 永遠不回
+    await p3.goto(base); await p3.waitForTimeout(1200);
+    if (await p3.$("#flightList .card")) problems.push("超過 6 小時的舊資料不該拿來顯示");
+    await ctx.close();
+  }
+
+  // 酒店城市卡：順便看機票（就算機票分頁選了別的出發地，也找全部出發地最便宜的來回）；回到最上面的小飛機
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.goto(base); await page.waitForSelector("#flightList .card");
+    await page.click('#origin button[data-v="KHH"]');
+    await page.click('.tabs button[data-tab="hotels"]');
+    const fly = await page.$('#hotelCities .hc-fly[data-hroute$="-OSA"]');
+    if (!fly) problems.push("大阪酒店卡沒有「來回機票」");
+    else {
+      if (!(await fly.textContent()).includes("5,980")) problems.push(`大阪酒店卡的機票價格不對：${await fly.textContent()}`);
+      await fly.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("點酒店卡的機票沒有打開價格日曆"));
+      const head = await page.textContent("#sheet .sh-head .city").catch(() => "");
+      if (!head.includes("大阪")) problems.push(`酒店卡打開的價格日曆不是大阪：${head}`);
+      const pops = []; page.on("popup", p => pops.push(p)); await page.waitForTimeout(200);
+      if (pops.length) problems.push("點酒店卡的機票不該直接打開 Trip.com 酒店頁");
+      await page.keyboard.press("Escape");
+    }
+    if ((await page.evaluate(() => state.origin)) !== "KHH") problems.push("看酒店卡機票價格後，機票分頁原本選的出發地被改掉");
+    // 回到最上面
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight)); await page.waitForTimeout(300);
+    if (!(await page.isVisible("#toTop.show"))) problems.push("捲到很下面沒有出現「回到最上面」");
+    await page.click("#toTop"); await page.waitForTimeout(400);
+    if ((await page.evaluate(() => scrollY)) > 5) problems.push("按「回到最上面」沒有回到頂端");
+    await page.waitForTimeout(300);
+    if (await page.isVisible("#toTop.show")) problems.push("回到頂端後「回到最上面」應該收起來");
+    await page.close();
+  }
+
   // 電腦滑鼠：機票卡照片跟著滑鼠傾斜、有光；滑鼠離開恢復
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "no-preference" });

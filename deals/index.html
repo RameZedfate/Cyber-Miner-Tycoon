@@ -297,6 +297,25 @@
   .when b{font-weight:500;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .when .dm{flex:0 0 auto;white-space:nowrap}
   .when.tap{cursor:pointer;position:relative;z-index:2} /* 日期那一行點了開價格日曆，其他地方點了去訂票 */
+  /* 酒店城市卡：順便看機票（點了開那個城市的價格日曆，其他地方點了去看酒店） */
+  .hc-fly{position:relative;z-index:2;display:flex;align-items:center;gap:5px;width:100%;margin-top:6px;padding:7px 9px;border:0;border-radius:10px;
+    background:var(--soft);color:var(--ink-2);font-size:12.5px;font-weight:600;text-align:left;min-width:0}
+  .hc-fly .ic{width:14px;height:14px;flex:0 0 auto;color:var(--blue);transform:rotate(45deg)}
+  .hc-fly span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hc-fly b{color:var(--ink);font-weight:800}
+  .hc-fly b .cur{font-size:.8em;font-weight:700}
+  .hc-fly i{font-style:normal;color:var(--muted);font-weight:700}
+  @media (max-width:359px){ .hc-fly{font-size:12px;padding:7px 7px;gap:4px} }
+  /* 回到最上面：右下角一架往上的小飛機，往下捲很遠才出現 */
+  .totop{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:50;width:46px;height:46px;border-radius:999px;border:0;
+    display:flex;align-items:center;justify-content:center;background:rgba(11,35,64,.92);color:var(--yellow);box-shadow:0 8px 24px rgba(11,35,64,.35);
+    opacity:0;transform:translateY(16px) scale(.8);pointer-events:none;transition:opacity .25s ease, transform .3s cubic-bezier(.2,1.4,.4,1)}
+  .totop.show{opacity:1;transform:none;pointer-events:auto}
+  .totop .ic{width:22px;height:22px}
+  .totop:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+  body.lock .totop{display:none}
+  .anim .totop.go .ic{animation:totopfly .55s cubic-bezier(.5,0,.75,0) forwards}
+  @keyframes totopfly{to{transform:translateY(-70px) scale(.6);opacity:0}}
   .more-d{position:relative;z-index:2;flex:0 0 auto;border:0;background:none;padding:0;height:22px;line-height:22px;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
   .memo{font-size:13.5px;color:var(--ink-2)}
   .card.pick .ph{box-shadow:0 0 0 3px var(--yellow)}
@@ -824,6 +843,7 @@
   </div>
 </section>
 
+<button class="totop" id="toTop" aria-label="回到最上面" tabindex="-1"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"></svg></button>
 <div class="sheet hidden" id="sheet" role="dialog" aria-modal="true" aria-label="航線詳情">
   <div class="sheet-bg" data-close></div>
   <div class="sheet-panel">
@@ -1811,6 +1831,20 @@ function hotelDateOptions(){
   if (h) opts.push({ checkin: h.start, checkout: h.end, t: h.name });
   return opts;
 }
+// 某個城市最便宜的來回機票（便宜機票分頁、不限出發地），酒店城市卡用
+function withAllOrigins(fn){ const o = state.origin; state.origin = ""; try { return fn(); } finally { state.origin = o; } }
+function cityFlightDeal(c){
+  return withMode("all", "rt", () => withAllOrigins(() => {
+    let best = null;
+    for (const o of new Set(Object.values(ORIGIN_GROUP))) for (const f of routeFlights(o, c)) if (!best || f.price < best.price) best = f;
+    return best;
+  }));
+}
+// 從酒店城市卡打開那個城市的價格日曆（便宜機票・來回、不限出發地）
+function openHotelRoute(o, d){
+  const html = withMode("all", "rt", () => withAllOrigins(() => routeSheetHTML(o, d)));
+  if (html) openSheet(html, true);
+}
 function renderHotelCities(){
   const opts = hotelDateOptions();
   if (!(state.hDate < opts.length)) state.hDate = 0;
@@ -1822,7 +1856,7 @@ function renderHotelCities(){
     .sort((a, b) => (HOTEL_REF[a] || [1e9])[0] - (HOTEL_REF[b] || [1e9])[0]);
   const cards = codes.map(c => {
     const url = hotelCityUrl(c, checkin, checkout); if (!url) return "";
-    const lm = LANDMARKS[c], co = countryOf(c), ref = HOTEL_REF[c];
+    const lm = LANDMARKS[c], co = countryOf(c), ref = HOTEL_REF[c], fl = state.loaded ? cityFlightDeal(c) : null;
     return `<article class="card hc">
       <a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(cityName(c))}酒店，看 Trip.com 房價"></a>
       <div class="ph g-${esc(co || "")}">${photoHTML(lm && lm[0], co, lm ? lm[1] : cityName(c), 640, false)}
@@ -1830,6 +1864,7 @@ function renderHotelCities(){
       <div class="cb">
         <div class="top-row"><span class="cty">${esc(cityName(c))}</span></div>
         <div class="air"><span class="an">${esc([COUNTRIES[co], `${nights} 晚參考`].filter(Boolean).join("・"))}</span></div>
+        ${fl ? `<button class="hc-fly" data-hroute="${esc(fl.o)}-${esc(c)}" aria-label="看${esc(cityName(c))}的來回機票價格日曆，${money(fl.price)} 起">${icon("plane")}<span>機票 <b>${priceHTML(fl.price)}</b></span><i aria-hidden="true">›</i></button>` : ""}
       </div>
     </article>`;
   }).join("");
@@ -1918,23 +1953,54 @@ async function loadExtras(){
   const parts = (CONFIG.extraUrls || []).map(u => getJSON(u).then(j => mergeAndRender(j && j.rows)).catch(() => {}));
   Promise.race([Promise.allSettled(parts), new Promise(r => setTimeout(r, 10000))]).then(settleData);
 }
+// 再次打開時秒開：把上次抓到的主要資料存在粉絲自己的瀏覽器（6 小時內有效），
+// 先用它畫出畫面，新資料到了再整個換掉（價格是預估價，幾秒的舊資料沒關係）
+const DATA_CACHE_KEY = "howtravle_data_v1", DATA_CACHE_MAX = 6 * 3600e3;
+function readDataCache(){
+  try { const c = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || "null");
+    return c && Array.isArray(c.rows) && c.rows.length && Date.now() - c.t < DATA_CACHE_MAX ? c : null; } catch(e) { return null; }
+}
+function writeDataCache(rows, updatedAt){
+  try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ t: Date.now(), u: updatedAt || null, rows })); } catch(e) { /* 空間不夠就算了 */ }
+}
+function resetFlights(){ state.flights = []; flightKeys.clear(); flightsVersion++; }
+function renderAllFlights(){ renderHero(); renderFlights(); renderHotelCities(); renderBrandTag(); }
+let fromCache = false;
 async function loadFlights(){
   const fscP = CONFIG.fscUrl ? getJSON(CONFIG.fscUrl).catch(() => null) : Promise.resolve(null);
+  const cached = readDataCache();
+  if (cached && addRows(cached.rows)){
+    fromCache = true; state.loaded = true; state.updatedAt = cached.u;
+    $("#updated").textContent = `預估價・更新於 ${cached.u ? fmtTime(cached.u) : "稍早"}・正在更新`;
+    state.month = bestMonth();
+    renderAllFlights();
+  }
+  let fresh = null;
   for (const url of CONFIG.dataUrls.filter(Boolean)){
     try {
       const j = await getJSON(url);
       const fscRows = ((await fscP) || {}).rows || [];
-      if (addRows([].concat(j.rows || [], j.data || [], j.air || [], fscRows))){ state.updatedAt = j.updated_at || null; break; }
+      const rows = [].concat(j.rows || [], j.data || [], j.air || [], fscRows);
+      if (rows.some(r => normalize(r))){ fresh = { rows, u: j.updated_at || null }; break; }
     } catch(e) { /* 換下一個來源 */ }
   }
-  state.loaded = true;
-  $("#updated").textContent = state.flights.length
-    ? `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "今天"}` : "";
-  state.month = bestMonth();
-  renderHero();
-  renderFlights();
-  renderHotelCities();
-  renderBrandTag();
+  if (fresh){
+    const keepMonth = fromCache ? state.month : null;
+    if (fromCache) resetFlights(); // 用新資料整個換掉，舊價格不留
+    addRows(fresh.rows); state.updatedAt = fresh.u; fromCache = false;
+    writeDataCache(fresh.rows, fresh.u);
+    state.loaded = true;
+    $("#updated").textContent = `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "今天"}`;
+    // 粉絲已經在看的月份還有票就不跳走
+    state.month = keepMonth && baseFiltered().some(f => f.dep.startsWith(keepMonth)) ? keepMonth : bestMonth();
+  } else {
+    state.loaded = true;
+    $("#updated").textContent = state.flights.length
+      ? `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "稍早"}${fromCache ? "（暫時連不上，先顯示上次的價格）" : ""}` : "";
+    if (!fromCache) state.month = bestMonth();
+  }
+  // 粉絲已經在滑大圖（用存的資料畫的）就不重畫大圖，免得被拉回第一張
+  if (cached && heroTouched){ renderFlights(); renderHotelCities(); renderBrandTag(); } else renderAllFlights();
   openRouteFromUrl();
   loadExtras();
 }
@@ -2389,6 +2455,7 @@ document.addEventListener("scroll", unpress, { passive: true, capture: true });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.closest("[data-close]")){ closeSheet(); return; }
+  const hr = t.closest("[data-hroute]"); if (hr){ const [o, d] = hr.dataset.hroute.split("-"); openHotelRoute(o, d); return; }
   const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); openRouteFrom(r, o, d); return; }
   const sh = t.closest("[data-share]"); if (sh){ const [o, d] = sh.dataset.share.split("-"); shareRoute(o, d, sh.dataset.smode, sh.dataset.stype); return; }
   if (t.closest("#luckyBtn") || t.closest("#again")){ lucky(); return; }
@@ -2680,6 +2747,19 @@ if (MOTION && "IntersectionObserver" in window){
     const svg = e.target.querySelector(".fp"); if (svg && svg.pauseAnimations) e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations(); } }).observe($("#hero"));
 }
 // ====================== 特效（第 3 輪） ======================
+// 回到最上面的小飛機：捲超過兩個畫面高才出現
+{
+  const tt = $("#toTop"); tt.querySelector("svg").innerHTML = ICONS.plane.slice(1);
+  let shown = false, ticking = false;
+  const upd = () => { ticking = false; const on = scrollY > innerHeight * 2;
+    if (on !== shown){ shown = on; tt.classList.toggle("show", on); tt.tabIndex = on ? 0 : -1; } };
+  addEventListener("scroll", () => { if (!ticking){ ticking = true; requestAnimationFrame(upd); } }, { passive: true });
+  tt.addEventListener("click", () => {
+    tt.classList.remove("go"); void tt.offsetWidth; tt.classList.add("go");
+    scrollTo({ top: 0, behavior: MOTION ? "smooth" : "auto" });
+    setTimeout(() => tt.classList.remove("go"), 700);
+  });
+}
 // 捲出畫面的區塊加 .offscreen，裡面重複播放的動畫（星星、旋轉外圈、骰子、雷達）暫停
 if (MOTION && "IntersectionObserver" in window){
   const offIO = new IntersectionObserver(es => { for (const e of es) e.target.classList.toggle("offscreen", !e.isIntersecting); });
