@@ -44,6 +44,19 @@
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-text-size-adjust:100%;
     -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   body{overflow-x:hidden;isolation:isolate}
+  /* 背景裝飾層 */
+  .bgdeco{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  .bgdeco .blob{position:absolute;border-radius:50%;width:70vmax;height:70vmax;will-change:transform}
+  .bgdeco .b1{left:-28vmax;top:-30vmax;background:radial-gradient(circle,rgba(37,99,235,.16),rgba(37,99,235,0) 62%)}
+  .bgdeco .b2{right:-30vmax;top:-18vmax;background:radial-gradient(circle,rgba(255,176,32,.20),rgba(255,176,32,0) 62%)}
+  .bgdeco .b3{left:20vmax;bottom:-42vmax;background:radial-gradient(circle,rgba(225,29,72,.10),rgba(124,58,237,.05) 40%,rgba(124,58,237,0) 64%)}
+  .anim .bgdeco .b1{animation:drift1 38s ease-in-out infinite alternate}
+  .anim .bgdeco .b2{animation:drift2 46s ease-in-out infinite alternate}
+  .anim .bgdeco .b3{animation:drift1 52s ease-in-out infinite alternate-reverse}
+  @keyframes drift1{to{transform:translate(12vmax,8vmax) scale(1.08)}}
+  @keyframes drift2{to{transform:translate(-10vmax,10vmax) scale(.94)}}
+  .bgdeco .routes{position:absolute;inset:0;width:100%;height:100%}
+  .bgdeco .routes{transform:translateZ(0)} /* 自己一層，捲動時不重畫 */
   /* 背景質感：暖白底＋左上淡藍、右上淡金的光暈＋很細的顆粒（固定不動，畫在內容下面） */
   body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     background:
@@ -137,7 +150,7 @@
   .hero.cf{--sw:84%;background:transparent;border-radius:0;overflow:hidden;margin:4px 0 0}
   @media (max-width:379px){ .hero.cf{--sw:86%} }
   @media (min-width:760px){ .hero.cf{--sw:74%} }
-  @media (min-width:1000px){ .hero.cf{--sw:70%} }
+  @media (min-width:1000px){ .hero.cf{--sw:min(70%, 1128px)} } /* 超寬螢幕時跟下面內容一樣寬 */
   .cf .hero-track{position:relative;gap:12px;padding:14px calc((100% - var(--sw)) / 2) 46px}
   /* 軌道左右留白＝(100% - 卡片寬)/2，卡片＝軌道內容寬的 100%，第一張剛好在正中間 */
   .slide > .s3d{position:absolute;inset:0;overflow:hidden}
@@ -208,6 +221,35 @@
   .tile[aria-pressed="true"] .ring{background:var(--navy)}
   .tile[aria-pressed="true"] .t b{color:var(--navy)}
 
+  /* ---------- 找機票面板：毛玻璃卡片 ---------- */
+  .finder{position:relative;margin-top:30px;padding:20px 16px 12px;border-radius:24px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);
+    border:1px solid rgba(255,255,255,.95);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 24px 60px -28px rgba(11,35,64,.38),0 6px 16px -6px rgba(11,35,64,.08)}
+  /* 上緣一條品牌色細線 */
+  .finder::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#FFC72C,#FF8A00 40%,#E11D48 75%,#7C3AED)}
+  .finder .f-mark{position:absolute;right:-26px;top:-30px;width:170px;height:170px;fill:var(--navy);opacity:.045;transform:rotate(35deg);pointer-events:none}
+  .finder h2.sec{margin-top:0}
+  .finder .sub{margin-bottom:0}
+  .finder .panel{margin-top:14px;padding-top:8px;border-top:1px solid rgba(17,24,39,.07)}
+  .finder .prow{padding:6px 0}
+  /* 卡片裡的月份、條件按鈕：淡灰底不加框（白卡片上更乾淨） */
+  .finder .month{background:#F4F5F7;border-color:transparent;transition:background .2s, box-shadow .2s}
+  .finder .month[aria-pressed="true"]{background:linear-gradient(135deg,#0B2340,#16386A);box-shadow:0 8px 18px -8px rgba(11,35,64,.6)}
+  .finder .chip{background:#F4F5F7;border-color:transparent}
+  .finder .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);box-shadow:0 6px 14px -6px rgba(17,24,39,.5)}
+  .finder .seg{background:#ECEEF2}
+  @media (hover:hover){ .finder .month:not([aria-pressed="true"]):hover, .finder .chip:not([aria-pressed="true"]):hover{background:#ECEEF2} }
+  @media (min-width:760px){
+    .finder{padding:26px 28px 16px}
+    .finder .panel{display:grid;row-gap:2px}
+    /* 電腦版：每排左邊一個小標籤（行程／月份／條件） */
+    .finder .prow{display:grid;grid-template-columns:56px minmax(0,1fr);align-items:center;gap:12px}
+    .finder .plbl.sr-only{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;white-space:nowrap;
+      font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.5px}
+    .finder .scroller{margin:0;padding:2px 0}
+  }
   /* ---------- 篩選（沒有外框，像 Google Flights 的膠囊列） ---------- */
   .panel{margin-top:6px}
   .prow{display:block;padding:5px 0}
@@ -736,6 +778,27 @@
 </style>
 </head>
 <body>
+<!-- 背景裝飾：慢慢飄的光暈＋淡淡的航線、地球經緯線（固定不動、在內容下面） -->
+<div class="bgdeco" aria-hidden="true">
+  <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i>
+  <svg class="routes" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <g fill="none" stroke="#0B2340" stroke-linecap="round">
+      <path d="M-40 760 C 300 520, 640 520, 900 300 S 1300 80, 1500 120" stroke-opacity=".07" stroke-width="1.4" stroke-dasharray="2 9"/>
+      <path d="M-60 300 C 260 180, 520 260, 760 160 S 1180 -20, 1500 40" stroke-opacity=".05" stroke-width="1.2" stroke-dasharray="2 10"/>
+      <path d="M200 960 C 420 700, 820 760, 1060 560 S 1380 420, 1520 460" stroke-opacity=".06" stroke-width="1.2" stroke-dasharray="2 9"/>
+      <g stroke-opacity=".07" stroke-width="1.1">
+        <circle cx="1290" cy="170" r="150"/><ellipse cx="1290" cy="170" rx="150" ry="52"/><ellipse cx="1290" cy="170" rx="150" ry="104"/>
+        <ellipse cx="1290" cy="170" rx="52" ry="150"/><ellipse cx="1290" cy="170" rx="104" ry="150"/><path d="M1140 170 H1440 M1290 20 V320"/>
+      </g>
+      <g stroke-opacity=".06" stroke-width="1.1">
+        <circle cx="120" cy="760" r="120"/><ellipse cx="120" cy="760" rx="120" ry="42"/><ellipse cx="120" cy="760" rx="42" ry="120"/><ellipse cx="120" cy="760" rx="84" ry="120"/>
+      </g>
+    </g>
+    <g fill="#0B2340" fill-opacity=".10">
+      <circle cx="900" cy="300" r="3"/><circle cx="760" cy="160" r="2.5"/><circle cx="1060" cy="560" r="2.5"/><circle cx="380" cy="590" r="2"/>
+    </g>
+  </svg>
+</div>
 <div class="brandbar">
   <div class="wrap">
     <div class="brand"><span class="ping" aria-hidden="true"></span>HOWTRAVLE <b>便宜票雷達</b></div>
@@ -775,6 +838,9 @@
       <div id="pickList"></div>
     </section>
 
+    <!-- 找機票面板：毛玻璃卡片（標題＋行程／出發地＋月份＋條件） -->
+    <section class="finder" aria-labelledby="fTitle">
+    <svg class="f-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></svg>
     <div id="listTop">
       <h2 class="sec" id="fTitle">便宜機票</h2>
       <p class="sub" id="fSub">預估最低價</p>
@@ -782,7 +848,7 @@
 
     <div class="panel">
       <!-- 來回／單程、出發地放同一排（放不下時可以左右滑） -->
-      <div class="prow"><span class="plbl sr-only">行程與出發地</span><div class="pctl"><div class="scroller segs">
+      <div class="prow"><span class="plbl sr-only">行程</span><div class="pctl"><div class="scroller segs">
         <div class="seg" id="tripType" role="group" aria-label="來回或單程">
           <button aria-pressed="true" data-v="rt">來回</button>
           <button aria-pressed="false" data-v="ow">單程</button>
@@ -794,6 +860,7 @@
       <div class="prow"><span class="plbl sr-only">月份</span><div class="pctl"><div class="scroller" id="months" role="group" aria-label="出發月份"></div></div></div>
       <div class="prow"><span class="plbl sr-only">條件</span><div class="pctl"><div class="scroller" id="filters" role="group" aria-label="條件"></div></div></div>
     </div>
+    </section>
     <div class="meta-row"><span id="updated">讀取中…</span><span class="mr-r"><button class="clear-c hidden" id="clearC"></button><span id="count"></span></span></div>
     <div class="grid" id="flightList">
       <div class="skel"><div class="a"></div><div class="b"></div></div>
