@@ -279,7 +279,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".hc-fly span", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         const s3 = el.closest(".s3d"); if (s3 && s3.style.transform) continue; // 3D 轉到旁邊的輪播卡片不量

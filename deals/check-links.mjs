@@ -163,11 +163,15 @@ try {
     await page.click('.tabs button[data-tab="flights"]');
     await page.click('#filters button[data-v="cheap"]');
     // 找到有「看全部日期」的月份
-    let routeBtn = await page.$("#flightList [data-route]");
+    // 優先挑有酒店城市代碼的目的地（才測得到「順便看酒店」）；哪張卡排第一會隨日期變
+    const pickRoute = () => page.evaluateHandle(() => {
+      const bs = [...document.querySelectorAll("#flightList [data-route]")];
+      return bs.find(b => HOTEL_CITY[canon(b.dataset.route.split("-")[1])]) || bs[0] || null; }).then(h => h.asElement());
+    let routeBtn = await pickRoute();
     for (const m of await page.$$eval("#months button", bs => bs.map(b => b.dataset.v))) {
       if (routeBtn) break;
       await page.click(`#months button[data-v="${m}"]`);
-      routeBtn = await page.$("#flightList [data-route]");
+      routeBtn = await pickRoute();
     }
     if (!routeBtn) problems.push("卡片沒有「看全部日期」按鈕：" + JSON.stringify(await page.evaluate(() => ({ mode: state.mode, type: state.type, tab: state.tab, budget: state.budget, origin: state.origin, country: state.country, filter: state.filter, n: state.flights.length, osa: routeFlights("TPE", "OSA").length, cards: document.querySelectorAll("#flightList .card").length }))));
     else {
@@ -379,6 +383,7 @@ try {
     await page.$eval("#hero .slide:nth-child(2) .pass", a => a.click());
     await page.waitForTimeout(900);
     if (pops.length) problems.push("點旁邊的輪播卡片直接打開了訂票頁（應該先轉到中間）");
+    if (await page.$(".takeoff")) problems.push("點旁邊的輪播卡片（沒打開連結）不該放起飛小飛機");
     const mid = await page.$eval("#hero .slide:nth-child(2) .s3d", e => e.style.transform);
     if (mid) problems.push(`點旁邊的輪播卡片後沒有轉到中間：${mid}`);
     // 點擊感：手指按下卡片時縮一下，放開後恢復；按鈕有水波
@@ -400,9 +405,166 @@ try {
       if (!(await more.$(".rip"))) problems.push("按鈕按下去沒有水波");
       await page.mouse.up();
     }
+    // 第 3 輪特效
+    // 分頁的白色滑塊：點「傳統航空」後滑到那顆上面
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.click('.tabs button[data-tab="fsc"]'); await page.waitForTimeout(600);
+    const th = await page.evaluate(() => { const t = document.querySelector(".tabs .thumb"), b = document.querySelector('.tabs button[data-tab="fsc"]');
+      return t ? { w: parseFloat(t.style.width), x: Number((t.style.transform.match(/-?[\d.]+/) || [NaN])[0]), bw: b.offsetWidth, bx: b.offsetLeft } : null; });
+    if (!th || Math.abs(th.w - th.bw) > 1 || Math.abs(th.x - th.bx) > 1) problems.push(`分頁滑塊沒有滑到選的那顆：${JSON.stringify(th)}`);
+    await page.click('.tabs button[data-tab="flights"]'); await page.waitForTimeout(300);
+    // 出發地滑塊：用程式改選取（例如分享連結）也要跟著動
+    await page.click('#origin button[data-v="KHH"]'); await page.waitForTimeout(500);
+    const oth = await page.evaluate(() => { const t = document.querySelector("#origin .thumb"), b = document.querySelector('#origin button[data-v="KHH"]');
+      return Math.abs(Number((t.style.transform.match(/-?[\d.]+/) || [NaN])[0]) - b.offsetLeft); });
+    if (!(oth <= 1)) problems.push(`出發地滑塊沒有跟著選取移動（差 ${oth}px）`);
+    await page.click('#origin button[data-v=""]'); await page.waitForTimeout(300);
+    // 進度條：往下捲會變長；卡片照片有景深位移
+    await page.evaluate(() => scrollTo(0, 1200)); await page.waitForTimeout(400);
+    const pr = await page.$eval(".progress", p => Number(p.dataset.p));
+    if (!(pr > 0.05)) problems.push(`往下捲後進度條沒有變長：${pr}`);
+    if (!(await page.evaluate(() => [...document.querySelectorAll(".card .ph")].some(e => e.dataset.py && e.querySelector(".bgimg") && e.querySelector(".bgimg").style.translate))))
+      problems.push("機票卡照片沒有捲動景深");
+    // 點訂票連結：小飛機起飛，一下就消失
+    const cl = await page.$("#flightList .card .card-link"); await cl.scrollIntoViewIfNeeded();
+    const clb = await cl.boundingBox();
+    const popP = page.waitForEvent("popup", { timeout: 3000 }).catch(() => null);
+    // 點卡片正中間（卡片可能剛好捲到最上面、被固定的分頁列蓋住上緣）
+    await page.mouse.click(clb.x + clb.width / 2, clb.y + clb.height / 2);
+    if ((await page.$$(".takeoff")).length !== 1) problems.push("點訂票連結沒有小飛機起飛");
+    await page.waitForTimeout(1100);
+    if ((await page.$$(".takeoff")).length) problems.push("起飛的小飛機沒有自己消失");
+    const pp = await popP; if (pp) await pp.close();
+    // 大圖圓點像限時動態一樣填滿；頂部張數跳完要是正確數字；訂票按鈕有光掃過
+    // 先把滑鼠移到左上角（品牌列）再捲回頂端，不然滑鼠停在大圖上，大圖會暫停（圓點不填）
+    await page.mouse.move(5, 5); await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(300);
+    if (await page.$("#hero.hold")) await page.waitForTimeout(4300);
+    const dotAnim = await page.$eval('#heroDots button[aria-current="true"]', b => getComputedStyle(b, "::after").animationName);
+    if (dotAnim !== "fill") problems.push(`大圖圓點沒有限時動態的填滿動畫：${dotAnim}`);
+    const want = await page.evaluate(() => { const t = todayTW(); return state.flights.filter(f => f.dep > t).length.toLocaleString("en-US"); });
+    const got = await page.textContent("#brandTag b").catch(() => "");
+    if (got !== want) problems.push(`頂部低價票張數跳完不對：${got}（應為 ${want}）`);
+    await page.evaluate(() => openRoute("TPE", "OSA")); await page.waitForTimeout(400);
+    const ctaAnim = await page.$eval("#sheet .sh-sticky .cta", a => getComputedStyle(a, "::after").animationName).catch(() => "none");
+    if (ctaAnim !== "ctashine") problems.push(`訂票按鈕沒有光掃過：${ctaAnim}`);
+    // 價格日曆：最便宜的那天（只有那幾天）有呼吸光圈
+    const best = await page.evaluate(() => { const ds = [...document.querySelectorAll("#sheet .day[data-day]")];
+      const p = (d) => Number(d.querySelector(".p").textContent.replace(/,/g, "")), min = Math.min(...ds.map(p));
+      return { wrong: ds.filter(d => d.classList.contains("best") !== (p(d) === min)).length, n: ds.filter(d => d.classList.contains("best")).length,
+        anim: (document.querySelector("#sheet .day.best") ? getComputedStyle(document.querySelector("#sheet .day.best"), "::after").animationName : "none") }; });
+    if (best.wrong || !best.n) problems.push(`價格日曆最便宜那天的光圈標錯：${JSON.stringify(best)}`);
+    if (best.anim !== "breathe") problems.push(`最便宜那天沒有呼吸光圈：${best.anim}`);
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 幫我選：機場翻牌看板，每個字一塊牌，停下來的字跟抽中的城市一樣
+    await page.click("#luckyBtn");
+    await page.waitForSelector("#sheet .slot .flap", { timeout: 3000 }).catch(() => problems.push("幫我選沒有翻牌看板"));
+    const flapOk = await page.$$eval("#slotName .flap", fs => fs.length > 0 && fs.every(f => [...f.textContent].length === 1));
+    if (!flapOk) problems.push("翻牌看板每塊牌應該只有一個字");
+    await page.waitForSelector("#sheet .win h3", { timeout: 5000 }).catch(() => problems.push("翻牌後沒有出現抽中的結果"));
+    // 收藏：愛心噴出 8 顆小愛心，一下就消失
+    const wf = await page.$('#sheet .btn2.fav-btn[aria-pressed="false"]');
+    if (wf) {
+      await wf.click(); await page.waitForTimeout(120);
+      if ((await page.$$(".hburst i")).length !== 8) problems.push("收藏時沒有噴出小愛心");
+      await page.waitForTimeout(1100);
+      if (await page.$(".hburst")) problems.push("噴出的小愛心沒有自己消失");
+      await page.click('#sheet .btn2.fav-btn'); // 取消，回到原本狀態
+    }
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 雷達夜空有星星；從卡片點「N 組日期」也能正常打開價格日曆（有轉場時）
+    if ((await page.$$("#radarSec > .stars i")).length < 10) problems.push("雷達區塊沒有星星");
+    const wt = await page.$("#flightList .when.tap"); await wt.scrollIntoViewIfNeeded();
+    await wt.click();
+    await page.waitForSelector("#sheet:not(.hidden) .sh-head", { timeout: 3000 }).catch(() => problems.push("從卡片打開價格日曆失敗（轉場）"));
+    await page.waitForTimeout(600);
+    if (await page.evaluate(() => [...document.querySelectorAll("*")].some(e => e.style && e.style.viewTransitionName))) problems.push("轉場結束後還留著 view-transition-name");
+    await page.keyboard.press("Escape");
     // 香港照片：維港夜景（一般比例的精選照片，不是會糊的超寬全景圖）
     if (!(await page.evaluate(() => LANDMARKS.HKG[0] === "File:13-08-09-peak-by-RalfR-04.jpg" && COUNTRY_PHOTO.HK[0] === LANDMARKS.HKG[0])))
       problems.push("香港照片沒換成維港夜景");
+    await page.close();
+  }
+
+  // 再次打開秒開：第一次存下資料；第二次網路很慢時先用存的畫出卡片，新資料到了整個換掉（舊價格不留）
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const p1 = await ctx.newPage();
+    await p1.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await p1.goto(base); await p1.waitForSelector("#flightList .card");
+    const saved = await p1.evaluate(() => { try { return JSON.parse(localStorage.getItem("howtravle_data_v1")).rows.length; } catch(e) { return 0; } });
+    if (!saved) problems.push("第一次打開沒有存下資料（再次打開不會秒開）");
+    await p1.close();
+    // 新資料：富國島那條航線沒了（傳統航空資料也沒有富國島）、大阪變便宜
+    const FRESH = { updated_at: new Date().toISOString(), rows: MOCK.rows.filter(r => r.destination !== "PQC").map(r => r.destination === "OSA" ? { ...r, price: r.price - 1000 } : r) };
+    let release; const gate = new Promise(r => { release = r; });
+    const p2 = await ctx.newPage();
+    await p2.route("**/*workers.dev/**", async r => { await gate; r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : FRESH) }); });
+    await p2.goto(base);
+    await p2.waitForSelector("#flightList .card", { timeout: 1500 }).catch(() => problems.push("再次打開時網路慢，沒有先用存的資料畫出卡片"));
+    if (!(await p2.textContent("#updated")).includes("正在更新")) problems.push("用存的資料時沒有標示「正在更新」");
+    if (!(await p2.evaluate(() => state.flights.some(f => canon(f.d) === "PQC")))) problems.push("存的資料裡應該還有富國島");
+    release();
+    await p2.waitForFunction(() => !document.querySelector("#updated").textContent.includes("正在更新"), null, { timeout: 5000 }).catch(() => problems.push("新資料到了沒有換掉「正在更新」"));
+    const after = await p2.evaluate(() => ({ sel: state.flights.some(f => canon(f.d) === "PQC"),
+      osa: Math.min(...state.flights.filter(f => canon(f.d) === "OSA").map(f => f.price)) }));
+    if (after.sel) problems.push("新資料到了，已經沒有的航線（富國島）還留在畫面資料裡");
+    if (after.osa !== 4980) problems.push(`新資料到了，大阪價格沒有更新：${after.osa}`);
+    // 超過 6 小時的舊資料不用
+    await p2.evaluate(() => { const c = JSON.parse(localStorage.getItem("howtravle_data_v1")); c.t = Date.now() - 7 * 3600e3; localStorage.setItem("howtravle_data_v1", JSON.stringify(c)); });
+    const p3 = await ctx.newPage();
+    await p3.route("**/*workers.dev/**", r => new Promise(() => {})); // 永遠不回
+    await p3.goto(base); await p3.waitForTimeout(1200);
+    if (await p3.$("#flightList .card")) problems.push("超過 6 小時的舊資料不該拿來顯示");
+    await ctx.close();
+  }
+
+  // 酒店城市卡：順便看機票（就算機票分頁選了別的出發地，也找全部出發地最便宜的來回）；回到最上面的小飛機
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.goto(base); await page.waitForSelector("#flightList .card");
+    await page.click('#origin button[data-v="KHH"]');
+    await page.click('.tabs button[data-tab="hotels"]');
+    const fly = await page.$('#hotelCities .hc-fly[data-hroute$="-OSA"]');
+    if (!fly) problems.push("大阪酒店卡沒有「來回機票」");
+    else {
+      if (!(await fly.textContent()).includes("5,980")) problems.push(`大阪酒店卡的機票價格不對：${await fly.textContent()}`);
+      await fly.click();
+      await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("點酒店卡的機票沒有打開價格日曆"));
+      const head = await page.textContent("#sheet .sh-head .city").catch(() => "");
+      if (!head.includes("大阪")) problems.push(`酒店卡打開的價格日曆不是大阪：${head}`);
+      const pops = []; page.on("popup", p => pops.push(p)); await page.waitForTimeout(200);
+      if (pops.length) problems.push("點酒店卡的機票不該直接打開 Trip.com 酒店頁");
+      await page.keyboard.press("Escape");
+    }
+    if ((await page.evaluate(() => state.origin)) !== "KHH") problems.push("看酒店卡機票價格後，機票分頁原本選的出發地被改掉");
+    // 回到最上面
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight)); await page.waitForTimeout(300);
+    if (!(await page.isVisible("#toTop.show"))) problems.push("捲到很下面沒有出現「回到最上面」");
+    await page.click("#toTop"); await page.waitForTimeout(400);
+    if ((await page.evaluate(() => scrollY)) > 5) problems.push("按「回到最上面」沒有回到頂端");
+    await page.waitForTimeout(300);
+    if (await page.isVisible("#toTop.show")) problems.push("回到頂端後「回到最上面」應該收起來");
+    await page.close();
+  }
+
+  // 電腦滑鼠：機票卡照片跟著滑鼠傾斜、有光；滑鼠離開恢復
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: "no-preference" });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    await page.goto(base);
+    await page.waitForSelector("#flightList .card .ph");
+    const ph = await page.$("#flightList .card .ph"); await ph.scrollIntoViewIfNeeded(); await page.waitForTimeout(700);
+    const b = await ph.boundingBox();
+    await page.mouse.move(b.x + b.width * 0.9, b.y + b.height * 0.1); await page.mouse.move(b.x + b.width * 0.85, b.y + b.height * 0.15);
+    const t = await ph.evaluate(e => ({ tilt: e.closest(".card").classList.contains("tilt"), ry: parseFloat(e.style.getPropertyValue("--ry")) }));
+    if (!t.tilt || !(t.ry > 1)) problems.push(`電腦滑鼠移到機票卡照片上沒有傾斜：${JSON.stringify(t)}`);
+    await page.mouse.move(2, 2); await page.mouse.move(3, 3);
+    if (await ph.evaluate(e => e.closest(".card").classList.contains("tilt"))) problems.push("滑鼠離開機票卡後沒有恢復");
     await page.close();
   }
 
@@ -433,6 +595,10 @@ try {
     if (await page.evaluate(() => tripCost({ d: "VDO", price: 3000, dep: "2026-11-14" })) !== null) problems.push("沒有酒店參考價的城市不該顯示整趟旅費");
     // 系統設定「減少動態」時，照片上不能有飄落的楓葉／雪
     if (await page.$(".fx")) problems.push("減少動態時還有季節飄落特效");
+    // 減少動態時：分段滑塊照樣對準（只是不滑），點連結不放小飛機、卡片價格不跳數字
+    const thr = await page.evaluate(() => { const t = document.querySelector("#tripType .thumb"), b = document.querySelector('#tripType button[aria-pressed="true"]');
+      return t && b ? Math.abs(parseFloat(t.style.width) - b.offsetWidth) : -1; });
+    if (!(thr >= 0 && thr <= 1)) problems.push(`減少動態時來回／單程的滑塊沒對準：${thr}`);
     // 雷達預算：拉到某個價錢，超過的城市變淡，文字說能飛幾個城市
     if (await page.isVisible("#rbud")) {
       const bud = await page.evaluate(() => {
