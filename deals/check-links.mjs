@@ -382,6 +382,13 @@ try {
     if (!fx[3].includes("fx-petal")) problems.push("沖繩 2 月應該飄櫻花瓣");
     if (!fx[4].includes("fx-spark")) problems.push("香港 12 月應該有聖誕閃光");
     if (fx[0] !== fx[5]) problems.push("同一個城市的飄落位置每次不一樣（重畫會跳）");
+    // 額外條件選起來時放花火，取消時不放；一下就消失
+    await page.click('#filters button[data-v="direct"]');
+    if (!(await page.$(".fw i"))) problems.push("額外條件選起來時沒有花火");
+    await page.waitForTimeout(1400);
+    if (await page.$(".fw")) problems.push("花火沒有自己消失");
+    await page.click('#filters button[data-v="direct"]');
+    if (await page.$(".fw")) problems.push("取消條件時不該放花火");
     // 大圖 3D 卡片輪播：第一張正面不轉，隔壁那張往後轉；點隔壁那張是轉過來，不是直接去訂票
     await page.waitForSelector("#hero.cf .slide:nth-child(2)", { timeout: 5000 }).catch(() => problems.push("大圖不是 3D 卡片輪播"));
     const tf = await page.$$eval("#hero .slide .s3d", els => els.slice(0, 2).map(e => e.style.transform));
@@ -749,6 +756,24 @@ try {
     if (!(await page.textContent("#fSub")).includes(`${Number(km[0].slice(5))}月出發`)) problems.push("選了月份後副標沒寫那個月");
     await page.click('#months button[data-v=""]');
     if ((await page.evaluate(() => state.month)) !== "" || !(await page.$("#months.all"))) problems.push("點「全部」月份沒有回到全部");
+    // 一條克萊茵藍的線只連選到的：來回 → 高雄 → 那個月（選「全部」就連到「全部」）
+    const pathTo = async () => page.evaluate(() => { const t = document.querySelector(".tree"), T = t.getBoundingClientRect(), pts = JSON.parse(t.querySelector(".t-path").dataset.pts);
+      const c = (q) => { const r = t.querySelector(q).getBoundingClientRect(); return Math.round(r.left - T.left + r.width / 2); };
+      return [pts.map(p => p[0]), [c('#tripType button[aria-pressed="true"]'), c('#origin button[aria-pressed="true"]'), c('#months button[aria-pressed="true"]')]]; });
+    await page.click('#origin button[data-v="KHH"]'); await page.click(`#months button[data-v="${km[1]}"]`); await page.waitForTimeout(120);
+    const [got1, want1] = await pathTo();
+    if (got1.some((x, i) => Math.abs(x - want1[i]) > 2)) problems.push(`選高雄＋${km[1]}，線沒有連到選到的按鈕：${got1} vs ${want1}`);
+    await page.click('#origin button[data-v=""]'); await page.click('#months button[data-v=""]'); await page.waitForTimeout(120);
+    const [got2, want2] = await pathTo();
+    if (got2.some((x, i) => Math.abs(x - want2[i]) > 2)) problems.push(`選全部時，線沒有連到「全部」：${got2} vs ${want2}`);
+    // 出發地有台南；免費資料沒有台南的預估價時，老實說並給「看高雄出發」「去 Trip.com 查台南出發」
+    await page.click('#origin button[data-v="TNN"]');
+    if (!(await page.textContent("#flightList")).includes("台南出發的國際線比較少")) problems.push("選台南時沒有說明台南出發的國際線比較少");
+    const tnnHref = await page.$eval('#flightList .empty a', a => a.href).catch(() => "");
+    if (!/dcity=tnn/.test(tnnHref) || !/Allianceid=7106961/.test(tnnHref)) problems.push(`台南的「去 Trip.com 查」連結不對：${tnnHref}`);
+    await page.click('#flightList [data-origin="KHH"]');
+    if ((await page.evaluate(() => state.origin)) !== "KHH") problems.push("按「看高雄出發」沒有換成高雄");
+    await page.click('#origin button[data-v=""]');
     // 選到的是克萊茵藍
     const kb = await page.$eval('#months .t-all', b => getComputedStyle(b).color);
     if (kb !== "rgb(0, 47, 167)") problems.push(`選到的按鈕不是克萊茵藍：${kb}`);

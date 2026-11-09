@@ -279,7 +279,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".hc-fly span", ".t-kid .m", ".t-kid .p", ".t-all", ".t-q", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".hc-fly span", ".t-kid .m", ".t-kid .p", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         const s3 = el.closest(".s3d"); if (s3 && s3.style.transform) continue; // 3D 轉到旁邊的輪播卡片不量
@@ -359,18 +359,23 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl:not(.sr-only)")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
-    // 樹狀選單：同一排的按鈕等寬、在框內；每顆上面的連線剛好在按鈕正中間
-    for (const kids of document.querySelectorAll(".t-kids")) {
-      if (!vis(kids)) continue;
-      const bs = [...kids.children], ws = bs.map(b => Math.round(R(b).width)), kb = R(kids);
-      if (Math.max(...ws) - Math.min(...ws) > 1) out.push(`樹狀選單同一排寬度不一：${ws.join(",")}`);
-      for (const b of bs) { const r = R(b); if (r.left < kb.left - 1 || r.right > kb.right + 1) out.push(`樹狀選單按鈕超出：${b.textContent.trim()}`);
-        if (r.right > W) out.push(`樹狀選單按鈕超出畫面：${b.textContent.trim()}`); }
-      const all = kids.parentElement.querySelector(".t-all"); if (all) { const a = R(all), mid = (kb.left + kb.right) / 2;
-        if (Math.abs((a.left + a.right) / 2 - mid) > 1.5) out.push("樹狀選單「全部」沒有在下面那排的正中間"); }
+    // 選機票：每排按鈕等寬、在框內；克萊茵藍的線剛好連到選到的那幾顆正中間
+    for (const row of document.querySelectorAll(".tree .t-opts.t-lvl")) {
+      if (!vis(row)) continue;
+      const bs = [...row.children], ws = bs.map(b => Math.round(R(b).width)), rb = R(row);
+      if (Math.max(...ws) - Math.min(...ws) > 1) out.push(`選機票同一排寬度不一：${ws.join(",")}`);
+      for (const b of bs) { const r = R(b); if (r.left < rb.left - 1 || r.right > rb.right + 1 || r.right > W) out.push(`選機票按鈕超出：${b.textContent.trim()}`);
+        if (b.scrollWidth > b.clientWidth + 1) out.push(`選機票按鈕文字被擠到：${b.textContent.trim()}`); }
     }
-    for (const q of document.querySelectorAll(".t-head .t-q")) { if (!vis(q)) continue; const r = R(q), h = R(q.closest(".finder"));
-      if (r.right > h.right - 4) out.push(`樹狀選單的問題文字超出卡片：${q.textContent}`); }
+    const tree = document.querySelector(".tree"), svg = tree && tree.querySelector(".t-path");
+    if (tree && vis(tree) && svg && svg.dataset.pts) {
+      const T = R(tree), pts = JSON.parse(svg.dataset.pts);
+      const sel = ['#tripType button[aria-pressed="true"]', '#origin button[aria-pressed="true"]', '#months button[aria-pressed="true"]'].map(q => tree.querySelector(q));
+      sel.forEach((b, i) => { if (!b) return; const r = R(b), cx = r.left - T.left + r.width / 2;
+        if (Math.abs(cx - pts[i][0]) > 1.5) out.push(`選機票的線沒有連到選到的按鈕正中間（第 ${i + 1} 個：${Math.round(cx)} vs ${pts[i][0]}）`); });
+    }
+    for (const q of document.querySelectorAll(".tree .t-lab")) { if (!vis(q)) continue; const r = R(q), h = R(q.closest(".finder"));
+      if (r.left < h.left || r.right > h.right - 4) out.push(`選機票的問題文字超出卡片：${q.textContent}`); }
     // 10. 分頁按鈕等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);

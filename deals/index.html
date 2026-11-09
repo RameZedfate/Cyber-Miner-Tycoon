@@ -238,48 +238,68 @@
   @media (min-width:760px){
     .finder{padding:26px 28px 16px}
   }
-  /* ---------- 樹狀選單（克萊茵藍＝選到的） ---------- */
-  :root{--klein:#002FA7;--klein-bg:rgba(0,47,167,.11);--klein-line:rgba(0,47,167,.55);--tline:#D3D8E0}
-  .tree{display:flex;flex-direction:column;align-items:center;max-width:620px;margin-left:auto;margin-right:auto}
-  .finder .tree.panel{display:flex}
-  .t-root{display:flex;justify-content:center}
-  .t-stem{width:2px;height:16px;background:var(--klein-line)}
-  .t-lvl{width:100%;display:flex;flex-direction:column;align-items:center}
-  .t-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;gap:10px}
-  .t-q{justify-self:start;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
-  .t-q small{display:block;font-size:11px;font-weight:600;opacity:.85}
-  .tree button.t-all, .tree button.t-kid{position:relative;border:1.5px solid transparent;background:#F2F4F7;color:var(--ink-2);font-weight:700;
-    border-radius:12px;min-height:40px;padding:6px 16px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;
-    transition:background .2s, border-color .2s, color .2s, box-shadow .2s;width:auto;text-align:center}
-  .tree button.t-all{min-width:96px;font-size:15px}
-  .tree button.t-all small{font-size:11.5px;font-weight:700;color:var(--muted);margin-top:2px}
-  .t-all::after{content:"";position:absolute;left:50%;bottom:-17.5px;width:2px;height:16px;margin-left:-1px;background:var(--tline)}
-  .t-kids{position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px;width:100%;padding-top:16px;margin-top:1.5px}
-  .t-kids::before{content:"";position:absolute;top:0;height:2px;left:calc(50% / var(--n));right:calc(50% / var(--n));background:var(--tline)}
-  .t-kid::before{content:"";position:absolute;left:50%;top:-16px;width:2px;height:16px;margin-left:-1px;background:var(--tline)}
-  .tree button.t-kid{width:100%;font-size:14px;padding:6px 4px}
-  .t-kid .m{font-size:14.5px;font-weight:800;white-space:nowrap}
+  /* ---------- 選機票（克萊茵藍＝選到的；一條線連起選到的） ---------- */
+  :root{--klein:#002FA7;--klein-bg:rgba(0,47,167,.11);--klein-line:rgba(0,47,167,.6);--labw:66px}
+  @media (min-width:760px){ :root{--labw:112px} }
+  .tree{position:relative;display:block;width:100%;margin-top:6px}
+  .finder .tree.panel{display:block}
+  .t-path{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+  .tp-line{fill:none;stroke:var(--klein);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+  .tp-dot{fill:var(--klein)}
+  .trow{position:relative;z-index:1;display:grid;grid-template-columns:var(--labw) minmax(0,1fr);align-items:center;column-gap:12px}
+  .trow + .trow{margin-top:44px}
+  @media (min-width:760px){ .trow + .trow{margin-top:54px} }
+  /* 每排左邊的問題：粗體、底下一小段克萊茵藍 */
+  .t-lab{position:relative;font-size:15.5px;font-weight:900;color:var(--navy);letter-spacing:.6px;white-space:nowrap;line-height:1.2}
+  .t-lab:not(:empty)::after{content:"";display:block;width:20px;height:3px;border-radius:2px;margin-top:6px;background:linear-gradient(90deg,var(--klein),#4F7BFF)}
+  @media (min-width:760px){ .t-lab{font-size:19px} }
+  .t-lab small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:2px}
+  .t-lab.sm{font-size:13.5px}
+  .t-lab.sm::after{display:none}
+  .t-opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  @media (min-width:760px){ .t-opts{gap:14px} }
+  .t-trip .t-opts{display:flex}
+  .tree button.t-all, .tree button.t-kid{position:relative;border:1.5px solid transparent;background:#F2F4F7;color:var(--ink-2);font-weight:800;
+    border-radius:12px;min-height:46px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;
+    width:100%;min-width:0;text-align:center;font-size:14.5px}
+  .tree button.t-all{border-style:dashed;border-color:#C9CFD9}
+  .t-kid .m, .t-all .m{font-size:14.5px;font-weight:800;white-space:nowrap}
   .t-kid .m small{font-size:10.5px;font-weight:700;margin-right:2px;color:var(--muted)}
-  .t-kid .p{font-size:11.5px;font-weight:700;color:var(--ink-2);margin-top:2px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .t-kid .p, .t-all small{font-size:11.5px;font-weight:700;color:var(--ink-2);margin-top:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .t-kid .p .cur, .t-all small .cur{font-size:.85em;font-weight:700}
   .t-kid .p.none{color:var(--muted);font-weight:600}
   .t-kid.best .p{color:var(--green)}
+  .t-all small .qi{font-style:normal}
+  @media (max-width:479px){ .t-kid .p .cur, .t-all small .cur, .t-all small .qi{display:none} .t-kid .m small{display:block;margin:0 0 1px;font-size:9.5px} }
+  @media (min-width:760px){ .tree button.t-all, .tree button.t-kid{min-height:54px;font-size:15.5px} .t-kid .m, .t-all .m{font-size:16px} .t-kid .p, .t-all small{font-size:12.5px} }
   /* 選到的：克萊茵藍半透明覆蓋 */
-  .tree button[aria-pressed="true"]{background:var(--klein-bg);border-color:var(--klein-line);color:var(--klein);box-shadow:0 0 0 3px rgba(0,47,167,.07)}
+  .tree button[aria-pressed="true"]{background:var(--klein-bg);border-color:var(--klein-line);border-style:solid;color:var(--klein);box-shadow:0 0 0 3px rgba(0,47,167,.07)}
   .tree button[aria-pressed="true"] small, .tree button[aria-pressed="true"] .p, .tree button[aria-pressed="true"] .m small{color:var(--klein)}
-  /* 「全部」：一條線連到下面每一個（整排變藍），下面每顆也淡淡上色 */
-  .t-lvl.all .t-all::after, .t-lvl.all .t-kids::before, .t-lvl.all .t-kid::before{background:var(--klein-line)}
-  .t-lvl.all .t-kid{background:rgba(0,47,167,.045);color:#1E3A8A}
-  /* 選了某一個：從「全部」那條線一路到它變藍 */
-  .t-lvl:not(.all) .t-all::after, .t-kid[aria-pressed="true"]::before{background:var(--klein-line)}
-  .t-extra{width:100%;margin-top:16px;padding-top:12px;border-top:1px dashed rgba(17,24,39,.1);display:flex;align-items:center;gap:12px}
-  .t-extra .t-q{flex:0 0 auto}
-  .t-extra .scroller{flex:1 1 auto;min-width:0;margin:0;padding:2px 0;flex-wrap:wrap;overflow:visible;row-gap:8px} /* 條件不多，換行全部看得到 */
+  /* 「全部」被選時，那排每顆淡淡上色（代表都算在內） */
+  .t-lvl.all .t-kid{background:rgba(0,47,167,.05);color:#1E3A8A}
+  .t-extra{position:relative;z-index:1;width:100%;margin-top:26px;padding-top:14px;border-top:1px dashed rgba(17,24,39,.1);display:grid;grid-template-columns:var(--labw) minmax(0,1fr);align-items:center;column-gap:12px}
+  .t-extra .scroller{min-width:0;margin:0;padding:2px 0;flex-wrap:wrap;overflow:visible;row-gap:8px} /* 條件不多，換行全部看得到 */
   .tree .chip[aria-pressed="true"]{background:var(--klein-bg);border-color:var(--klein-line);color:var(--klein);box-shadow:none}
   /* 來回／單程：滑塊也是克萊茵藍 */
   .tree .seg.has-thumb .thumb{background:var(--klein-bg);box-shadow:inset 0 0 0 1.5px var(--klein-line)}
   .tree .seg button[aria-pressed="true"]{color:var(--klein)}
   @media (hover:hover){ .tree button.t-kid:not([aria-pressed="true"]):hover, .tree button.t-all:not([aria-pressed="true"]):hover{background:#E9ECF1} }
-  @media (max-width:379px){ .tree button.t-kid{padding:6px 2px} .t-kid .m{font-size:13.5px} .t-kid .p{font-size:10.5px} .t-kids{gap:6px} .t-extra{flex-direction:column;align-items:stretch;gap:8px} }
+  .tree button.t-kid, .tree button.t-all{white-space:nowrap}
+  /* 手機：額外條件的標題放上面，條件按鈕整排寬 */
+  @media (max-width:479px){ .t-extra{grid-template-columns:minmax(0,1fr);row-gap:10px} .t-extra .t-lab small{display:inline;margin-left:6px} }
+  /* 很窄的手機：問題折成兩行（哪裡／飛？），讓按鈕寬一點 */
+  @media (max-width:379px){ :root{--labw:30px} .trow .t-lab{font-size:14px;white-space:normal;width:2.1em;line-height:1.25} .trow .t-lab::after{width:16px}
+    .trow{column-gap:8px} .t-opts{gap:5px} .tree button.t-kid, .tree button.t-all{font-size:13.5px;padding:6px 1px} .t-kid .m, .t-all .m{font-size:13.5px} .t-kid .p, .t-all small{font-size:10.5px} }
+  /* 花火 */
+  .fw{position:fixed;z-index:120;width:0;height:0;pointer-events:none}
+  .fw i{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px 1px var(--c);
+    animation:fwburst 1s cubic-bezier(.12,.75,.3,1) var(--dl,0s) both}
+  .fw i.st{left:-7px;top:-1px;width:14px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--c));animation-name:fwstreak}
+  .fw i.sp{width:3px;height:3px;left:-1.5px;top:-1.5px;animation-duration:1.25s}
+  .fw-flash{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#fff 0,rgba(255,214,107,.85) 35%,rgba(255,138,0,0) 70%);animation:fwflash .45s ease-out both}
+  @keyframes fwburst{0%{transform:translate(0,0) scale(.4);opacity:0}8%{opacity:1}65%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:1}100%{transform:translate(var(--dx),calc(var(--dy) + 22px)) scale(.3);opacity:0}}
+  @keyframes fwstreak{0%{transform:translate(0,0) rotate(var(--a)) scaleX(.2);opacity:0}10%{opacity:1}65%{transform:translate(var(--dx),var(--dy)) rotate(var(--a)) scaleX(1.2);opacity:1}100%{transform:translate(var(--dx),calc(var(--dy) + 18px)) rotate(var(--a)) scaleX(.4);opacity:0}}
+  @keyframes fwflash{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.8);opacity:0}}
   .ft-visits{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
   .ft-visits .ic{width:16px;height:16px;color:var(--klein)}
   .ft-visits b{color:var(--klein);font-weight:800;font-variant-numeric:tabular-nums}
@@ -878,22 +898,24 @@
       <p class="sub" id="fSub">預估最低價</p>
     </div>
 
-    <!-- 樹狀選單：來回／單程 → 哪邊飛？（全部／高雄／台北／台中）→ 幾月飛？（全部／各月）→ 額外條件（可複選） -->
+    <!-- 選機票：每排左邊一個粗體問題；一條克萊茵藍的線只連「選到的」：來回 → 出發地 → 月份 -->
     <div class="tree panel">
-      <div class="t-root"><div class="seg" id="tripType" role="group" aria-label="來回或單程">
-        <button aria-pressed="true" data-v="rt">來回</button>
-        <button aria-pressed="false" data-v="ow">單程</button>
+      <svg class="t-path" aria-hidden="true"><path class="tp-line"/><circle class="tp-dot d1" r="4"/><circle class="tp-dot d2" r="4"/></svg>
+      <div class="trow t-trip"><span class="t-lab" aria-hidden="true"></span><div class="t-opts">
+        <div class="seg" id="tripType" role="group" aria-label="來回或單程">
+          <button aria-pressed="true" data-v="rt">來回</button>
+          <button aria-pressed="false" data-v="ow">單程</button>
+        </div>
       </div></div>
-      <div class="t-stem" aria-hidden="true"></div>
-      <div class="t-lvl all" id="origin" role="group" aria-label="哪邊飛（出發地）">
-        <div class="t-head"><span></span><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button><span class="t-q">哪邊飛？</span></div>
-        <div class="t-kids" style="--n:3">
-          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button>
+      <div class="trow"><span class="t-lab" id="labO">哪裡飛？</span>
+        <div class="t-opts t-lvl all" id="origin" role="group" aria-labelledby="labO">
+          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button><button class="t-kid" aria-pressed="false" data-v="TNN">台南</button><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button>
         </div>
       </div>
-      <div class="t-stem" aria-hidden="true"></div>
-      <div class="t-lvl all" id="months" role="group" aria-label="幾月飛（出發月份）"></div>
-      <div class="t-extra"><span class="t-q">額外條件<small>可複選</small></span><div class="scroller" id="filters" role="group" aria-label="額外條件（可複選）"></div></div>
+      <div class="trow"><span class="t-lab" id="labM">幾月飛？</span>
+        <div class="t-opts t-lvl all" id="months" role="group" aria-labelledby="labM"></div>
+      </div>
+      <div class="t-extra"><span class="t-lab sm">額外條件<small>可複選</small></span><div class="scroller" id="filters" role="group" aria-label="額外條件（可複選）"></div></div>
     </div>
     </section>
     <div class="meta-row"><span id="updated">讀取中…</span><span class="mr-r"><button class="clear-c hidden" id="clearC"></button><span id="count"></span></span></div>
@@ -1756,19 +1778,77 @@ function renderMonths(){
   const mins = keys.map(k => { let min = null; for (const f of base) if (f.dep.startsWith(k) && (min === null || f.price < min)) min = f.price; return min; });
   const have = mins.filter(Boolean), low = have.length ? Math.min(...have) : null;
   $("#months").classList.toggle("all", !state.month);
-  $("#months").innerHTML = `<div class="t-head"><span></span><button class="t-all" aria-pressed="${!state.month}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}">全部${low ? `<small>${money(low)} 起</small>` : ""}</button><span class="t-q">幾月飛？</span></div>
-    <div class="t-kids" style="--n:${keys.length}">${keys.map((k, i) => {
+  $("#months").innerHTML = keys.map((k, i) => {
       const [y, m] = k.split("-"), min = mins[i];
-      return `<button class="t-kid${min && min === low && have.length > 1 ? " best" : ""}" aria-pressed="${k === state.month}" data-v="${k}">
-        <span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? "" : " none"}">${min ? money(min) : "查即時價"}</span></button>`;
-    }).join("")}</div>`;
+      return `<button class="t-kid${min && min === low && have.length > 1 ? " best" : ""}" aria-pressed="${k === state.month}" data-v="${k}" aria-label="${y}年${Number(m)}月${min ? `，最低 ${money(min)}` : ""}">
+        <span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? "" : " none"}">${min ? priceHTML(min) : "即時價"}</span></button>`;
+    }).join("") + `<button class="t-all" aria-pressed="${!state.month}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}<em class="qi"> 起</em></small>` : ""}</button>`;
+  requestAnimationFrame(drawTreePath);
 }
 function renderChips(){
   $("#filters").innerHTML = CONDS.filter(x => !x.rt || state.type === "rt").map(x =>
     `<button class="chip" aria-pressed="${state.conds.has(x.v)}" data-v="${x.v}">${x.t}</button>`).join("");
 }
-// 樹狀選單：選「全部」時整排連線變藍
-function syncTree(){ $("#origin").classList.toggle("all", !state.origin); }
+// 選「全部」時那排每顆淡淡上色
+function syncTree(){ $("#origin").classList.toggle("all", !state.origin); requestAnimationFrame(drawTreePath); }
+// 一條克萊茵藍的線：從選到的來回／單程 → 選到的出發地 → 選到的月份（直角轉彎、圓角）
+let treePathD = "";
+function drawTreePath(){
+  const tree = document.querySelector(".tree"), svg = tree && tree.querySelector(".t-path");
+  if (!svg || !tree.offsetParent) return;
+  const a = tree.querySelector('#tripType button[aria-pressed="true"]'), b = tree.querySelector('#origin button[aria-pressed="true"]'), c = tree.querySelector('#months button[aria-pressed="true"]');
+  if (!a || !b || !c) return;
+  const T = tree.getBoundingClientRect();
+  const pt = (el) => { const r = el.getBoundingClientRect(); return { x: r.left - T.left + r.width / 2, top: r.top - T.top, bot: r.bottom - T.top }; };
+  const A = pt(a), B = pt(b), C = pt(c);
+  const elbow = (x1, y1, x2, y2) => {
+    const ym = (y1 + y2) / 2, dx = x2 - x1;
+    if (Math.abs(dx) < 1) return `M${x1.toFixed(1)} ${y1.toFixed(1)}V${y2.toFixed(1)}`;
+    const r = Math.min(12, Math.abs(dx) / 2, (y2 - y1) / 4), s = Math.sign(dx);
+    return `M${x1.toFixed(1)} ${y1.toFixed(1)}V${(ym - r).toFixed(1)}Q${x1.toFixed(1)} ${ym.toFixed(1)} ${(x1 + s * r).toFixed(1)} ${ym.toFixed(1)}H${(x2 - s * r).toFixed(1)}Q${x2.toFixed(1)} ${ym.toFixed(1)} ${x2.toFixed(1)} ${(ym + r).toFixed(1)}V${y2.toFixed(1)}`;
+  };
+  const d = elbow(A.x, A.bot + 2, B.x, B.top - 2) + elbow(B.x, B.bot + 2, C.x, C.top - 2);
+  svg.setAttribute("viewBox", `0 0 ${T.width.toFixed(1)} ${T.height.toFixed(1)}`);
+  svg.dataset.pts = JSON.stringify([A, B, C].map(p => [Math.round(p.x), Math.round(p.top), Math.round(p.bot)]));
+  const line = svg.querySelector(".tp-line");
+  svg.querySelector(".d1").setAttribute("cx", B.x); svg.querySelector(".d1").setAttribute("cy", B.top - 2);
+  svg.querySelector(".d2").setAttribute("cx", C.x); svg.querySelector(".d2").setAttribute("cy", C.top - 2);
+  if (d === treePathD) return;
+  const changed = treePathD !== "";
+  treePathD = d; line.setAttribute("d", d);
+  // 換選擇時線重新畫一次（從上往下）
+  if (MOTION && changed){
+    const len = line.getTotalLength();
+    line.style.transition = "none"; line.style.strokeDasharray = len; line.style.strokeDashoffset = len;
+    line.getBoundingClientRect();
+    line.style.transition = "stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"; line.style.strokeDashoffset = "0";
+  }
+}
+if ("ResizeObserver" in window) new ResizeObserver(() => drawTreePath()).observe(document.querySelector(".tree"));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawTreePath());
+// 額外條件選起來時：一朵花火從按鈕炸開（只在可以有動畫時）
+function fireworks(el){
+  if (!MOTION) return;
+  const r = el.getBoundingClientRect(), box = document.createElement("span");
+  box.className = "fw"; box.setAttribute("aria-hidden", "true");
+  box.style.left = (r.left + r.width / 2) + "px"; box.style.top = (r.top + r.height / 2) + "px";
+  const colors = ["#FFC72C", "#FF8A00", "#E11D48", "#2F5BFF", "#F472B6", "#22D3EE", "#FFFFFF"];
+  let h = `<b class="fw-flash"></b>`;
+  const N = 26;
+  for (let i = 0; i < N; i++){
+    const a = (i / N) * Math.PI * 2 + (i % 2) * 0.12, dist = 46 + (i % 4) * 11, c = colors[i % colors.length];
+    const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
+    // 一半是拖著尾巴的光條、一半是亮點
+    h += i % 2
+      ? `<i class="st" style="--c:${c};--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--a:${(a * 180 / Math.PI).toFixed(0)}deg;--dl:${(i % 3) * 0.03}s"></i>`
+      : `<i style="--c:${c};--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--dl:${(i % 3) * 0.03}s"></i>`;
+  }
+  for (let i = 0; i < 8; i++){ // 外圈慢慢落下的小火花
+    const a = Math.random() * Math.PI * 2, dist = 70 + Math.random() * 26;
+    h += `<i class="sp" style="--c:${colors[i % 4]};--dx:${(Math.cos(a) * dist).toFixed(1)}px;--dy:${(Math.sin(a) * dist).toFixed(1)}px;--dl:.12s"></i>`;
+  }
+  box.innerHTML = h; document.body.appendChild(box); setTimeout(() => box.remove(), 1300);
+}
 // 熱門航線的建議日期：
 // 選「連假」→ 那個月的連假；選「週末」→ 週五去週日回；其他 → 所選月份（至少一週後）第一個週五去、週一回
 function suggestDates(){
@@ -1831,8 +1911,12 @@ function renderFlights(){
 
   const list = cheapestPerRoute(baseFiltered().filter(f => !state.month || f.dep.startsWith(state.month)));
   const box = $("#flightList");
-  const narrowed = state.country || state.conds.size || state.budget || state.month;
-  if (!modeFiltered().length){
+  const narrowed = state.country || state.conds.size || state.budget || state.month || state.origin;
+  if (state.origin === "TNN" && !list.length){
+    // 免費資料來源沒有台南出發的預估價：老實說，給兩個出口
+    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>台南出發的國際線比較少，目前還沒有預估價</b>可以看看高雄出發（車程約 40 分鐘），或直接到 Trip.com 查台南出發的即時價。
+      <div class="btns"><button class="btn" data-origin="KHH">看高雄出發</button><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/?dcity=tnn&locale=zh-TW&curr=TWD"))}" target="_blank" rel="noopener sponsored">去 Trip.com 查台南出發</a></div></div>`;
+  } else if (!modeFiltered().length){
     box.innerHTML = `<div class="empty">${EMPTY_ART}<b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
       <div class="btns"><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else if (!list.length){
@@ -2191,7 +2275,9 @@ $("#clearC").addEventListener("click", () => { state.country = ""; resetPage(); 
 $("#filters").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const v = b.dataset.v, prevMode = state.mode;
-  state.conds.has(v) ? state.conds.delete(v) : state.conds.add(v); // 可複選：再點一次取消
+  const on = !state.conds.has(v);
+  on ? state.conds.add(v) : state.conds.delete(v); // 可複選：再點一次取消
+  if (on) fireworks(b);
   syncMode(); resetPage(); monthWithResults();
   if (state.mode !== prevMode) renderHero(); // 只看廉航／傳統時，大圖也只放那種航空
   renderFlights();
@@ -2581,6 +2667,7 @@ document.addEventListener("scroll", unpress, { passive: true, capture: true });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.closest("[data-close]")){ closeSheet(); return; }
+  const og = t.closest("[data-origin]"); if (og){ const ob = document.querySelector(`#origin button[data-v="${og.dataset.origin}"]`); if (ob) ob.click(); return; }
   const hr = t.closest("[data-hroute]"); if (hr){ const [o, d] = hr.dataset.hroute.split("-"); openHotelRoute(o, d); return; }
   const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); openRouteFrom(r, o, d); return; }
   const sh = t.closest("[data-share]"); if (sh){ const [o, d] = sh.dataset.share.split("-"); shareRoute(o, d, sh.dataset.smode, sh.dataset.stype); return; }
