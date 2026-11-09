@@ -206,7 +206,7 @@ async function buildPart(part, token) {
 // ---------- 累積資料庫（KV）----------
 // 存成精簡格式（欄位名稱只寫一次、日期不含時間），粉絲讀取時原封不動傳出去，不用重新解析（免費方案 CPU 時間很短）。
 // 網頁看到 cols＋data 會自己還原成一般格式。
-const POOL_KEY = "pool_v2", CURSOR_KEY = "cursor_v1";
+const POOL_KEY = "pool_v2", CURSOR_KEY = "cursor_v1", VISITS_KEY = "visits_v1";
 const POOL_MAX_AGE = 3 * 24 * 3600 * 1000;   // 票最多保留 3 天
 const POOL_PER_ROUTE_MONTH = 60;             // 每條航線每個月（來回／單程分開）最多留最便宜的 60 筆
 const POOL_MAX_ROWS = 4000;                  // 整個資料庫最多 4000 筆（控制免費方案的 CPU 時間），超過只留最便宜的
@@ -269,6 +269,18 @@ export default {
       const code = (k, dflt) => (url.searchParams.get(k) || dflt).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
       const out = await probe(token, code("o", "KHH"), code("d", "SEL"));
       return new Response(JSON.stringify(out, null, 1), { headers: { ...headers, "Cache-Control": "no-store" } });
+    }
+    // 累積瀏覽人數：網頁每個瀏覽器第一次來帶 &new=1（加 1），之後只讀。存在 KV（DEALS）的 "visits"
+    // KV 不是原子操作，同時很多人進來可能少算幾個，數字是「大約」；沒設定 KV 回 null（網頁就不顯示）
+    if (p === "visit") {
+      const h = { ...headers, "Cache-Control": "no-store" };
+      if (!env.DEALS) return new Response(JSON.stringify({ visits: null, note: "尚未設定 KV（DEALS）" }), { headers: h });
+      let n = Number(await env.DEALS.get(VISITS_KEY)) || 0;
+      if (url.searchParams.get("new") === "1") {
+        n += 1;
+        try { await env.DEALS.put(VISITS_KEY, String(n)); } catch (e) { /* 超過免費寫入額度就先不加 */ }
+      }
+      return new Response(JSON.stringify({ visits: n }), { headers: h });
     }
     if (p === "all") {
       const h = { ...headers, "Cache-Control": "public, max-age=600" };

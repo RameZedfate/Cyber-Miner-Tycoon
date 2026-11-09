@@ -59,6 +59,20 @@ for (const part of ["main", "fsc", "m0", "m1", "m2", "m3", "g0", "g1", "g2", "g3
   ok(j.count === 0 && Array.isArray(j.rows), "沒有 KV 時 ?part=all 應回傳空資料");
 }
 
+// 2b. 累積瀏覽人數：沒有 KV 回 null；有 KV 時 new=1 加 1、沒帶只讀；不能被快取
+{
+  const res0 = await worker.fetch(new Request("https://x.workers.dev/?part=visit&new=1"), { TP_TOKEN: "t" }, ctx);
+  const j0 = await res0.json();
+  ok(j0.visits === null, "沒有 KV 時瀏覽人數應回 null");
+  const store = new Map();
+  const KV = { get: async (k) => store.get(k) ?? null, put: async (k, v) => { store.set(k, v); } };
+  const env = { TP_TOKEN: "t", DEALS: KV };
+  const get = async (q) => { const r = await worker.fetch(new Request("https://x.workers.dev/?part=visit" + q), env, ctx); return [await r.json(), r.headers.get("Cache-Control")]; };
+  const [a] = await get("&new=1"), [b] = await get("&new=1"), [c, cc] = await get("");
+  ok(a.visits === 1 && b.visits === 2 && c.visits === 2, `瀏覽人數計算不對：${a.visits}/${b.visits}/${c.visits}`);
+  ok(cc === "no-store", "瀏覽人數不能被快取");
+}
+
 // 3. 有 KV：排程輪流抓、累積、清除（資料庫是精簡格式：cols＋data）
 {
   const store = new Map();
