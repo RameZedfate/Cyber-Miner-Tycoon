@@ -246,7 +246,7 @@
   .t-path{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
   .tp-line{fill:none;stroke:var(--klein);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
   .tp-dot{fill:var(--klein)}
-  .trow{position:relative;z-index:1;display:grid;grid-template-columns:var(--labw) minmax(0,1fr);align-items:center;column-gap:12px}
+  .trow{position:relative;z-index:1;display:grid;grid-template-columns:var(--labw) minmax(0,1fr) var(--labw);align-items:center;column-gap:12px}
   .trow + .trow{margin-top:44px}
   @media (min-width:760px){ .trow + .trow{margin-top:54px} }
   /* 每排左邊的問題：粗體、底下一小段克萊茵藍 */
@@ -256,9 +256,9 @@
   .t-lab small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:2px}
   .t-lab.sm{font-size:13.5px}
   .t-lab.sm::after{display:none}
-  .t-opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .t-opts{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:8px}
   @media (min-width:760px){ .t-opts{gap:14px} }
-  .t-trip .t-opts{display:flex}
+  .t-trip .t-opts{display:flex;justify-content:center}
   .tree button.t-all, .tree button.t-kid{position:relative;border:1.5px solid transparent;background:#F2F4F7;color:var(--ink-2);font-weight:800;
     border-radius:12px;min-height:46px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;
     width:100%;min-width:0;text-align:center;font-size:14.5px}
@@ -277,19 +277,66 @@
   .tree button[aria-pressed="true"] small, .tree button[aria-pressed="true"] .p, .tree button[aria-pressed="true"] .m small{color:var(--klein)}
   /* 「全部」被選時，那排每顆淡淡上色（代表都算在內） */
   .t-lvl.all .t-kid{background:rgba(0,47,167,.05);color:#1E3A8A}
-  .t-extra{position:relative;z-index:1;width:100%;margin-top:26px;padding-top:14px;border-top:1px dashed rgba(17,24,39,.1);display:grid;grid-template-columns:var(--labw) minmax(0,1fr);align-items:center;column-gap:12px}
-  .t-extra .scroller{min-width:0;margin:0;padding:2px 0;flex-wrap:wrap;overflow:visible;row-gap:8px} /* 條件不多，換行全部看得到 */
+  .t-extra{position:relative;z-index:1;width:100%;margin-top:28px;padding-top:16px;border-top:1px dashed rgba(17,24,39,.1);display:flex;flex-direction:column;align-items:center;gap:10px}
+  .t-extra .t-lab small{display:inline;margin-left:6px}
+  .t-extra .scroller{min-width:0;margin:0;padding:2px 0;flex-wrap:wrap;overflow:visible;row-gap:8px;justify-content:center} /* 條件不多，換行全部看得到、置中 */
   .tree .chip[aria-pressed="true"]{background:var(--klein-bg);border-color:var(--klein-line);color:var(--klein);box-shadow:none}
   /* 來回／單程：滑塊也是克萊茵藍 */
   .tree .seg.has-thumb .thumb{background:var(--klein-bg);box-shadow:inset 0 0 0 1.5px var(--klein-line)}
   .tree .seg button[aria-pressed="true"]{color:var(--klein)}
   @media (hover:hover){ .tree button.t-kid:not([aria-pressed="true"]):hover, .tree button.t-all:not([aria-pressed="true"]):hover{background:#E9ECF1} }
   .tree button.t-kid, .tree button.t-all{white-space:nowrap}
-  /* 手機：額外條件的標題放上面，條件按鈕整排寬 */
-  @media (max-width:479px){ .t-extra{grid-template-columns:minmax(0,1fr);row-gap:10px} .t-extra .t-lab small{display:inline;margin-left:6px} }
-  /* 很窄的手機：問題折成兩行（哪裡／飛？），讓按鈕寬一點 */
-  @media (max-width:379px){ :root{--labw:30px} .trow .t-lab{font-size:14px;white-space:normal;width:2.1em;line-height:1.25} .trow .t-lab::after{width:16px}
-    .trow{column-gap:8px} .t-opts{gap:5px} .tree button.t-kid, .tree button.t-all{font-size:13.5px;padding:6px 1px} .t-kid .m, .t-all .m{font-size:13.5px} .t-kid .p, .t-all small{font-size:10.5px} }
+  /* 手機：問題改直式（像招牌），左右各留一樣寬，選項剛好置中 */
+  @media (max-width:559px){ :root{--labw:24px} .trow{column-gap:8px} .t-opts{gap:5px}
+    .trow .t-lab{writing-mode:vertical-rl;text-orientation:upright;justify-self:center;font-size:14px;letter-spacing:3px;line-height:1;padding-left:4px;border-left:3px solid var(--klein)}
+    .trow .t-lab:not(:empty)::after{display:none}
+    .tree button.t-kid, .tree button.t-all{font-size:13.5px;padding:6px 1px;min-height:48px} .t-kid .m, .t-all .m{font-size:13.5px} .t-kid .p, .t-all small{font-size:10.5px} }
+  @media (max-width:359px){ :root{--labw:20px} .trow{column-gap:5px} .t-opts{gap:4px} .trow .t-lab{font-size:13px;letter-spacing:2px} .t-kid .m, .t-all .m{font-size:12.5px} .t-kid .p, .t-all small{font-size:9.5px} }
+  /* ---------- 限時動態（最上面） ---------- */
+  .stories-wrap{padding-top:10px}
+  .stories{justify-content:flex-start !important;overflow-x:auto !important;margin:0 -16px !important;padding:4px 16px 2px !important;gap:14px}
+  @media (min-width:760px){ .stories{gap:18px} .stories .tile{flex:0 0 84px;max-width:none} .stories .ring{width:84px;height:84px} }
+  .tile-set .all-ph{background:radial-gradient(circle at 65% 35%,#1B4A85,#0B2340 70%)}
+  .tile-set .all-ph .ic{transform:none;width:44%;height:44%;color:#fff}
+  .tile-set .ring{position:relative;background:linear-gradient(135deg,#002FA7,#4F7BFF)}
+  .set-n{position:absolute;right:-2px;top:-2px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:var(--klein);color:#fff;font-size:12px;font-style:normal;font-weight:800;
+    display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+  /* 綠框＝極力推薦、紅框＝普通偏便宜 */
+  .ring.go, .ring.ok{position:relative;isolation:isolate;background:transparent;padding:4px}
+  .ring.go .ph, .ring.ok .ph{box-shadow:0 0 0 2.5px var(--bg)} /* 照片外一圈白，再外面一圈綠／紅 */
+  .ring.go::before, .ring.ok::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit}
+  .ring.go::before{background:conic-gradient(from 200deg,#15803D,#22C55E,#86EFAC,#22C55E,#15803D)}
+  .ring.ok::before{background:conic-gradient(from 200deg,#B91C1C,#EF4444,#FCA5A5,#EF4444,#B91C1C)}
+  .anim .ring.go::before{animation:spin 6s linear infinite}
+  .st-legend{display:flex;justify-content:flex-end;gap:14px;margin:6px 0 0;font-size:12px;color:var(--muted);font-weight:600}
+  .st-legend span{display:inline-flex;align-items:center;gap:5px}
+  .st-legend i{width:10px;height:10px;border-radius:50%;border:2.5px solid}
+  .st-legend i.go{border-color:#22C55E} .st-legend i.ok{border-color:#EF4444}
+  .st-skel .ring{background:#E4E7EC} .st-skel .t b{height:12px;width:48px;margin:2px auto;background:#E4E7EC;border-radius:6px} .st-skel .t span{height:10px;width:40px;margin:4px auto 0;background:#ECEEF1;border-radius:6px}
+  .st-empty{flex:0 0 auto;align-self:center;margin:0;font-size:13.5px;color:var(--muted);white-space:nowrap}
+  .stories + .st-legend + .hero, .stories-wrap + .hero{margin-top:6px}
+  /* 找機票卡片：條件摘要（點了開設定）＋幫我選 */
+  .f-sum{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;margin-top:14px;padding:10px 12px;border:1.5px solid rgba(0,47,167,.18);border-radius:14px;
+    background:rgba(0,47,167,.04);color:var(--klein);text-align:left;font-weight:700}
+  .f-sum > .ic{width:18px;height:18px;flex:0 0 auto}
+  .fs-chips{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
+  .fs-chips i{font-style:normal;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--klein-bg);color:var(--klein);white-space:nowrap}
+  .f-sum b{flex:0 0 auto;font-size:13px;padding:6px 12px;border-radius:999px;background:var(--klein);color:#fff}
+  .f-lucky{position:absolute;right:16px;top:20px;z-index:2}
+  .finder #listTop{padding-right:112px}
+  @media (min-width:760px){ .f-lucky{right:28px;top:26px} }
+  /* 設定面板 */
+  .sheet-panel.set-panel{max-width:820px;padding:0}
+  #countries .cur{display:none} /* 七個國家一排，價格只放數字 */
+  @media (min-width:760px){ .set-panel{--labw:96px} }
+  .set-head{padding:22px 20px 6px}
+  .set-head h3{margin:0;font-size:22px;font-weight:900;color:var(--navy)}
+  .set-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+  .set-panel .tree{padding:18px 16px 4px;max-width:720px;margin:0 auto}
+  @media (min-width:760px){ .set-panel .tree{padding:22px 28px 8px} .set-head{padding:26px 28px 6px} }
+  .set-foot{position:sticky;bottom:0;z-index:3;display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(245,243,238,0),var(--bg) 28%)}
+  .set-foot .cta{flex:1 1 auto;border:0;font-size:15.5px}
+  .set-foot .btn2{flex:0 0 auto}
   /* 花火 */
   .fw{position:fixed;z-index:120;width:0;height:0;pointer-events:none}
   .fw i{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px 1px var(--c);
@@ -717,6 +764,7 @@
   .card .ph{transition:filter .2s ease}
   .rrow.press,.opt.press{scale:.985;background:rgba(17,24,39,.04)}
   .rip-host{position:relative;overflow:hidden}
+  .rip-clip{overflow:hidden}
   .rip{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.18;transform:scale(0);animation:rip .55s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes rip{to{transform:scale(1);opacity:0}}
   @media (hover:hover){ .tile:hover .bgimg.ok,.mini:hover .bgimg.ok{transform:scale(1.06)} .tile .bgimg,.mini .bgimg{transition:opacity .5s ease, transform .6s ease} }
@@ -870,15 +918,14 @@
 
 <!-- ===================== 機票（便宜機票／傳統航空共用） ===================== -->
 <section id="flights">
+  <!-- 限時動態（像 IG）：最左邊「設定」打開選條件；後面是符合設定的城市，綠框＝極力推薦、紅框＝普通偏便宜 -->
+  <div class="wrap stories-wrap">
+    <div class="tiles stories" id="tiles" aria-label="限時動態：符合設定的便宜機票"></div>
+    <div class="st-legend" aria-hidden="true"><span><i class="go"></i>極力推薦</span><span><i class="ok"></i>普通偏便宜</span></div>
+  </div>
   <div class="hero" id="hero"></div>
 
   <div class="wrap">
-    <div class="sec-head">
-      <div><h2 class="sec">想去哪？</h2>
-      <p class="sub hidden" id="tilesSub"></p></div>
-      <button class="lucky" id="luckyBtn">幫我選！</button>
-    </div>
-    <div class="tiles" id="tiles"></div>
 
     <section id="favSec" class="hidden">
       <h2 class="sec">我收藏的航線</h2>
@@ -898,25 +945,8 @@
       <p class="sub" id="fSub">預估最低價</p>
     </div>
 
-    <!-- 選機票：每排左邊一個粗體問題；一條克萊茵藍的線只連「選到的」：來回 → 出發地 → 月份 -->
-    <div class="tree panel">
-      <svg class="t-path" aria-hidden="true"><path class="tp-line"/><circle class="tp-dot d1" r="4"/><circle class="tp-dot d2" r="4"/></svg>
-      <div class="trow t-trip"><span class="t-lab" aria-hidden="true"></span><div class="t-opts">
-        <div class="seg" id="tripType" role="group" aria-label="來回或單程">
-          <button aria-pressed="true" data-v="rt">來回</button>
-          <button aria-pressed="false" data-v="ow">單程</button>
-        </div>
-      </div></div>
-      <div class="trow"><span class="t-lab" id="labO">哪裡飛？</span>
-        <div class="t-opts t-lvl all" id="origin" role="group" aria-labelledby="labO">
-          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button><button class="t-kid" aria-pressed="false" data-v="TNN">台南</button><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button>
-        </div>
-      </div>
-      <div class="trow"><span class="t-lab" id="labM">幾月飛？</span>
-        <div class="t-opts t-lvl all" id="months" role="group" aria-labelledby="labM"></div>
-      </div>
-      <div class="t-extra"><span class="t-lab sm">額外條件<small>可複選</small></span><div class="scroller" id="filters" role="group" aria-label="額外條件（可複選）"></div></div>
-    </div>
+    <button class="f-sum" id="fSum" aria-label="調整條件"></button>
+    <button class="lucky f-lucky" id="luckyBtn">幫我選！</button>
     </section>
     <div class="meta-row"><span id="updated">讀取中…</span><span class="mr-r"><button class="clear-c hidden" id="clearC"></button><span id="count"></span></span></div>
     <div class="grid" id="flightList">
@@ -968,6 +998,37 @@
 </section>
 
 <button class="totop" id="toTop" aria-label="回到最上面" tabindex="-1"><svg class="ic f" viewBox="0 0 24 24" aria-hidden="true"></svg></button>
+<!-- 設定：選機票條件（從限時動態最左邊的「設定」打開） -->
+<div class="sheet hidden" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="sheet-bg" data-setclose></div>
+  <div class="sheet-panel set-panel">
+    <button class="sheet-x" data-setclose aria-label="關閉"></button>
+    <div class="set-head"><h3 id="setTitle">設定</h3><p>可以複選。上面的限時動態和下面的機票會跟著變。</p></div>
+    <!-- 選機票：每排左邊一個粗體問題；一條克萊茵藍的線連起選到的（可複選，會分岔） -->
+    <div class="tree">
+      <svg class="t-path" aria-hidden="true"></svg>
+      <div class="trow t-trip"><span class="t-lab" aria-hidden="true"></span><div class="t-opts">
+        <div class="seg" id="tripType" role="group" aria-label="來回或單程">
+          <button aria-pressed="true" data-v="rt">來回</button>
+          <button aria-pressed="false" data-v="ow">單程</button>
+        </div>
+      </div><span class="t-sp"></span></div>
+      <div class="trow"><span class="t-lab" id="labO">哪裡飛？</span>
+        <div class="t-opts t-lvl all" id="origin" role="group" aria-labelledby="labO" style="--n:5">
+          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button><button class="t-kid" aria-pressed="false" data-v="TNN">台南</button><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button>
+        </div><span class="t-sp"></span>
+      </div>
+      <div class="trow"><span class="t-lab" id="labC">飛哪裡？</span>
+        <div class="t-opts t-lvl all" id="countries" role="group" aria-labelledby="labC" style="--n:7"></div><span class="t-sp"></span>
+      </div>
+      <div class="trow"><span class="t-lab" id="labM">幾月飛？</span>
+        <div class="t-opts t-lvl all" id="months" role="group" aria-labelledby="labM" style="--n:5"></div><span class="t-sp"></span>
+      </div>
+      <div class="t-extra"><span class="t-lab sm">額外條件<small>可複選</small></span><div class="scroller" id="filters" role="group" aria-label="額外條件（可複選）"></div></div>
+    </div>
+    <div class="set-foot"><button class="btn2" id="setReset">重設</button><button class="cta" id="setGo">看結果</button></div>
+  </div>
+</div>
 <div class="sheet hidden" id="sheet" role="dialog" aria-modal="true" aria-label="航線詳情">
   <div class="sheet-bg" data-close></div>
   <div class="sheet-panel">
@@ -1185,6 +1246,7 @@ function flightUrl(f){
 
 // 自繪圖示（取代 Emoji）。F 開頭＝實心。
 const ICONS = {
+  gear: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.6-.3 4.9 1.2 5.5 4.3"/>',
   tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.6"/>',
   plane: 'F<path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/>',
@@ -1463,7 +1525,7 @@ function isWeekend(f){
 }
 
 const state = {
-  tab: "flights", mode: "all", type: "rt", origin: "", month: "", country: "", conds: new Set(), budget: 0,
+  tab: "flights", mode: "all", type: "rt", origins: new Set(), countries: new Set(), months: new Set(), conds: new Set(), budget: 0,
   shown: CONFIG.pageSize(), flights: [], updatedAt: null, loaded: false,
   hotels: [], hotelsUpdated: null, hCountry: "", hDate: 0, routesAll: false,
 };
@@ -1472,6 +1534,11 @@ const CONDS = [
   { v:"direct", t:"直飛" }, { v:"lcc", t:"僅看廉航" }, { v:"fsc", t:"僅看傳統" }, { v:"weekend", t:"週末" }, { v:"five", t:"五天前後", rt:true },
 ];
 // 航空公司條件決定「模式」：只看傳統＝fsc、只看廉航＝lcc、其他＝all（價格日曆、大圖、分享連結都跟著）
+// 可複選的條件：沒選＝全部
+const okOrigin = (o) => !state.origins.size || state.origins.has(o);
+const okCountry = (c) => !state.countries.size || state.countries.has(c);
+const okMonth = (dep) => !state.months.size || state.months.has(dep.slice(0, 7));
+const COUNTRY_SHORT = { JP:"日本", KR:"韓國", TH:"泰國", VN:"越南", CN:"大陸", HK:"香港" };
 function syncMode(){
   const f = state.conds.has("fsc"), l = state.conds.has("lcc");
   state.mode = f && !l ? "fsc" : l && !f ? "lcc" : "all";
@@ -1499,7 +1566,7 @@ function memo(key, fn){
   }
   return memoStore.get(key);
 }
-function modeKey(){ return [state.mode, state.type, state.origin, todayTW()].join("|"); }
+function modeKey(){ return [state.mode, state.type, [...state.origins].sort().join(","), todayTW()].join("|"); }
 function modeFiltered(){ return memo("mode|" + modeKey(), modeFilteredRaw); }
 function modeFilteredRaw(){
   const fsc = state.mode === "fsc", lcc = state.mode === "lcc";
@@ -1511,13 +1578,13 @@ function modeFilteredRaw(){
     (!fsc || FSC_AIRLINES[f.airline]) &&
     (!lcc || !FSC_AIRLINES[f.airline]) &&
     (state.type === "rt" ? !!f.ret : !f.ret) &&
-    (!state.origin || f.o === state.origin)
+    okOrigin(f.o)
   );
 }
 // 依目前條件篩選（不含「月份」），讓月份按鈕能顯示各月最低價
 function baseFiltered(){
   return modeFiltered().filter(f =>
-    (!state.country || f.country === state.country) &&
+    okCountry(f.country) &&
     (!state.conds.has("direct") || f.direct) &&
     (!state.conds.has("weekend") || isWeekend(f)) &&
     (!state.conds.has("five") || state.type !== "rt" || isAboutFive(f)) &&
@@ -1742,29 +1809,30 @@ function renderHero(){
 /* ====================================================================
    ⑧ 依地區探索
    ==================================================================== */
+// 限時動態：最左邊「設定」；後面是符合設定（出發地、國家、月份、條件）的城市，一個城市一顆
+// 綠框＝極力推薦（比平常便宜，或是這批裡最便宜的三分之一）、紅框＝普通偏便宜
+function storyFlights(){ return cheapestPerCity(baseFiltered().filter(f => okMonth(f.dep))).filter(f => flightUrl(f)); }
+function isGreat(f, cut){ return savingPct(f) > 0 || f.price <= cut; }
+function activeCount(){ return state.origins.size + state.countries.size + state.months.size + state.conds.size + (state.type === "ow" ? 1 : 0); }
 function renderTiles(){
-  const cs = state.mode === "fsc" ? FSC_COUNTRIES : MAIN_COUNTRIES;
-  const base = modeFiltered();
-  const mins = {};
-  for (const f of base) if (!mins[f.country] || f.price < mins[f.country]) mins[f.country] = f.price;
-  // 有價格的排前面（便宜的先），沒有價格的放後面
-  const order = cs.slice().sort((a, b) => (mins[a] || 1e9) - (mins[b] || 1e9) || cs.indexOf(a) - cs.indexOf(b));
-  // 最前面一顆「全部」：想看全部地區時一點就回來
-  const allMin = Math.min(...Object.values(mins));
-  const allTile = `<button class="tile tile-all" data-v="" aria-pressed="${!state.country}">
-      <span class="ring"><span class="ph all-ph">${icon("plane")}</span></span>
-      <span class="t"><b>全部</b><span>${isFinite(allMin) ? money(allMin) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
-    </button>`;
-  setHTML($("#tiles"), allTile + order.map(c => {
-    const min = mins[c] || null;
-    const p = COUNTRY_PHOTO[c];
-    // 像 IG 限時動態：圓形照片；最便宜的地區外圈是漸層色
-    const hot = min && c === order[0];
-    return `<button class="tile${min || !state.loaded ? "" : " nop"}" data-v="${c}" aria-pressed="${state.country === c}">
-      <span class="ring${hot ? " hot" : ""}"><span class="ph g-${c}">${photoHTML(p && p[0], c, p ? p[1] : COUNTRIES[c], 640, false, true)}</span></span>
-      <span class="t"><b>${esc(COUNTRIES[c])}</b><span>${min ? money(min) : (state.loaded ? "查即時價" : "讀取中")}</span></span>
-    </button>`;
-  }).join(""));
+  const n = activeCount();
+  const setBtn = `<button class="tile tile-set" id="openSet" aria-label="設定：選出發地、國家、月份和條件${n ? `（已選 ${n} 項）` : ""}">
+      <span class="ring"><span class="ph all-ph">${icon("gear")}</span>${n ? `<i class="set-n">${n}</i>` : ""}</span>
+      <span class="t"><b>設定</b><span>${n ? `已選 ${n} 項` : "選條件"}</span></span></button>`;
+  if (!state.loaded){
+    setHTML($("#tiles"), setBtn + Array.from({ length: 6 }, () => `<span class="tile st-skel" aria-hidden="true"><span class="ring"></span><span class="t"><b></b><span></span></span></span>`).join(""));
+    return;
+  }
+  const list = storyFlights().slice(0, 24);
+  const ps = list.map(f => f.price).sort((a, b) => a - b), cut = ps.length ? ps[Math.floor((ps.length - 1) / 3)] : 0;
+  const great = list.filter(f => isGreat(f, cut)), rest = list.filter(f => !isGreat(f, cut));
+  const html = [...great, ...rest].map(f => {
+    const g = isGreat(f, cut), c = f.country, lm = landmarkOf(f.d), name = cityName(f.d);
+    return `<button class="tile story" data-route="${esc(f.o)}-${esc(f.d)}" aria-label="${esc(name)}，${g ? "極力推薦" : "普通偏便宜"}，${money(f.price)} 起，看這條航線">
+      <span class="ring ${g ? "go" : "ok"}"><span class="ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : name, 500, false, true)}</span></span>
+      <span class="t"><b>${esc(name)}</b><span>${money(f.price)}</span></span></button>`;
+  }).join("");
+  setHTML($("#tiles"), setBtn + (html || `<p class="st-empty">沒有符合設定的票，點「設定」放寬條件</p>`));
   queueImages();
 }
 
@@ -1777,54 +1845,80 @@ function renderMonths(){
   const keys = monthKeys(), thisYear = todayTW().slice(0, 4);
   const mins = keys.map(k => { let min = null; for (const f of base) if (f.dep.startsWith(k) && (min === null || f.price < min)) min = f.price; return min; });
   const have = mins.filter(Boolean), low = have.length ? Math.min(...have) : null;
-  $("#months").classList.toggle("all", !state.month);
+  $("#months").classList.toggle("all", !state.months.size);
+  $("#months").style.setProperty("--n", keys.length + 1);
   $("#months").innerHTML = keys.map((k, i) => {
       const [y, m] = k.split("-"), min = mins[i];
-      return `<button class="t-kid${min && min === low && have.length > 1 ? " best" : ""}" aria-pressed="${k === state.month}" data-v="${k}" aria-label="${y}年${Number(m)}月${min ? `，最低 ${money(min)}` : ""}">
+      return `<button class="t-kid${min && min === low && have.length > 1 ? " best" : ""}" aria-pressed="${state.months.has(k)}" data-v="${k}" aria-label="${y}年${Number(m)}月${min ? `，最低 ${money(min)}` : ""}">
         <span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? "" : " none"}">${min ? priceHTML(min) : "即時價"}</span></button>`;
-    }).join("") + `<button class="t-all" aria-pressed="${!state.month}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}<em class="qi"> 起</em></small>` : ""}</button>`;
+    }).join("") + `<button class="t-all" aria-pressed="${!state.months.size}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}<em class="qi"> 起</em></small>` : ""}</button>`;
   requestAnimationFrame(drawTreePath);
 }
 function renderChips(){
   $("#filters").innerHTML = CONDS.filter(x => !x.rt || state.type === "rt").map(x =>
     `<button class="chip" aria-pressed="${state.conds.has(x.v)}" data-v="${x.v}">${x.t}</button>`).join("");
 }
-// 選「全部」時那排每顆淡淡上色
-function syncTree(){ $("#origin").classList.toggle("all", !state.origin); requestAnimationFrame(drawTreePath); }
+// 飛哪裡？：每個國家顯示最低價（照目前出發地、月份、條件）
+function renderCountries(){
+  const saved = state.countries; state.countries = new Set();
+  let base; try { base = baseFiltered().filter(f => okMonth(f.dep)); } finally { state.countries = saved; }
+  const mins = {}; for (const f of base) if (!mins[f.country] || f.price < mins[f.country]) mins[f.country] = f.price;
+  const all = Object.values(mins), low = all.length ? Math.min(...all) : null;
+  $("#countries").classList.toggle("all", !state.countries.size);
+  $("#countries").innerHTML = MAIN_COUNTRIES.map(c => `<button class="t-kid${mins[c] && mins[c] === low && all.length > 1 ? " best" : ""}" aria-pressed="${state.countries.has(c)}" data-v="${c}" aria-label="${COUNTRIES[c]}${mins[c] ? `，最低 ${money(mins[c])}` : ""}">
+      <span class="m">${COUNTRY_SHORT[c]}</span><span class="p${mins[c] ? "" : " none"}">${mins[c] ? priceHTML(mins[c]) : "即時價"}</span></button>`).join("")
+    + `<button class="t-all" aria-pressed="${!state.countries.size}" data-v="" aria-label="全部國家"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}</small>` : ""}</button>`;
+}
+// 選「全部」時那排每顆淡淡上色；出發地按鈕照目前的選擇
+function syncTree(){
+  $("#origin").classList.toggle("all", !state.origins.size);
+  $("#origin").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v ? state.origins.has(b.dataset.v) : !state.origins.size));
+  requestAnimationFrame(drawTreePath);
+}
 // 一條克萊茵藍的線：從選到的來回／單程 → 選到的出發地 → 選到的月份（直角轉彎、圓角）
 let treePathD = "";
 function drawTreePath(){
-  const tree = document.querySelector(".tree"), svg = tree && tree.querySelector(".t-path");
+  const tree = document.querySelector("#setSheet .tree"), svg = tree && tree.querySelector(".t-path");
   if (!svg || !tree.offsetParent) return;
-  const a = tree.querySelector('#tripType button[aria-pressed="true"]'), b = tree.querySelector('#origin button[aria-pressed="true"]'), c = tree.querySelector('#months button[aria-pressed="true"]');
-  if (!a || !b || !c) return;
+  const rows = ["#tripType", "#origin", "#countries", "#months"].map(q => [...tree.querySelectorAll(`${q} button[aria-pressed="true"]`)]);
+  if (rows.some(r => !r.length)) return;
   const T = tree.getBoundingClientRect();
-  const pt = (el) => { const r = el.getBoundingClientRect(); return { x: r.left - T.left + r.width / 2, top: r.top - T.top, bot: r.bottom - T.top }; };
-  const A = pt(a), B = pt(b), C = pt(c);
+  const P = rows.map(r => r.map(el => { const b = el.getBoundingClientRect(); return { x: b.left - T.left + b.width / 2, top: b.top - T.top, bot: b.bottom - T.top }; }));
+  const f1 = (v) => v.toFixed(1);
   const elbow = (x1, y1, x2, y2) => {
     const ym = (y1 + y2) / 2, dx = x2 - x1;
-    if (Math.abs(dx) < 1) return `M${x1.toFixed(1)} ${y1.toFixed(1)}V${y2.toFixed(1)}`;
-    const r = Math.min(12, Math.abs(dx) / 2, (y2 - y1) / 4), s = Math.sign(dx);
-    return `M${x1.toFixed(1)} ${y1.toFixed(1)}V${(ym - r).toFixed(1)}Q${x1.toFixed(1)} ${ym.toFixed(1)} ${(x1 + s * r).toFixed(1)} ${ym.toFixed(1)}H${(x2 - s * r).toFixed(1)}Q${x2.toFixed(1)} ${ym.toFixed(1)} ${x2.toFixed(1)} ${(ym + r).toFixed(1)}V${y2.toFixed(1)}`;
+    if (Math.abs(dx) < 1) return `M${f1(x1)} ${f1(y1)}V${f1(y2)}`;
+    const r = Math.min(12, Math.abs(dx) / 2, (y2 - y1) / 4), sg = Math.sign(dx);
+    return `M${f1(x1)} ${f1(y1)}V${f1(ym - r)}Q${f1(x1)} ${f1(ym)} ${f1(x1 + sg * r)} ${f1(ym)}H${f1(x2 - sg * r)}Q${f1(x2)} ${f1(ym)} ${f1(x2)} ${f1(ym + r)}V${f1(y2)}`;
   };
-  const d = elbow(A.x, A.bot + 2, B.x, B.top - 2) + elbow(B.x, B.bot + 2, C.x, C.top - 2);
-  svg.setAttribute("viewBox", `0 0 ${T.width.toFixed(1)} ${T.height.toFixed(1)}`);
-  svg.dataset.pts = JSON.stringify([A, B, C].map(p => [Math.round(p.x), Math.round(p.top), Math.round(p.bot)]));
-  const line = svg.querySelector(".tp-line");
-  svg.querySelector(".d1").setAttribute("cx", B.x); svg.querySelector(".d1").setAttribute("cy", B.top - 2);
-  svg.querySelector(".d2").setAttribute("cx", C.x); svg.querySelector(".d2").setAttribute("cy", C.top - 2);
+  let d = ""; const dots = [];
+  for (let i = 0; i < P.length - 1; i++){
+    const S = P[i], D = P[i + 1];
+    if (S.length === 1 && D.length === 1) d += elbow(S[0].x, S[0].bot + 2, D[0].x, D[0].top - 2);
+    else {
+      // 複選：每個選到的往下接到一條橫線，再分到下一排每個選到的
+      const ym = (Math.max(...S.map(q => q.bot)) + Math.min(...D.map(q => q.top))) / 2, xs = [...S, ...D].map(q => q.x);
+      for (const a of S) d += `M${f1(a.x)} ${f1(a.bot + 2)}V${f1(ym)}`;
+      d += `M${f1(Math.min(...xs))} ${f1(ym)}H${f1(Math.max(...xs))}`;
+      for (const b of D) d += `M${f1(b.x)} ${f1(ym)}V${f1(b.top - 2)}`;
+    }
+    for (const b of D) dots.push(b);
+  }
+  svg.setAttribute("viewBox", `0 0 ${f1(T.width)} ${f1(T.height)}`);
+  svg.dataset.pts = JSON.stringify(P.map(r => r.map(q => Math.round(q.x))));
   if (d === treePathD) return;
   const changed = treePathD !== "";
-  treePathD = d; line.setAttribute("d", d);
+  treePathD = d;
+  svg.innerHTML = `<path class="tp-line" d="${d}"/>` + dots.map(b => `<circle class="tp-dot" r="4" cx="${f1(b.x)}" cy="${f1(b.top - 2)}"/>`).join("");
   // 換選擇時線重新畫一次（從上往下）
   if (MOTION && changed){
-    const len = line.getTotalLength();
-    line.style.transition = "none"; line.style.strokeDasharray = len; line.style.strokeDashoffset = len;
+    const line = svg.querySelector(".tp-line"), len = line.getTotalLength();
+    line.style.strokeDasharray = len; line.style.strokeDashoffset = len;
     line.getBoundingClientRect();
     line.style.transition = "stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"; line.style.strokeDashoffset = "0";
   }
 }
-if ("ResizeObserver" in window) new ResizeObserver(() => drawTreePath()).observe(document.querySelector(".tree"));
+if ("ResizeObserver" in window) new ResizeObserver(() => drawTreePath()).observe(document.querySelector("#setSheet .tree"));
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawTreePath());
 // 額外條件選起來時：一朵花火從按鈕炸開（只在可以有動畫時）
 function fireworks(el){
@@ -1853,7 +1947,8 @@ function fireworks(el){
 // 選「連假」→ 那個月的連假；選「週末」→ 週五去週日回；其他 → 所選月份（至少一週後）第一個週五去、週一回
 function suggestDates(){
   const rt = state.type === "rt";
-  let d = state.month ? state.month + "-01" : todayTW();
+  const m0 = [...state.months].sort()[0];
+  let d = m0 ? m0 + "-01" : todayTW();
   if (d < addDays(todayTW(), 7)) d = addDays(todayTW(), 7);
   while (wd(d) !== 5) d = addDays(d, 1);
   if (state.conds.has("weekend")) return { dep: d, ret: rt ? addDays(d, 2) : null, why: "週末" };
@@ -1868,10 +1963,10 @@ function renderMoreRoutes(shown){
   const { dep, ret, why } = suggestDates();
   const cards = [];
   for (const [o, dests] of Object.entries(POPULAR_ROUTES)){
-    if (state.origin && state.origin !== o) continue;
+    if (!okOrigin(o)) continue;
     for (const d of dests){
       const c = countryOf(d);
-      if (state.country && state.country !== c) continue;
+      if (!okCountry(c)) continue;
       if (have.has(o + "-" + canon(d))) continue;
       const url = flightUrl({ o, d, dep, ret, direct: false });
       if (!url) continue;
@@ -1892,27 +1987,27 @@ function renderMoreRoutes(shown){
   box.classList.toggle("hidden", !cards.length);
 }
 function clearFilters(){
-  state.country = ""; state.conds.clear(); syncMode(); state.budget = 0; state.month = ""; resetPage();
+  state.countries.clear(); state.months.clear(); state.conds.clear(); syncMode(); state.budget = 0; resetPage();
   renderFlights(); scrollToList();
 }
 function renderFlights(){
-  if (state.month && !monthKeys().includes(state.month)) state.month = "";
-  renderMonths(); renderChips(); renderTiles(); syncTree();
+  for (const m of [...state.months]) if (!monthKeys().includes(m)) state.months.delete(m);
+  renderMonths(); renderCountries(); renderChips(); renderTiles(); syncTree();
   const fsc = state.mode === "fsc";
-  const where = state.country ? COUNTRIES[state.country] : "";
+  const cs = [...state.countries], ms = [...state.months].sort();
+  const where = cs.length ? (cs.length > 2 ? `${COUNTRIES[cs[0]]}等 ${cs.length} 國` : cs.map(c => COUNTRIES[c]).join("・")) : "";
   $("#fTitle").textContent = "便宜機票" + (where ? `・${where}` : "");
-  $("#fSub").textContent = `${state.month ? Number(state.month.split("-")[1]) + "月出發" : `近 ${monthKeys().length} 個月`}・${state.type === "rt" ? "來回" : "單程"}・預估最低價（含稅）`;
-  $("#tilesSub").textContent = fsc ? "只看華航、長榮、國泰等傳統航空" : "";
-  $("#tilesSub").classList.toggle("hidden", !fsc);
+  $("#fSub").textContent = `${ms.length ? ms.map(m => Number(m.slice(5))).join("・") + "月出發" : `近 ${monthKeys().length} 個月`}・${state.type === "rt" ? "來回" : "單程"}・預估最低價（含稅）`;
+  renderSummary();
   const cc = $("#clearC");
-  cc.classList.toggle("hidden", !state.country);
-  cc.innerHTML = state.country ? `${esc(COUNTRIES[state.country])} ${icon("close")}` : "";
+  cc.classList.toggle("hidden", !cs.length);
+  cc.innerHTML = cs.length ? `${esc(cs.map(c => COUNTRY_SHORT[c]).join("・"))} ${icon("close")}` : "";
 
 
-  const list = cheapestPerRoute(baseFiltered().filter(f => !state.month || f.dep.startsWith(state.month)));
+  const list = cheapestPerRoute(baseFiltered().filter(f => okMonth(f.dep)));
   const box = $("#flightList");
-  const narrowed = state.country || state.conds.size || state.budget || state.month || state.origin;
-  if (state.origin === "TNN" && !list.length){
+  const narrowed = state.countries.size || state.conds.size || state.budget || state.months.size || state.origins.size;
+  if (state.origins.size === 1 && state.origins.has("TNN") && !list.length){
     // 免費資料來源沒有台南出發的預估價：老實說，給兩個出口
     box.innerHTML = `<div class="empty">${EMPTY_ART}<b>台南出發的國際線比較少，目前還沒有預估價</b>可以看看高雄出發（車程約 40 分鐘），或直接到 Trip.com 查台南出發的即時價。
       <div class="btns"><button class="btn" data-origin="KHH">看高雄出發</button><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/?dcity=tnn&locale=zh-TW&curr=TWD"))}" target="_blank" rel="noopener sponsored">去 Trip.com 查台南出發</a></div></div>`;
@@ -1926,6 +2021,7 @@ function renderFlights(){
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
   }
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
+  $("#setGo").textContent = list.length ? `看 ${list.length} 條航線` : "看結果";
   renderMoreRoutes(list);
   renderFavs();
   renderPicks();
@@ -2048,7 +2144,7 @@ function hotelDateOptions(){
   return opts;
 }
 // 某個城市最便宜的來回機票（便宜機票分頁、不限出發地），酒店城市卡用
-function withAllOrigins(fn){ const o = state.origin; state.origin = ""; try { return fn(); } finally { state.origin = o; } }
+function withAllOrigins(fn){ const o = state.origins; state.origins = new Set(); try { return fn(); } finally { state.origins = o; } }
 function cityFlightDeal(c){
   return withMode("all", "rt", () => withAllOrigins(() => {
     let best = null;
@@ -2145,7 +2241,7 @@ let pendingRoute = true;
 function mergeAndRender(rows){
   if (!state.loaded || !addRows(rows || [])) return;
   // 目前選的月份沒有票，就換到有票而且最便宜的月份
-  if (!baseFiltered().some(f => f.dep.startsWith(state.month))) state.month = bestMonth();
+  monthWithResults();
   if (!$("#updated").textContent) $("#updated").textContent = "預估價・今天更新";
   if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); } else renderHotelCities();
   renderBrandTag();
@@ -2188,7 +2284,6 @@ async function loadFlights(){
   if (cached && addRows(cached.rows)){
     fromCache = true; state.loaded = true; state.updatedAt = cached.u;
     $("#updated").textContent = `預估價・更新於 ${cached.u ? fmtTime(cached.u) : "稍早"}・正在更新`;
-    state.month = bestMonth();
     renderAllFlights();
   }
   let fresh = null;
@@ -2201,19 +2296,16 @@ async function loadFlights(){
     } catch(e) { /* 換下一個來源 */ }
   }
   if (fresh){
-    const keepMonth = fromCache ? state.month : null;
     if (fromCache) resetFlights(); // 用新資料整個換掉，舊價格不留
     addRows(fresh.rows); state.updatedAt = fresh.u; fromCache = false;
     writeDataCache(fresh.rows, fresh.u);
     state.loaded = true;
     $("#updated").textContent = `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "今天"}`;
-    // 粉絲已經在看的月份還有票就不跳走
-    state.month = keepMonth && baseFiltered().some(f => f.dep.startsWith(keepMonth)) ? keepMonth : bestMonth();
+    monthWithResults(); // 粉絲選的月份還有票就不動
   } else {
     state.loaded = true;
     $("#updated").textContent = state.flights.length
       ? `預估價・更新於 ${state.updatedAt ? fmtTime(state.updatedAt) : "稍早"}${fromCache ? "（暫時連不上，先顯示上次的價格）" : ""}` : "";
-    if (!fromCache) state.month = bestMonth();
   }
   // 粉絲已經在滑大圖（用存的資料畫的）就不重畫大圖，免得被拉回第一張
   if (cached && heroTouched){ renderFlights(); renderHotelCities(); renderBrandTag(); } else renderAllFlights();
@@ -2222,7 +2314,14 @@ async function loadFlights(){
 }
 // 預設選「有票、而且最便宜」的月份
 // 預設「全部月份」
-function bestMonth(){ return ""; }
+// 找機票卡片上的條件摘要（點了打開設定）
+function renderSummary(){
+  const names = (set, map, all) => set.size ? [...set].map(v => map[v]).join("・") : all;
+  const parts = [state.type === "rt" ? "來回" : "單程", names(state.origins, ORIGIN_NAME, "全部出發地"), names(state.countries, COUNTRY_SHORT, "全部國家"),
+    state.months.size ? [...state.months].sort().map(m => Number(m.slice(5))).join("・") + "月" : "全部月份",
+    ...CONDS.filter(c => state.conds.has(c.v)).map(c => c.t)];
+  $("#fSum").innerHTML = `${icon("gear")}<span class="fs-chips">${parts.map(t => `<i>${esc(t)}</i>`).join("")}</span><b>調整</b>`;
+}
 
 /* ====================================================================
    ⑬ 互動
@@ -2252,26 +2351,58 @@ $("#tripType").addEventListener("click", e => {
   $("#tripType").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
   renderHero(); renderFlights();
 });
-$("#origin").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || b.dataset.v === state.origin) return; // 點已選的那顆不做事
-  state.origin = b.dataset.v;
-  $("#origin").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-  syncTree();
-  resetPage(); monthWithResults(); renderHero(); renderFlights(); // 這個月還有票就留在這個月
-});
-$("#months").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.month = b.dataset.v; resetPage(); renderFlights(); });
-$("#tiles").addEventListener("click", e => {
-  const b = e.target.closest("button.tile"); if (!b) return;
-  state.country = state.country === b.dataset.v ? "" : b.dataset.v; resetPage(); // 再點一次同一區也會回到全部
-  if (state.flights.length) state.month = bestMonth();
-  renderFlights(); scrollToList();
-});
+// 哪裡飛／飛哪裡／幾月飛：可複選；點「全部」清掉；選起來時放花火
+function bindMulti(el, set, after){
+  el.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const v = b.dataset.v;
+    let on = true;
+    if (!v){ if (!set.size) return; set.clear(); }
+    else if (set.has(v)){ set.delete(v); on = false; }
+    else set.add(v);
+    if (on) fireworks(b);
+    resetPage(); after();
+  });
+}
+bindMulti($("#origin"), state.origins, () => { syncTree(); monthWithResults(); renderHero(); renderFlights(); });
+bindMulti($("#countries"), state.countries, () => { monthWithResults(); renderFlights(); });
+bindMulti($("#months"), state.months, () => renderFlights());
+$("#tiles").addEventListener("click", e => { if (e.target.closest(".tile-set")) openSet(); });
+$("#fSum").addEventListener("click", () => openSet());
 // 換條件後這個月沒有票、別的月有：自動跳到有票而且最便宜的月份
 function monthWithResults(){
   const has = (m) => baseFiltered().some(f => f.dep.startsWith(m));
-  if (state.month && !has(state.month)) state.month = ""; // 這個月沒票了就回到「全部」
+  for (const m of [...state.months]) if (!has(m)) state.months.delete(m); // 選的月份沒票了就拿掉（都沒了＝全部）
 }
-$("#clearC").addEventListener("click", () => { state.country = ""; resetPage(); renderFlights(); });
+$("#clearC").addEventListener("click", () => { state.countries.clear(); resetPage(); renderFlights(); });
+// 設定面板：打開時記一筆瀏覽紀錄（手機返回鍵＝關掉），Esc、X、背景、看結果都能關
+let setOpen = false;
+function openSet(){
+  if (setOpen) return;
+  setOpen = true; setReturnFocus = document.activeElement;
+  $("#setSheet").classList.remove("hidden"); document.body.classList.add("lock");
+  try { history.pushState({ howSet: 1 }, ""); } catch(e) {}
+  $("#setSheet .sheet-x").focus({ preventScroll: true });
+  requestAnimationFrame(() => { treePathD = ""; drawTreePath(); });
+}
+let setReturnFocus = null;
+function closeSet(fromBack){
+  if (!setOpen) return;
+  setOpen = false;
+  $("#setSheet").classList.add("hidden");
+  if ($("#sheet").classList.contains("hidden")) document.body.classList.remove("lock");
+  if (!fromBack) try { history.back(); } catch(e) {}
+  if (setReturnFocus && setReturnFocus.focus && setReturnFocus.isConnected) setReturnFocus.focus({ preventScroll: true });
+}
+window.addEventListener("popstate", () => { if (setOpen) closeSet(true); });
+document.addEventListener("click", e => { if (e.target.closest("[data-setclose]")) closeSet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && setOpen) closeSet(); });
+$("#setGo").addEventListener("click", () => { closeSet(); setTimeout(scrollToList, 60); });
+$("#setReset").addEventListener("click", () => {
+  state.origins.clear(); state.countries.clear(); state.months.clear(); state.conds.clear(); syncMode();
+  if (state.type !== "rt"){ state.type = "rt"; $("#tripType").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === "rt")); }
+  resetPage(); renderHero(); renderFlights();
+});
 $("#filters").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const v = b.dataset.v, prevMode = state.mode;
@@ -2640,7 +2771,7 @@ function lucky(){
 }
 
 // 點擊感：按下去時加 .press（縮一下）、按鈕加水波；Android 輕震一下
-const PRESS = ".card, .pass, .tile, .mini, .chip, .month, .lucky, .cta, .hero-cta, .btn2, .more, .seg button, .tabs button, .rrow, .opt, .hotel-x, .t-all, .t-kid";
+const PRESS = ".card, .pass, .tile, .f-sum, .mini, .chip, .month, .lucky, .cta, .hero-cta, .btn2, .more, .seg button, .tabs button, .rrow, .opt, .hotel-x, .t-all, .t-kid";
 const RIPPLE = ".cta, .btn2:not(.fav-btn), .more, .rrow, .opt, .chip, .month, .lucky, .hotel-x";
 let pressed = null;
 const unpress = () => { if (pressed){ pressed.classList.remove("press"); pressed = null; } };
@@ -2654,7 +2785,8 @@ document.addEventListener("pointerdown", e => {
   const r = el.matches(RIPPLE) && MOTION ? el : null;
   if (r){
     const b = r.getBoundingClientRect(), size = Math.max(b.width, b.height) * 2.2;
-    r.classList.add("rip-host");
+    // 水波要裁在按鈕裡；本來就有定位的（例如右上角的「幫我選」）不能改成 relative，不然按下去按鈕會跳走
+    r.classList.add(getComputedStyle(r).position === "static" ? "rip-host" : "rip-clip");
     const sp = document.createElement("span"); sp.className = "rip";
     sp.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - b.left - size / 2}px;top:${e.clientY - b.top - size / 2}px`;
     r.appendChild(sp); setTimeout(() => sp.remove(), 600);
@@ -2667,7 +2799,7 @@ document.addEventListener("scroll", unpress, { passive: true, capture: true });
 document.addEventListener("click", e => {
   const t = e.target;
   if (t.closest("[data-close]")){ closeSheet(); return; }
-  const og = t.closest("[data-origin]"); if (og){ const ob = document.querySelector(`#origin button[data-v="${og.dataset.origin}"]`); if (ob) ob.click(); return; }
+  const og = t.closest("[data-origin]"); if (og){ state.origins.clear(); state.origins.add(og.dataset.origin); resetPage(); syncTree(); renderHero(); renderFlights(); return; }
   const hr = t.closest("[data-hroute]"); if (hr){ const [o, d] = hr.dataset.hroute.split("-"); openHotelRoute(o, d); return; }
   const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); openRouteFrom(r, o, d); return; }
   const sh = t.closest("[data-share]"); if (sh){ const [o, d] = sh.dataset.share.split("-"); shareRoute(o, d, sh.dataset.smode, sh.dataset.stype); return; }
@@ -2690,7 +2822,8 @@ document.addEventListener("click", e => {
   }
 
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheet").classList.contains("hidden")) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !setOpen && !$("#sheet").classList.contains("hidden")) closeSheet(); });
+$("#setSheet .sheet-x").innerHTML = icon("close");
 $("#luckyBtn").innerHTML = icon("dice") + "幫我選！";
 $("#sheet .sheet-x").innerHTML = icon("close");
 // 分享連結 ?route=KHH-SEL：資料載入後直接打開那條航線
@@ -2770,7 +2903,7 @@ function renderFavs(){
   const drops = [];
   favShown = 0;
   // 收藏不受「出發地」按鈕影響（選台北時，高雄出發的收藏也要在）
-  const origin0 = state.origin; state.origin = "";
+  const origin0 = state.origins; state.origins = new Set();
   let cards;
   try { cards = favs.map(k => {
     const [o, d] = k.split("-");
@@ -2784,7 +2917,7 @@ function renderFavs(){
     else if (diff >= 100) badge = `<span class="badge">${icon("up")}比上次貴 ${money(diff)}</span>`;
     if (dataSettled) saveFavPrice(k, Math.round(f.price));
     return miniCard(f, { mp: `最便宜・${list.length} 組`, badge });
-  }).join(""); } finally { state.origin = origin0; }
+  }).join(""); } finally { state.origins = origin0; }
   if (drops.length && !favDropToasted){
     favDropToasted = true;
     const [d, v] = drops.sort((a, b) => b[1] - a[1])[0];
@@ -2949,7 +3082,6 @@ document.addEventListener("keydown", e => {
     $("#tripType").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === "ow"));
   }
 })();
-state.month = "";
 $("#hero").innerHTML = heroLoading();
 // 大圖捲出畫面時暫停它的動畫（省電）
 if (MOTION && "IntersectionObserver" in window){
@@ -2973,7 +3105,7 @@ if (MOTION && "IntersectionObserver" in window){
 // 捲出畫面的區塊加 .offscreen，裡面重複播放的動畫（星星、旋轉外圈、骰子、雷達）暫停
 if (MOTION && "IntersectionObserver" in window){
   const offIO = new IntersectionObserver(es => { for (const e of es) e.target.classList.toggle("offscreen", !e.isIntersecting); });
-  for (const el of [document.querySelector("#flights .sec-head"), $("#tiles"), $("#radarSec")]) if (el) offIO.observe(el);
+  for (const el of [$("#tiles"), $("#radarSec")]) if (el) offIO.observe(el);
 }
 // 分段切換的白色滑塊：哪顆被選就滑過去（不管是點的、程式改的、分享連結帶的）
 function segThumb(box, attr){
