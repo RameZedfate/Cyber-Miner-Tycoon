@@ -279,7 +279,7 @@ async function measure(page) {
       if (c && p) { const a = R(c), b = R(p); if (a.right > b.left + 1) out.push(`城市名稱壓到價格：${c.textContent}`); if (b.right > card.right + 1) out.push("價格超出卡片"); }
     }
     // 6. 文字被截斷或撐破
-    for (const sel of [".cap .city", ".air .an", ".cty", ".hc-fly span", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
+    for (const sel of [".cap .city", ".air .an", ".cty", ".hc-fly span", ".t-kid .m", ".t-kid .p", ".t-all", ".t-q", ".pr-end b", ".pf-p strong", ".pf-d", ".price", ".when b", ".when .dm", ".more-d", ".tile .t b", ".tile .t span", ".month .p", ".month .m", ".tabs button", ".hero h2", ".badge", ".mini .md", ".mini .mp strong", ".tk-end b", ".tk-p strong", ".mini .ms", ".mini .mc", ".pbadge", ".chip", ".clear-c", ".rrow .rr-c", ".rrow .rr-go", ".win-in h3", ".win .eyebrow", ".win-sub", ".btn2"]) {
       for (const el of document.querySelectorAll(sel)) {
         if (!vis(el)) continue;
         const s3 = el.closest(".s3d"); if (s3 && s3.style.transform) continue; // 3D 轉到旁邊的輪播卡片不量
@@ -359,13 +359,32 @@ async function measure(page) {
     if (ctl.length && Math.max(...ctl) - Math.min(...ctl) > 1) out.push(`篩選面板各排左緣沒對齊：${ctl.join(",")}`);
     const panel = document.querySelector(".panel");
     if (panel && vis(panel)) for (const el of panel.querySelectorAll(".plbl:not(.sr-only)")) { const a = R(el), b = R(panel); if (a.left < b.left) out.push("篩選標籤超出面板"); }
-    // 10. 分頁按鈕三顆等寬
+    // 樹狀選單：同一排的按鈕等寬、在框內；每顆上面的連線剛好在按鈕正中間
+    for (const kids of document.querySelectorAll(".t-kids")) {
+      if (!vis(kids)) continue;
+      const bs = [...kids.children], ws = bs.map(b => Math.round(R(b).width)), kb = R(kids);
+      if (Math.max(...ws) - Math.min(...ws) > 1) out.push(`樹狀選單同一排寬度不一：${ws.join(",")}`);
+      for (const b of bs) { const r = R(b); if (r.left < kb.left - 1 || r.right > kb.right + 1) out.push(`樹狀選單按鈕超出：${b.textContent.trim()}`);
+        if (r.right > W) out.push(`樹狀選單按鈕超出畫面：${b.textContent.trim()}`); }
+      const all = kids.parentElement.querySelector(".t-all"); if (all) { const a = R(all), mid = (kb.left + kb.right) / 2;
+        if (Math.abs((a.left + a.right) / 2 - mid) > 1.5) out.push("樹狀選單「全部」沒有在下面那排的正中間"); }
+    }
+    for (const q of document.querySelectorAll(".t-head .t-q")) { if (!vis(q)) continue; const r = R(q), h = R(q.closest(".finder"));
+      if (r.right > h.right - 4) out.push(`樹狀選單的問題文字超出卡片：${q.textContent}`); }
+    // 10. 分頁按鈕等寬
     const tabs = [...document.querySelectorAll(".tabs button")].map(b => Math.round(R(b).width));
     if (Math.max(...tabs) - Math.min(...tabs) > 1) out.push(`分頁按鈕寬度不一：${tabs.join(",")}`);
     // 11. 篩選列每顆按鈕高度一致、垂直置中
     for (const sc of [...document.querySelectorAll(".scroller, .quick")].filter(e => getComputedStyle(e).display === "flex")) {
       const bs = [...sc.children].filter(vis);
       const tops = bs.map(b => Math.round(R(b).top)), hs = bs.map(b => Math.round(R(b).height));
+      // 會換行的那排（額外條件）：同一行的上緣要對齊、每行間距一樣，按鈕都在框內
+      if (getComputedStyle(sc).flexWrap === "wrap") {
+        const rows = [...new Set(tops)].sort((x, y) => x - y), scr = R(sc);
+        const rowsOk = rows.every(t => tops.filter(x => Math.abs(x - t) <= 1).length > 0) && rows.length <= Math.ceil(bs.length / 1);
+        if (!rowsOk || Math.max(...hs) - Math.min(...hs) > 1 || bs.some(b => R(b).right > scr.right + 1)) out.push(`#${sc.id} 按鈕沒對齊`);
+        continue;
+      }
       if (bs.length && (Math.max(...tops) - Math.min(...tops) > 1 || Math.max(...hs) - Math.min(...hs) > 1)) out.push(`#${sc.id} 按鈕沒對齊`);
     }
     return out;
@@ -391,8 +410,10 @@ try {
     // 先收藏兩條航線，讓「我收藏的航線」也一起量
     for (const b of (await page.$$("#flightList .card [data-fav]")).slice(0, 2)) await b.click();
     await page.waitForTimeout(200);
+    // fsc＝便宜機票分頁勾「僅看傳統」（已經沒有傳統航空分頁）
     for (const tab of ["flights", "fsc", "hotels"]) {
-      await page.click(`.tabs button[data-tab="${tab}"]`);
+      await page.click(`.tabs button[data-tab="${tab === "fsc" ? "flights" : tab}"]`);
+      if (tab === "fsc") await page.click('#filters button[data-v="fsc"]');
       // 捲動整頁讓延遲載入的照片都載入
       await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 40)); } window.scrollTo(0, 0); });
       await page.waitForTimeout(700);
@@ -409,6 +430,7 @@ try {
       const fbNames = await page.$$eval(".ph .fb", els => els.filter(e => !e.closest("section.hidden") && !e.parentElement.querySelector(".bgimg.ok")).map(e => e.textContent));
       console.log(`[${w}px ${tab}] 照片載入 ${ok} 張、使用漸層底 ${fb} 個${fb ? "（" + fbNames.join("、") + "）" : ""}、問題 ${issues.length} 個`);
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `layout-${w}-${tab}.png`), fullPage: true });
+      if (tab === "fsc") await page.click('#filters button[data-v="fsc"]');
     }
     // 便宜票雷達：標籤不重疊、不超出、點了要開價格日曆
     await page.click('.tabs button[data-tab="flights"]');
