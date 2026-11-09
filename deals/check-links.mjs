@@ -770,6 +770,9 @@ try {
     if (!(await page.textContent("#sheet .fx-src")).includes("約")) problems.push("拿不到今天匯率時應標示「參考匯率（約）」");
     const cdt = await page.$$eval("#sheet .costs dt", ds => ds.map(d => d.textContent));
     if (cdt.join() !== "機票,酒店,機＋酒") problems.push(`價格日曆費用的順序不對：${cdt}`);
+    // 酒店寫清楚怎麼算：每晚參考價 × 晚數
+    const hd = await page.$$eval("#sheet .costs .ir", rs => (rs[1] && rs[1].textContent) || "");
+    if (!/每晚約 NT\$[\d,]+ × \d+ 晚/.test(hd) || !hd.includes("參考價")) problems.push(`酒店沒寫「每晚約 NT$○ × N 晚」參考價：${hd}`);
     if (!(await page.textContent("#sheet .cost-note").catch(() => "")).includes("2 人")) problems.push("價格日曆沒有「酒店均以 2 人」的備註");
     const order = await page.evaluate(() => { const b = document.querySelector("#sheet .sh-body"), idx = (q) => [...b.querySelectorAll("*")].indexOf(b.querySelector(q)); return [idx(".info"), idx(".opt-list"), idx(".cal")]; });
     if (!(order[0] < order[1] && order[1] < order[2])) problems.push(`價格日曆應該是資訊 → 幾組日期 → 日曆：${order}`);
@@ -860,6 +863,10 @@ try {
     await page.click('#flightList [data-origin="KHH"]');
     if ((await page.evaluate(() => [...state.origins].join())) !== "KHH") problems.push("按「看高雄出發」沒有換成高雄");
     await setClick(page, '#origin button[data-v=""]');
+    // 「全部」放在每排正中間：高雄 台南 全部 台中 台北
+    const mid = await page.evaluate(() => ["#origin", "#countries", "#months"].map(q => { const bs = [...document.querySelectorAll(`${q} button`)]; return [bs.findIndex(b => !b.dataset.v), Math.floor(bs.length / 2), bs.map(b => b.textContent.trim().slice(0, 2)).join(" ")]; }));
+    for (const [i, want, txt] of mid) if (i !== want) problems.push(`「全部」沒有在正中間：${txt}`);
+    if (mid[0][2] !== "高雄 台南 全部 台中 台北") problems.push(`哪裡飛？的順序應為「高雄 台南 全部 台中 台北」：${mid[0][2]}`);
     // 選到的是克萊茵藍
     const kb = await page.$eval('#months .t-all', b => getComputedStyle(b).color);
     if (kb !== "rgb(0, 47, 167)") problems.push(`選到的按鈕不是克萊茵藍：${kb}`);
