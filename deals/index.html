@@ -337,6 +337,68 @@
   .set-foot{position:sticky;bottom:0;z-index:3;display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(245,243,238,0),var(--bg) 28%)}
   .set-foot .cta{flex:1 1 auto;border:0;font-size:15.5px}
   .set-foot .btn2{flex:0 0 auto}
+  /* ---------- 「航線」圈圈：極簡奶油白＋繞著轉的小粒子 ---------- */
+  .stories{padding-top:12px !important}
+  .tile-set .ring{position:relative;background:linear-gradient(145deg,#F3E7CF,#E9D7B4)}
+  .tile-set .all-ph{background:radial-gradient(circle at 35% 30%,#FFFDF8,#FBF4E6 70%)}
+  .tile-set .all-ph .ic{color:#8A6A3B;width:46%;height:46%}
+  .tile-set .t b{color:#5B4526}
+  .orbit{position:absolute;inset:-7px;border-radius:50%;pointer-events:none}
+  .orbit i{position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);border-radius:50%;
+    background:#E2B866;opacity:var(--o);box-shadow:0 0 6px rgba(226,184,102,.8);transform:rotate(var(--a)) translateY(-46px)}
+  @media (min-width:760px){ .orbit i{transform:rotate(var(--a)) translateY(-49px)} }
+  .anim .orbit{animation:spin 14s linear infinite}
+  .anim .orbit i:nth-child(2n){animation:tw 2.4s ease-in-out infinite}
+  .anim .orbit i:nth-child(3n){animation:tw 3.1s ease-in-out .8s infinite}
+  /* ---------- 雷達最下面：滑到底了的「幫我選」卡片 ---------- */
+  .lucky-card{position:relative;display:flex;align-items:center;gap:14px;margin:26px auto 0;max-width:560px;padding:16px 16px;border-radius:20px;
+    background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.18);color:#fff}
+  .lc-art{flex:0 0 46px;height:46px;border-radius:14px;background:radial-gradient(circle at 30% 30%,#FFD66B,#FF8A00);box-shadow:0 8px 20px -6px rgba(255,138,0,.6);position:relative}
+  .lc-art::before,.lc-art::after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#0B2340}
+  .lc-art::before{left:11px;top:11px} .lc-art::after{right:11px;bottom:11px;box-shadow:-13px -13px 0 #0B2340,-13px 0 0 #0B2340,0 -13px 0 #0B2340}
+  .anim .lc-art{animation:wig 4s ease-in-out 1s infinite}
+  .lc-txt{flex:1 1 auto;min-width:0;line-height:1.35}
+  .lc-txt b{display:block;font-size:16px;font-weight:900}
+  .lc-txt span{display:block;font-size:14.5px;color:#C9D6EA;font-weight:600}
+  .lucky-card .lucky{flex:0 0 auto;background:var(--yellow);border-color:var(--yellow);color:#0B2340;font-weight:800;height:42px;padding:0 16px}
+  .lucky-card .lucky .ic{color:#0B2340}
+  .band.no-radar h2.sec, .band.no-radar #radarSub, .band.no-radar .rbud, .band.no-radar .radar-wrap{display:none}
+  .list-top{height:6px}
+  /* ---------- 價格日曆：資訊清單（左標題、右內容） ---------- */
+  .info{margin:0 0 4px;padding:6px 14px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+  .info .ir{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(17,24,39,.08)}
+  .info .ir:last-child{border-bottom:0}
+  .info dt{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .info dd{margin:0;font-size:15px;font-weight:700;color:var(--ink);min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .info dd .ic{width:16px;height:16px;color:var(--gold)}
+  .info dd small{font-size:12px;font-weight:600;color:var(--muted)}
+  .flag{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif;font-size:18px;line-height:1}
+  .fx-box{display:inline-flex;align-items:center;padding:2px 10px;border:1.5px solid var(--klein-line);border-radius:8px;color:var(--klein);font-weight:800;font-variant-numeric:tabular-nums;background:var(--klein-bg)}
+  .costs{margin-top:10px}
+  .costs .ir dd{font-size:16px}
+  .costs .ir.sum dd{font-size:19px;color:var(--navy)}
+  .costs .ir.sum dt{color:var(--ink)}
+  .costs .ir.sum dd strong, .costs .ir.sum dd{background:linear-gradient(transparent 60%,rgba(255,199,44,.5) 60%);width:max-content}
+  .cost-note{margin:6px 2px 0;font-size:12px;color:var(--muted)}
+  .sh-h{display:flex;align-items:baseline;gap:8px;margin:22px 0 10px;font-size:18px;font-weight:900;color:var(--navy)}
+  .sh-h small{font-size:12.5px;font-weight:600;color:var(--muted)}
+  /* 節慶日：日曆格子角落一個手繪小圖，月份旁邊畫幾朵花火 */
+  .day.fest{position:relative;box-shadow:inset 0 0 0 1.5px rgba(225,29,72,.45)}
+  .day .fz{position:absolute;right:1px;top:1px;width:15px;height:15px;pointer-events:none}
+  .cal h4{position:relative}
+  .cal-deco{position:absolute;right:0;top:-12px;height:36px;width:110px;pointer-events:none}
+  .cal-deco svg{position:absolute}
+  .cal-deco .cd1{right:0;top:0;width:36px;height:36px}
+  .cal-deco .cd2{right:40px;top:6px;width:26px;height:26px}
+  .cal-deco .cd3{right:72px;top:-2px;width:20px;height:20px}
+  .anim .cal-deco svg{animation:pop .6s cubic-bezier(.2,1.5,.4,1) both}
+  .anim .cal-deco .cd2{animation-delay:.12s} .anim .cal-deco .cd3{animation-delay:.24s}
+  .fest-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .fest-list li{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ink)}
+  .fest-list .fl{width:22px;height:22px;flex:0 0 auto}
+  .fest-list b{font-variant-numeric:tabular-nums;color:var(--red)}
+  .fest-list small{font-size:11.5px;font-weight:600;color:var(--muted)}
+  .legend .lg{width:16px;height:16px;vertical-align:-3px;margin-right:2px}
   /* 花火 */
   .fw{position:fixed;z-index:120;width:0;height:0;pointer-events:none}
   .fw i{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px 1px var(--c);
@@ -877,6 +939,7 @@
   @keyframes wig{0%,86%,100%{transform:none}89%{transform:rotate(-18deg) scale(1.1)}92%{transform:rotate(16deg) scale(1.1)}95%{transform:rotate(-8deg)}}
   @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none !important;transition:none !important} .rv{opacity:1 !important;transform:none !important} .progress b{display:none} }
 </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&text=%F0%9F%87%AF%F0%9F%87%B5%F0%9F%87%B0%F0%9F%87%B7%F0%9F%87%B9%F0%9F%87%AD%F0%9F%87%BB%F0%9F%87%B3%F0%9F%87%A8%F0%9F%87%B3%F0%9F%87%AD%F0%9F%87%B0&display=swap" />
 </head>
 <body>
 <!-- 背景裝飾：慢慢飄的光暈＋淡淡的航線、地球經緯線（固定不動、在內容下面） -->
@@ -937,17 +1000,7 @@
       <div id="pickList"></div>
     </section>
 
-    <!-- 找機票面板：毛玻璃卡片（標題＋行程／出發地＋月份＋條件） -->
-    <section class="finder" aria-labelledby="fTitle">
-    <svg class="f-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/></svg>
-    <div id="listTop">
-      <h2 class="sec" id="fTitle">便宜機票</h2>
-      <p class="sub" id="fSub">預估最低價</p>
-    </div>
-
-    <button class="f-sum" id="fSum" aria-label="調整條件"></button>
-    <button class="lucky f-lucky" id="luckyBtn">幫我選！</button>
-    </section>
+    <div id="listTop" class="list-top"></div>
     <div class="meta-row"><span id="updated">讀取中…</span><span class="mr-r"><button class="clear-c hidden" id="clearC"></button><span id="count"></span></span></div>
     <div class="grid" id="flightList">
       <div class="skel"><div class="a"></div><div class="b"></div></div>
@@ -956,13 +1009,6 @@
     </div>
     <button class="more hidden" id="moreBtn">查看更多航線</button>
 
-    <section id="moreRoutes" class="hidden">
-      <h2 class="sec" id="mrTitle">其他熱門航線</h2>
-      <p class="sub" id="mrSub">還沒有預估價，點了直接看 Trip.com 即時價</p>
-      <div class="date-note" id="mrDates"></div>
-      <div class="rlist" id="routeList"></div>
-      <button class="more hidden" id="routesMore">顯示全部</button>
-    </section>
   </div>
   <section id="radarSec" class="band hidden">
     <div class="wrap">
@@ -974,6 +1020,12 @@
         <p class="rbud-out" id="rbudOut" aria-live="polite"></p>
       </div>
       <div class="radar-wrap"><svg id="radar" viewBox="0 0 400 400" role="group" aria-label="便宜票雷達：各城市的方向、距離與最低價"></svg></div>
+      <!-- 頁面最下面：滑到底了就幫粉絲選一個 -->
+      <div class="lucky-card">
+        <div class="lc-art" aria-hidden="true"></div>
+        <div class="lc-txt"><b>你都滑到底了，</b><span>不如我幫你選吧？</span></div>
+        <button class="lucky" id="luckyBtn">幫我選！</button>
+      </div>
     </div>
   </section>
 </section>
@@ -1003,7 +1055,7 @@
   <div class="sheet-bg" data-setclose></div>
   <div class="sheet-panel set-panel">
     <button class="sheet-x" data-setclose aria-label="關閉"></button>
-    <div class="set-head"><h3 id="setTitle">設定</h3><p>可以複選。上面的限時動態和下面的機票會跟著變。</p></div>
+    <div class="set-head"><h3 id="setTitle">選航線</h3><p>可以複選。上面的限時動態和下面的機票會跟著變。</p></div>
     <!-- 選機票：每排左邊一個粗體問題；一條克萊茵藍的線連起選到的（可複選，會分岔） -->
     <div class="tree">
       <svg class="t-path" aria-hidden="true"></svg>
@@ -1058,6 +1110,7 @@ const CONFIG = {
   // 機票資料來源，依序嘗試。第一格是新 Worker（deals/worker.js）；第二格是舊版 Worker，當備援。
   dataUrls: ["https://howtravle-deals.a8225012.workers.dev/", "https://cold-union-5668.a8225012.workers.dev/"],
   visitUrl: "https://howtravle-deals.a8225012.workers.dev/?part=visit", // 累積瀏覽人數（要先設定 KV）
+  fxUrl: "https://open.er-api.com/v6/latest/TWD", // 今天匯率（免費、不用金鑰）
   fscUrl: "https://howtravle-deals.a8225012.workers.dev/?part=fsc", // 傳統航空
   // 熱門航線細抓（每段一個月），讓同一條航線有更多日期可選；抓不到就略過
   // 熱門航線細抓（m＝逐月、g＝每天最低價），先顯示主要資料，這些到了再補進去
@@ -1247,6 +1300,7 @@ function flightUrl(f){
 // 自繪圖示（取代 Emoji）。F 開頭＝實心。
 const ICONS = {
   gear: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  route: '<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16" stroke-dasharray="2.2 2.4"/>',
   users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.6-.3 4.9 1.2 5.5 4.3"/>',
   tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.6"/>',
   plane: 'F<path d="M12 2c.83 0 1.5.9 1.5 2v4.6l7.5 4.3v2.2l-7.5-2.3v4.4l2.2 1.6V21L12 19.9 8.3 21v-2.2l2.2-1.6v-4.4L3 15.1v-2.2l7.5-4.3V4c0-1.1.67-2 1.5-2z"/>',
@@ -1814,11 +1868,13 @@ function renderHero(){
 function storyFlights(){ return cheapestPerCity(baseFiltered().filter(f => okMonth(f.dep))).filter(f => flightUrl(f)); }
 function isGreat(f, cut){ return savingPct(f) > 0 || f.price <= cut; }
 function activeCount(){ return state.origins.size + state.countries.size + state.months.size + state.conds.size + (state.type === "ow" ? 1 : 0); }
+// 「航線」圈圈旁邊繞著轉的小粒子
+const ORBIT_DOTS = [0, 52, 118, 170, 228, 296].map((a, i) => `<i style="--a:${a}deg;--s:${[4, 3, 5, 3, 4, 3][i]}px;--o:${[.9, .6, .8, .5, .7, .55][i]}"></i>`).join("");
 function renderTiles(){
   const n = activeCount();
-  const setBtn = `<button class="tile tile-set" id="openSet" aria-label="設定：選出發地、國家、月份和條件${n ? `（已選 ${n} 項）` : ""}">
-      <span class="ring"><span class="ph all-ph">${icon("gear")}</span>${n ? `<i class="set-n">${n}</i>` : ""}</span>
-      <span class="t"><b>設定</b><span>${n ? `已選 ${n} 項` : "選條件"}</span></span></button>`;
+  const setBtn = `<button class="tile tile-set" id="openSet" aria-label="航線：選出發地、國家、月份和條件${n ? `（已選 ${n} 項）` : ""}">
+      <span class="ring"><span class="orbit" aria-hidden="true">${ORBIT_DOTS}</span><span class="ph all-ph">${icon("route")}</span>${n ? `<i class="set-n">${n}</i>` : ""}</span>
+      <span class="t"><b>航線</b><span>${n ? `已選 ${n} 項` : "選條件"}</span></span></button>`;
   if (!state.loaded){
     setHTML($("#tiles"), setBtn + Array.from({ length: 6 }, () => `<span class="tile st-skel" aria-hidden="true"><span class="ring"></span><span class="t"><b></b><span></span></span></span>`).join(""));
     return;
@@ -1943,49 +1999,6 @@ function fireworks(el){
   }
   box.innerHTML = h; document.body.appendChild(box); setTimeout(() => box.remove(), 1300);
 }
-// 熱門航線的建議日期：
-// 選「連假」→ 那個月的連假；選「週末」→ 週五去週日回；其他 → 所選月份（至少一週後）第一個週五去、週一回
-function suggestDates(){
-  const rt = state.type === "rt";
-  const m0 = [...state.months].sort()[0];
-  let d = m0 ? m0 + "-01" : todayTW();
-  if (d < addDays(todayTW(), 7)) d = addDays(todayTW(), 7);
-  while (wd(d) !== 5) d = addDays(d, 1);
-  if (state.conds.has("weekend")) return { dep: d, ret: rt ? addDays(d, 2) : null, why: "週末" };
-  if (state.conds.has("five")) return { dep: d, ret: rt ? addDays(d, 4) : null, why: "五天" };
-  return { dep: d, ret: rt ? addDays(d, 3) : null, why: "" };
-}
-function renderMoreRoutes(shown){
-  const box = $("#moreRoutes");
-  if (!state.loaded){ box.classList.add("hidden"); return; }
-  const fsc = state.mode === "fsc";
-  const have = new Set(shown.map(f => f.o + "-" + canon(f.d)));
-  const { dep, ret, why } = suggestDates();
-  const cards = [];
-  for (const [o, dests] of Object.entries(POPULAR_ROUTES)){
-    if (!okOrigin(o)) continue;
-    for (const d of dests){
-      const c = countryOf(d);
-      if (!okCountry(c)) continue;
-      if (have.has(o + "-" + canon(d))) continue;
-      const url = flightUrl({ o, d, dep, ret, direct: false });
-      if (!url) continue;
-      const lm = landmarkOf(d);
-      cards.push(`<a class="rrow" href="${esc(url)}" target="_blank" rel="noopener sponsored">
-        <span class="rr-t ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, "", 500, false, true)}</span>
-        <span class="rr-c">${esc(cityName(d))}</span><span class="rr-o">${esc(`${ORIGIN_NAME[o]}出發`)}</span><span class="rr-go">看即時價 ›</span></a>`);
-    }
-  }
-  // 先放 6 個（電腦 9 個），清單很少時多放
-  const first = shown.length < 3 ? 12 : innerWidth >= 1000 ? 9 : 6;
-  $("#mrTitle").textContent = shown.length ? "其他熱門航線" : "熱門航線";
-  $("#mrSub").textContent = fsc ? "還沒有預估價，點了看 Trip.com 即時價（可篩選航空公司）" : "還沒有預估價，點了直接看 Trip.com 即時價";
-  $("#mrDates").innerHTML = icon("cal") + `<span>${why ? esc(why) + " " : ""}<b>${esc(fmtDate(dep))}${ret ? " → " + esc(fmtDate(ret)) : "（單程）"}</b>，到 Trip.com 可改</span>`;
-  setHTML($("#routeList"), cards.slice(0, state.routesAll ? cards.length : first).join(""));
-  $("#routesMore").classList.toggle("hidden", state.routesAll || cards.length <= first);
-  $("#routesMore").textContent = `顯示全部（${cards.length}）`;
-  box.classList.toggle("hidden", !cards.length);
-}
 function clearFilters(){
   state.countries.clear(); state.months.clear(); state.conds.clear(); syncMode(); state.budget = 0; resetPage();
   renderFlights(); scrollToList();
@@ -1996,9 +2009,6 @@ function renderFlights(){
   const fsc = state.mode === "fsc";
   const cs = [...state.countries], ms = [...state.months].sort();
   const where = cs.length ? (cs.length > 2 ? `${COUNTRIES[cs[0]]}等 ${cs.length} 國` : cs.map(c => COUNTRIES[c]).join("・")) : "";
-  $("#fTitle").textContent = "便宜機票" + (where ? `・${where}` : "");
-  $("#fSub").textContent = `${ms.length ? ms.map(m => Number(m.slice(5))).join("・") + "月出發" : `近 ${monthKeys().length} 個月`}・${state.type === "rt" ? "來回" : "單程"}・預估最低價（含稅）`;
-  renderSummary();
   const cc = $("#clearC");
   cc.classList.toggle("hidden", !cs.length);
   cc.innerHTML = cs.length ? `${esc(cs.map(c => COUNTRY_SHORT[c]).join("・"))} ${icon("close")}` : "";
@@ -2012,17 +2022,16 @@ function renderFlights(){
     box.innerHTML = `<div class="empty">${EMPTY_ART}<b>台南出發的國際線比較少，目前還沒有預估價</b>可以看看高雄出發（車程約 40 分鐘），或直接到 Trip.com 查台南出發的即時價。
       <div class="btns"><button class="btn" data-origin="KHH">看高雄出發</button><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/?dcity=tnn&locale=zh-TW&curr=TWD"))}" target="_blank" rel="noopener sponsored">去 Trip.com 查台南出發</a></div></div>`;
   } else if (!modeFiltered().length){
-    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，先看下面的熱門航線，或直接到 Trip.com 查。
+    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>今天的低價票還在整理中</b>${fsc ? "傳統航空" : ""}預估價每天自動更新，可以先到 Trip.com 查即時價。
       <div class="btns"><a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else if (!list.length){
-    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>這個條件目前沒有預估低價</b>下面的熱門航線可以直接看 Trip.com 即時價，或放寬條件看看。
-      <div class="btns">${narrowed ? `<button class="btn" data-clear>看全部最便宜的票</button>` : ""}</div></div>`;
+    box.innerHTML = `<div class="empty">${EMPTY_ART}<b>這個條件目前沒有預估低價</b>放寬條件看看，或到 Trip.com 查即時價。
+      <div class="btns">${narrowed ? `<button class="btn" data-clear>看全部最便宜的票</button>` : ""}<a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else {
     box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
   }
   $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
   $("#setGo").textContent = list.length ? `看 ${list.length} 條航線` : "看結果";
-  renderMoreRoutes(list);
   renderFavs();
   renderPicks();
   renderRadar();
@@ -2314,14 +2323,6 @@ async function loadFlights(){
 }
 // 預設選「有票、而且最便宜」的月份
 // 預設「全部月份」
-// 找機票卡片上的條件摘要（點了打開設定）
-function renderSummary(){
-  const names = (set, map, all) => set.size ? [...set].map(v => map[v]).join("・") : all;
-  const parts = [state.type === "rt" ? "來回" : "單程", names(state.origins, ORIGIN_NAME, "全部出發地"), names(state.countries, COUNTRY_SHORT, "全部國家"),
-    state.months.size ? [...state.months].sort().map(m => Number(m.slice(5))).join("・") + "月" : "全部月份",
-    ...CONDS.filter(c => state.conds.has(c.v)).map(c => c.t)];
-  $("#fSum").innerHTML = `${icon("gear")}<span class="fs-chips">${parts.map(t => `<i>${esc(t)}</i>`).join("")}</span><b>調整</b>`;
-}
 
 /* ====================================================================
    ⑬ 互動
@@ -2368,7 +2369,7 @@ bindMulti($("#origin"), state.origins, () => { syncTree(); monthWithResults(); r
 bindMulti($("#countries"), state.countries, () => { monthWithResults(); renderFlights(); });
 bindMulti($("#months"), state.months, () => renderFlights());
 $("#tiles").addEventListener("click", e => { if (e.target.closest(".tile-set")) openSet(); });
-$("#fSum").addEventListener("click", () => openSet());
+
 // 換條件後這個月沒有票、別的月有：自動跳到有票而且最便宜的月份
 function monthWithResults(){
   const has = (m) => baseFiltered().some(f => f.dep.startsWith(m));
@@ -2413,7 +2414,6 @@ $("#filters").addEventListener("click", e => {
   if (state.mode !== prevMode) renderHero(); // 只看廉航／傳統時，大圖也只放那種航空
   renderFlights();
 });
-$("#routesMore").addEventListener("click", () => { state.routesAll = true; renderFlights(); });
 $("#moreBtn").addEventListener("click", () => { state.shown += CONFIG.pageSize(); renderFlights(); });
 $("#hCountries").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.hCountry = b.dataset.v; renderHotels(); });
 $("#hDates").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.hDate = Number(b.dataset.v); renderHotelCities(); queueImages(); });
@@ -2559,6 +2559,78 @@ function tripCostHTML(f){
     <span class="tc sum"><small>一個人整趟約</small><b>${priceHTML(t.total)}</b></span>
     <em>酒店用平價參考價・兩人同住每人約 ${money(t.pair)}</em></div>`;
 }
+// 大節慶（日曆上畫手繪小圖）：[城市或國家, 日期規則, 名稱, 圖案, 是否每年日期會變]
+// 日期規則："MM-DD" 固定；"MM:nth:N:週幾"＝第 N 個星期幾（0＝日）；"MM:last:週幾"＝最後一個星期幾
+// 日期會變的節慶用常見的日子估，畫面上會寫「約」，以當年官方公告為準
+const FESTIVALS = [
+  ["JP", "01-01", "正月新年", "light", 0],
+  ["TYO", "07:last:6", "隅田川花火大會", "fire", 1],
+  ["TYO", "10:nth:2:6", "鴻巢花火大會", "fire", 1],
+  ["OSA", "07-25", "天神祭奉納花火", "fire", 0],
+  ["OSA", "08:nth:1:6", "淀川花火大會", "fire", 1],
+  ["FUK", "05-03", "博多咚打鼓港祭", "fest", 0],
+  ["FUK", "07-15", "博多祇園山笠・追山", "fest", 0],
+  ["SPK", "02-04", "札幌雪祭（約一週）", "snow", 1],
+  ["OKA", "10:nth:2:0", "那霸大綱挽", "fest", 1],
+  ["SEL", "10:nth:1:6", "首爾世界煙火節", "fire", 1],
+  ["PUS", "11:nth:1:6", "釜山煙火節", "fire", 1],
+  ["TH", "04-13", "潑水節（4/13–15）", "water", 0],
+  ["DAD", "06:nth:1:6", "峴港國際煙火節", "fire", 1],
+  ["HKG", "12-31", "維港跨年煙火", "fire", 0],
+];
+function festDate(rule, y){
+  let m = rule.match(/^(\d\d)-(\d\d)$/);
+  if (m) return `${y}-${m[1]}-${m[2]}`;
+  m = rule.match(/^(\d\d):(nth|last):(\d)(?::(\d))?$/);
+  if (!m) return null;
+  const mo = Number(m[1]), dow = Number(m[2] === "last" ? m[3] : m[4]);
+  if (m[2] === "last"){ const d = new Date(Date.UTC(y, mo, 0)); while (d.getUTCDay() !== dow) d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); }
+  const d = new Date(Date.UTC(y, mo - 1, 1)); while (d.getUTCDay() !== dow) d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCDate(d.getUTCDate() + 7 * (Number(m[3]) - 1)); return d.toISOString().slice(0, 10);
+}
+// 某個城市某個月的節慶（城市的、加上整個國家的）
+function festivalsOf(code, monthKey){
+  const c = canon(code), co = countryOf(c), y = Number(monthKey.slice(0, 4));
+  return FESTIVALS.filter(f => f[0] === c || f[0] === co).map(([, rule, name, kind, approx]) => ({ date: festDate(rule, y), name, kind, approx: !!approx }))
+    .filter(f => f.date && f.date.startsWith(monthKey));
+}
+// 手繪風小圖：花火、潑水、雪、燈、祭典
+function doodle(kind, cls = "dd"){
+  const C = { fire: ["#E11D48", "#F59E0B", "#7C3AED"], water: ["#0EA5E9", "#38BDF8", "#0284C7"], snow: ["#60A5FA", "#93C5FD", "#3B82F6"], light: ["#F59E0B", "#FBBF24", "#E11D48"], fest: ["#DC2626", "#F59E0B", "#16A34A"] }[kind] || ["#E11D48", "#F59E0B", "#7C3AED"];
+  let g = "";
+  if (kind === "fire"){
+    // 兩朵大小不一的花火：線長度故意不一樣，像手畫
+    const burst = (cx, cy, r, col, n) => { let h = ""; for (let i = 0; i < n; i++){ const a = i / n * Math.PI * 2 + .2, r1 = r * .35, r2 = r * (.82 + ((i * 37) % 7) / 30);
+      h += `<path d="M${(cx + Math.cos(a) * r1).toFixed(1)} ${(cy + Math.sin(a) * r1).toFixed(1)} L${(cx + Math.cos(a) * r2).toFixed(1)} ${(cy + Math.sin(a) * r2).toFixed(1)}" stroke="${col}"/>`;
+      if (i % 2) h += `<circle cx="${(cx + Math.cos(a) * (r2 + 2)).toFixed(1)}" cy="${(cy + Math.sin(a) * (r2 + 2)).toFixed(1)}" r=".9" fill="${col}" stroke="none"/>`; } return h; };
+    g = burst(14, 12, 10, C[0], 10) + burst(28, 20, 7, C[1], 8) + burst(8, 27, 5, C[2], 7);
+  } else if (kind === "water"){
+    g = [[10, 10], [22, 16], [14, 26], [29, 7]].map(([x, y], i) => `<path d="M${x} ${y - 6} C ${x + 5} ${y}, ${x + 4} ${y + 5}, ${x} ${y + 5} C ${x - 4} ${y + 5}, ${x - 5} ${y}, ${x} ${y - 6} Z" stroke="${C[i % 3]}"/>`).join("");
+  } else if (kind === "snow"){
+    g = [[14, 14, 9], [29, 25, 5]].map(([x, y, r], k) => [0, 60, 120].map(a => { const t = a * Math.PI / 180; return `<path d="M${(x - Math.cos(t) * r).toFixed(1)} ${(y - Math.sin(t) * r).toFixed(1)} L${(x + Math.cos(t) * r).toFixed(1)} ${(y + Math.sin(t) * r).toFixed(1)}" stroke="${C[k]}"/>`; }).join("")).join("");
+  } else if (kind === "light"){
+    g = [[14, 13, 8], [28, 24, 5]].map(([x, y, r], k) => `<path d="M${x} ${y - r} L${x + r * .3} ${y - r * .3} L${x + r} ${y} L${x + r * .3} ${y + r * .3} L${x} ${y + r} L${x - r * .3} ${y + r * .3} L${x - r} ${y} L${x - r * .3} ${y - r * .3} Z" stroke="${C[k]}"/>`).join("");
+  } else {
+    g = `<path d="M9 6 C 13 4, 21 4, 25 6 L 23 26 C 19 28, 14 28, 11 26 Z" stroke="${C[0]}"/><path d="M10 12 H 24 M 11 19 H 23" stroke="${C[1]}"/><path d="M17 26 V 32" stroke="${C[2]}"/>`;
+  }
+  return `<svg class="${cls}" viewBox="0 0 36 36" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${g}</svg>`;
+}
+// 匯率：台幣 1 元換多少當地錢。先用今天的匯率（open.er-api.com，存 12 小時），拿不到就用參考值並標「約」
+const FX_CODE = { JP:"JPY", KR:"KRW", TH:"THB", VN:"VND", CN:"CNY", HK:"HKD" };
+const FX_FALLBACK = { JPY: 4.7, KRW: 43, THB: 1.05, VND: 800, CNY: 0.22, HKD: 0.24 };
+const FLAG = { JP:"🇯🇵", KR:"🇰🇷", TH:"🇹🇭", VN:"🇻🇳", CN:"🇨🇳", HK:"🇭🇰" };
+const FX_KEY = "howtravle_fx_v1";
+let fxLive = null;
+try { const c = JSON.parse(localStorage.getItem(FX_KEY) || "null"); if (c && c.rates && Date.now() - c.t < 12 * 3600e3) fxLive = c.rates; } catch(e) {}
+async function loadFx(){
+  if (fxLive || !CONFIG.fxUrl) return;
+  try { const j = await getJSON(CONFIG.fxUrl); if (j && j.rates && j.rates.JPY){ fxLive = j.rates; try { localStorage.setItem(FX_KEY, JSON.stringify({ t: Date.now(), rates: j.rates })); } catch(e) {}
+    document.querySelectorAll(".fx-box[data-c]").forEach(el => { el.outerHTML = fxHTML(el.dataset.c); }); } } catch(e) {}
+}
+function fxRate(c){ const code = FX_CODE[c]; if (!code) return null; const r = (fxLive && fxLive[code]) || FX_FALLBACK[code]; return { r, live: !!(fxLive && fxLive[code]) }; }
+function fmtRate(r){ return r >= 100 ? Math.round(r).toLocaleString("en-US") : r >= 10 ? r.toFixed(1).replace(/\.0$/, "") : r >= 1 ? r.toFixed(2).replace(/0$/, "") : r.toFixed(3).replace(/0$/, ""); }
+function fxHTML(c){ const x = fxRate(c); if (!x) return ""; return `<span class="fx-box" data-c="${esc(c)}" title="台幣 1 元約換 ${fmtRate(x.r)} ${esc(CURRENCY_NAME[c] || "")}">1 : ${fmtRate(x.r)}</span><small class="fx-src">${x.live ? "今天匯率" : "參考匯率（約）"}</small>`; }
+function twTime(){ const t = new Date(Date.now() + 8 * 3600e3); return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`; }
 const TZ = { JP:"比台灣快 1 小時", KR:"比台灣快 1 小時", TH:"比台灣慢 1 小時", VN:"比台灣慢 1 小時", CN:"跟台灣一樣", HK:"跟台灣一樣" };
 const CURRENCY_NAME = { JP:"日圓", KR:"韓元", TH:"泰銖", VN:"越南盾", CN:"人民幣", HK:"港幣" };
 
@@ -2567,15 +2639,23 @@ function routeSheetHTML(o, d){
   if (!list.length) return "";
   const c = countryOf(d), lm = landmarkOf(d);
   const cheapest = list.reduce((a, b) => b.price < a.price ? b : a);
-  const durs = list.map(f => f.dur).filter(Boolean);
   const cm = Number(cheapest.dep.slice(5, 7)), cs = seasonOf(d, cm), ct = tempOf(d, cm), lt = localTime(d);
-  const facts = [
-    lt ? `<span class="fact">${icon("clock")}當地現在 <b>${esc(lt)}</b></span>` : "",
-    ct != null ? `<span class="fact">${icon("thermo")}${cm} 月平均 <b>${ct}°C</b></span>` : "",
-    cs ? `<span class="fact season">${icon(cs.ic)}<b>${esc(cs.t)}</b></span>` : "",
-    `<span class="fact">時差 <b>${esc(TZ[c] || "")}</b></span>`,
-    CURRENCY_NAME[c] ? `<span class="fact">貨幣 <b>${esc(CURRENCY_NAME[c])}</b></span>` : "",
+  const cmFest = festivalsOf(d, cheapest.dep.slice(0, 7));
+  const feature = cs ? cs.t : cmFest.length ? cmFest.map(f => f.name).join("、") : (CITY_VIBE[canon(d)] || "—");
+  // 統一排法：當地時間、台灣時間、天氣溫度、當月特色、貨幣（國旗＋匯率）
+  const row = (k, v, cls = "") => `<div class="ir${cls}"><dt>${k}</dt><dd>${v}</dd></div>`;
+  const info = [
+    lt ? row("當地時間", esc(lt)) : "",
+    row("台灣時間", esc(twTime())),
+    ct != null ? row("天氣溫度", `${cm} 月平均 <b>${ct}°C</b>`) : "",
+    row("當月特色", `${cs ? icon(cs.ic) : ""}${esc(feature)}`, " feat"),
+    CURRENCY_NAME[c] ? row("貨幣", `${esc(CURRENCY_NAME[c])} <span class="flag">${FLAG[c] || ""}</span> ${fxHTML(c)}`, " cur") : "",
   ].join("");
+  // 機票＋酒店（最便宜的平價酒店參考價，不含青旅；雙人房）
+  const tc = tripCost(cheapest);
+  const costs = `<div class="ir"><dt>機票</dt><dd>${priceHTML(cheapest.price)}</dd></div>` + (tc
+    ? `<div class="ir"><dt>酒店</dt><dd>${priceHTML(tc.hotel)}<small>${tc.nights} 晚・最便宜酒店（不含青旅）</small></dd></div>
+       <div class="ir sum"><dt>機＋酒</dt><dd>${priceHTML(tc.total)}</dd></div>` : "");
   // 價格日曆：每個出發日的最低價，依價格分三級上色
   const byDay = new Map();
   for (const f of list){ const cur = byDay.get(f.dep); if (!cur || f.price < cur.price) byDay.set(f.dep, f); }
@@ -2587,15 +2667,20 @@ function routeSheetHTML(o, d){
     const [y, mm] = m.split("-").map(Number);
     const first = new Date(Date.UTC(y, mm - 1, 1)).getUTCDay();
     const nDays = new Date(Date.UTC(y, mm, 0)).getUTCDate();
+    const fests = festivalsOf(d, m), festBy = new Map(fests.map(f => [f.date, f]));
     const cells = WD.map(w => `<div class="wd">${w}</div>`);
     for (let i = 0; i < first; i++) cells.push('<div class="day blank"></div>');
     for (let dd = 1; dd <= nDays; dd++){
-      const key = `${m}-${String(dd).padStart(2, "0")}`, f = byDay.get(key), ix = `style="--i:${first + dd}"`;
+      const key = `${m}-${String(dd).padStart(2, "0")}`, f = byDay.get(key), ix = `style="--i:${first + dd}"`, fe = festBy.get(key);
+      const fz = fe ? doodle(fe.kind, "fz") : "", fl = fe ? `，${fe.name}${fe.approx ? "（約）" : ""}` : "";
       cells.push(f
-        ? `<button class="day lv${lv(f.price)}${f.price === prices[0] ? " best" : ""}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}${f.price === prices[0] ? "（最便宜）" : ""}"><span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
-        : `<div class="day" ${ix}><span class="n" style="font-weight:500">${dd}</span></div>`);
+        ? `<button class="day lv${lv(f.price)}${f.price === prices[0] ? " best" : ""}${fe ? " fest" : ""}" ${ix} data-day="${key}" aria-label="${mm}月${dd}日 ${money(f.price)}${f.price === prices[0] ? "（最便宜）" : ""}${fl}">${fz}<span class="n">${dd}</span><span class="p">${Math.round(f.price).toLocaleString("en-US")}</span></button>`
+        : `<div class="day${fe ? " fest" : ""}" ${ix}${fe ? ` aria-label="${mm}月${dd}日${fl}"` : ""}>${fz}<span class="n" style="font-weight:500">${dd}</span></div>`);
     }
-    return `<div class="cal"><h4>${y} 年 ${mm} 月</h4><div class="cal-grid">${cells.join("")}</div></div>`;
+    // 有花火的月份，月份標題旁邊畫幾朵手繪花火
+    const deco = fests.some(f => f.kind === "fire") ? `<span class="cal-deco">${doodle("fire", "cd1")}${doodle("fire", "cd2")}${doodle("fire", "cd3")}</span>` : "";
+    const flist = fests.length ? `<ul class="fest-list">${fests.map(f => `<li>${doodle(f.kind, "fl")}<b>${Number(f.date.slice(5, 7))}/${Number(f.date.slice(8))}</b>${esc(f.name)}${f.approx ? "<small>約，以當年公告為準</small>" : ""}</li>`).join("")}</ul>` : "";
+    return `<div class="cal"><h4>${y} 年 ${mm} 月${deco}</h4><div class="cal-grid">${cells.join("")}</div>${flist}</div>`;
   }).join("");
   const opts = list.slice().sort((a, b) => a.price - b.price).slice(0, 40).sort((a, b) => a.dep.localeCompare(b.dep)).map(f => {
     const url = flightUrl(f); if (!url) return "";
@@ -2610,19 +2695,15 @@ function routeSheetHTML(o, d){
     <div class="sh-head ph g-${esc(c || "")}">${photoHTML(lm && lm[0], c, lm ? lm[1] : cityName(d), 1280, true)}${seasonFX(d, cm)}${sheetRouteSVG()}
       <div class="cap"><div class="city">${esc(ORIGIN_NAME[o])} → ${esc(cityName(d))}</div><div class="lm">${icon("pin")}${esc(CITY_VIBE[canon(d)] || ((lm ? lm[1] + "・" : "") + (COUNTRIES[c] || "")))}</div></div></div>
     <div class="sh-body">
-      <div class="ticket">
-        <span class="tk-end"><b>${esc(cheapest.oAp || o)}</b><small>${esc(ORIGIN_NAME[o])}</small></span>
-        <span class="tk-mid"><i></i>${icon("plane", "tk-plane")}<i></i><small>${durs.length ? esc(fmtDur(Math.min(...durs))) : (cheapest.direct ? "直飛" : "")}</small></span>
-        <span class="tk-end"><b>${esc(cheapest.dAp || d)}</b><small>${esc(cityName(d))}</small></span>
-        <span class="tk-p"><small>最低</small><strong>${priceHTML(cheapest.price)}</strong></span>
-      </div>
-      <div class="facts">${facts}</div>
-      ${tripCostHTML(cheapest)}
-      ${cal}
-      <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>（數字為 NT$ 預估價，點日期看下面的選項）</span></div>
+      <dl class="info">${info}</dl>
+      <dl class="info costs">${costs}</dl>
+      ${tc ? `<p class="cost-note">備註：酒店均以 2 人一間計算（最便宜的平價酒店參考價，不是即時價）</p>` : ""}
       ${hotelCrossSell(cheapest, "跟最便宜的機票同天")}
-      <h3 style="margin:16px 0 8px;font-size:17px">${list.length} 組日期・${state.type === "rt" ? "來回" : "單程"}</h3>
+      <h3 class="sh-h">幾組日期<small>${list.length} 組・${state.type === "rt" ? "來回" : "單程"}</small></h3>
       <div class="opt-list">${opts}</div>
+      <h3 class="sh-h">日曆<small>點日期跳到上面那組</small></h3>
+      ${cal}
+      <div class="legend"><span><i style="background:#DCFCE7"></i>便宜</span><span><i style="background:#FEF3C7"></i>普通</span><span><i style="background:#FEE2E2"></i>偏貴</span><span>${doodle("fire", "lg")}大節慶</span></div>
       <!-- 固定在面板底部：不管滑到哪都能一鍵訂最便宜的 -->
       <div class="sh-actions sh-sticky">
         <button class="btn2" data-share="${esc(o)}-${esc(d)}" data-smode="${esc(state.mode)}" data-stype="${esc(state.type)}">${icon("share")}分享</button>
@@ -2972,8 +3053,10 @@ function renderRadar(){
   const RADAR_MAX_PTS = 35; // 城市太多會擠，只畫最便宜的 35 個
   const pts = all.slice(0, RADAR_MAX_PTS);
   $("#radarSub").textContent = "越綠越便宜，點一下看日期";
-  if (!state.loaded || pts.length < 3){ sec.classList.add("hidden"); return; }
-  sec.classList.remove("hidden");
+  // 城市太少時只藏雷達本身，最下面的「幫我選」卡片照樣顯示
+  sec.classList.toggle("hidden", !state.loaded);
+  sec.classList.toggle("no-radar", pts.length < 3);
+  if (!state.loaded || pts.length < 3) return;
   const sorted = pts.map(f => f.price).sort((a, b) => a - b);
   const q1 = sorted[Math.floor(sorted.length / 3)], q2 = sorted[Math.floor(sorted.length * 2 / 3)];
   const lv = (p) => p <= q1 ? 1 : p <= q2 ? 2 : 3;
@@ -3202,6 +3285,14 @@ async function loadVisits(){
   el.classList.remove("hidden");
 }
 setTimeout(loadVisits, 1200); // 等主要資料先抓
+setTimeout(loadFx, 2000);
+// 一進來就打開「航線」設定（每次打開網站一次；分享連結直接開那條航線時不打開）
+const AUTOSET_KEY = "howtravle_autoset_v1";
+(function autoOpenSet(){
+  let hasRoute = false; try { hasRoute = !!new URLSearchParams(location.search).get("route"); } catch(e) {}
+  let shown = false; try { shown = !!sessionStorage.getItem(AUTOSET_KEY); sessionStorage.setItem(AUTOSET_KEY, "1"); } catch(e) {}
+  if (!hasRoute && !shown) setTimeout(() => { if (state.tab === "flights" && $("#sheet").classList.contains("hidden")) openSet(); }, 350);
+})();
 syncMode();
 renderChips(); renderMonths(); renderTiles(); renderHotelHero();
 loadFlights(); loadPicks(); loadHotels();

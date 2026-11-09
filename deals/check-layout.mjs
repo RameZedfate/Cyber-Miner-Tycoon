@@ -92,6 +92,8 @@ const askedSizes = new Set();
 const STD_SIZES = new Set(["500", "960", "1280", "1920"]);
 let failedOnce = new Set();
 async function setup(page) {
+  // 一進來會自動打開「航線」設定；量版面時先不要（設定面板另外量）
+  await page.addInitScript(() => { try { sessionStorage.setItem("howtravle_autoset_v1", "1"); } catch(e) {} });
   await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
     body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MAIN) }));
   await page.route("**/picks.json", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(PICKS) }));
@@ -513,9 +515,9 @@ try {
             if (Math.abs(Math.round(R(d).left) - wds[want]) > 1) { out.push(`日曆 ${m}/${i + 1} 不在星期${"日一二三四五六"[want]}那一欄`); break; }
           }
         }
-        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .fact, .sh-head .city, .trip .tc b, .trip em")) {
+        for (const el of document.querySelectorAll(".day .p, .day .n, .opt .d1, .opt .pp strong, .info dt, .info dd, .sh-head .city, .fest-list li")) {
           if (el.scrollWidth > el.clientWidth + 1) out.push(`面板文字被截斷：「${el.textContent.trim().slice(0, 16)}」`);
-          const p = el.closest(".day,.opt,.facts,.sh-head,.trip"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
+          const p = el.closest(".day,.opt,.info,.sh-head,.cal"); if (p) { const a = R(el), b = R(p); if (a.right > b.right + 1 || a.left < b.left - 1) out.push(`面板文字超出外框：「${el.textContent.trim().slice(0, 16)}」`); }
         }
         // 小登機證：代碼、飛機、價格不互相重疊
         const tk = document.querySelector("#sheet .ticket");
@@ -536,12 +538,12 @@ try {
       if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `sheet-${w}.png`) });
       await page.keyboard.press("Escape");
     }
-    // 五位數價格的價格日曆：上方小登機證的價格不能擠到代碼
+    // 五位數價格的價格日曆：資訊清單的價格、匯率框不能超出、不能被截斷
     await page.evaluate(() => openRoute("TPE", "HKT"));
-    await page.waitForSelector("#sheet:not(.hidden) .ticket", { timeout: 3000 }).catch(() => all.push(`[${w}px] 普吉島價格日曆沒打開`));
-    const tk5 = await page.evaluate(() => { const tk = document.querySelector("#sheet .ticket"); if (!tk) return "";
-      const R = (e) => e.getBoundingClientRect(), e = [...tk.querySelectorAll(".tk-end")].map(R), pl = R(tk.querySelector(".tk-plane")), pr = R(tk.querySelector(".tk-p strong")), box = R(tk);
-      return (e[0].right > pl.left || e[1].left < pl.right || e[1].right > R(tk.querySelector(".tk-p")).left || pr.right > box.right) ? `五位數價格的日曆登機證擠在一起（${tk.querySelector(".tk-p strong").textContent}）` : ""; });
+    await page.waitForSelector("#sheet:not(.hidden) .info", { timeout: 3000 }).catch(() => all.push(`[${w}px] 普吉島價格日曆沒打開`));
+    const tk5 = await page.evaluate(() => { const R = (e) => e.getBoundingClientRect(), out = [];
+      for (const dd of document.querySelectorAll("#sheet .info dd")) { const a = R(dd), b = R(dd.closest(".info")); if (a.right > b.right + 1) out.push(`價格日曆資訊超出框：${dd.textContent.trim().slice(0, 14)}`); }
+      return out.join("；"); });
     if (tk5) all.push(`[${w}px] ${tk5}`);
     await page.keyboard.press("Escape");
     // 幫我選
