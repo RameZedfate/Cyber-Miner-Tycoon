@@ -422,6 +422,8 @@ try {
     await page.waitForTimeout(200);
     if (await card.evaluate(e => e.classList.contains("press"))) problems.push("放開機票卡後沒有彈回來");
     for (const pp of pops.splice(0)) await pp.close().catch(() => {});
+    // 放開等於點了卡片：會打開價格日曆，先關掉
+    if (await page.$("#sheet:not(.hidden)")) { await page.keyboard.press("Escape"); await page.waitForTimeout(400); }
     const more = await page.$("#moreBtn:not(.hidden), #routesMore:not(.hidden)");
     if (more) {
       await more.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
@@ -449,16 +451,24 @@ try {
     if (!(pr > 0.05)) problems.push(`往下捲後進度條沒有變長：${pr}`);
     if (!(await page.evaluate(() => [...document.querySelectorAll(".card .ph")].some(e => e.dataset.py && e.querySelector(".bgimg") && e.querySelector(".bgimg").style.translate))))
       problems.push("機票卡照片沒有捲動景深");
-    // 點訂票連結：小飛機起飛，一下就消失
+    // 點機票卡：先打開價格日曆（不直接跳去 Trip.com）；日期依價格由低到高
     const cl = await page.$("#flightList .card .card-link"); await cl.scrollIntoViewIfNeeded();
     const clb = await cl.boundingBox();
-    const popP = page.waitForEvent("popup", { timeout: 3000 }).catch(() => null);
+    const cardPop = page.waitForEvent("popup", { timeout: 1500 }).catch(() => null);
     // 點卡片正中間（卡片可能剛好捲到最上面、被固定的分頁列蓋住上緣）
     await page.mouse.click(clb.x + clb.width / 2, clb.y + clb.height / 2);
+    await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("點機票卡沒有打開價格日曆"));
+    if (await cardPop) problems.push("點機票卡直接跳去 Trip.com（應先打開價格日曆）");
+    const optPrices = await page.$$eval("#sheet .opt .pp strong", els => els.map(e => Number(e.textContent.replace(/[^0-9]/g, ""))));
+    if (optPrices.some((p, i) => i && p < optPrices[i - 1])) problems.push(`幾組日期沒有從最便宜排到最貴：${optPrices.slice(0, 8).join(", ")}`);
+    // 在日曆裡點訂票：小飛機起飛，一下就消失
+    const popP = page.waitForEvent("popup", { timeout: 3000 }).catch(() => null);
+    await page.click("#sheet .opt");
     if ((await page.$$(".takeoff")).length !== 1) problems.push("點訂票連結沒有小飛機起飛");
     await page.waitForTimeout(1100);
     if ((await page.$$(".takeoff")).length) problems.push("起飛的小飛機沒有自己消失");
     const pp = await popP; if (pp) await pp.close();
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
     // 大圖圓點像限時動態一樣填滿；頂部張數跳完要是正確數字；訂票按鈕有光掃過
     // 先把滑鼠移到左上角（品牌列）再捲回頂端，不然滑鼠停在大圖上，大圖會暫停（圓點不填）
     await page.mouse.move(5, 5); await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(300);
@@ -598,7 +608,6 @@ try {
     };
     const cases = [
       ["hero", () => page.click("#hero .slide:first-child .pass")],
-      ["card", async () => { const c = await page.$("#flightList .card .card-link"); await c.scrollIntoViewIfNeeded(); const b = await c.boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); }],
     ];
     for (const [want, fn] of cases) {
       const got = await sub1Of(fn);

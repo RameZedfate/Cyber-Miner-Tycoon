@@ -469,6 +469,7 @@
   @media (min-width:1000px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 22px} }
   .card{position:relative;display:flex;flex-direction:column;min-width:0}
   .card .card-link{position:absolute;inset:0;z-index:1;border-radius:var(--r)}
+  button.card-link{width:100%;height:100%;border:0;padding:0;margin:0;background:none;cursor:pointer;font:inherit}
   .card .card-link:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
   .card .ph{aspect-ratio:16/10;border-radius:var(--r);box-shadow:var(--shadow)}
   .card .ph .bgimg{transition:opacity .5s ease, transform .6s ease}
@@ -1729,10 +1730,12 @@ function flightCard(f, opt = {}){
   const nDates = opt.pick || opt.noMore ? 0 : routeFlights(f.o, f.d).length;
   const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 天` : "單程";
   const stops = f.direct ? "直飛" : (f.tr > 0 || f.rtr > 0) ? "轉機" : "";
-  // Airbnb 式：照片在上、下面三行字；整張卡片點了就到 Trip.com（愛心、日期另外點）
+  // Airbnb 式：照片在上、下面三行字；整張卡片點了先打開這條航線的價格日曆（在日曆裡選日期再去 Trip.com）
+  const toCal = routeFlights(f.o, f.d).length > 0;
   return `
   <article class="card${opt.pick ? " pick" : ""}${opt.rank === 1 ? " best" : ""}${save ? " deal" : ""}">
-    <a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))} ${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 訂票"></a>
+    ${toCal ? `<button class="card-link" data-route="${esc(f.o)}-${esc(f.d)}" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))} ${f.ret ? "來回" : "單程"} ${money(f.price)} 起，看價格日曆"></button>`
+      : `<a class="card-link" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))} ${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 訂票"></a>`}
     <div class="ph g-${esc(f.country || "")}">
       ${photoHTML(lm && lm[0], f.country, lm ? lm[1] : cityName(f.d), 800, false)}
       <div class="badges">${badge}</div>
@@ -2707,7 +2710,8 @@ function routeSheetHTML(o, d){
     const flist = fests.length ? `<ul class="fest-list">${fests.map(f => `<li>${doodle(f.kind, "fl")}<b>${Number(f.date.slice(5, 7))}/${Number(f.date.slice(8))}</b>${esc(f.name)}${f.approx ? "<small>約，以當年公告為準</small>" : ""}</li>`).join("")}</ul>` : "";
     return `<div class="cal"><h4>${y} 年 ${mm} 月${deco}</h4><div class="cal-grid">${cells.join("")}</div>${flist}</div>`;
   }).join("");
-  const opts = list.slice().sort((a, b) => a.price - b.price).slice(0, 40).sort((a, b) => a.dep.localeCompare(b.dep)).map(f => {
+  // 幾組日期：最便宜排到最貴（同價格先出發的在前）
+  const opts = list.slice().sort((a, b) => a.price - b.price || a.dep.localeCompare(b.dep)).slice(0, 40).map(f => {
     const url = flightUrl(f); if (!url) return "";
     const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 天` : "單程";
     return `<a class="opt" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
@@ -2724,7 +2728,7 @@ function routeSheetHTML(o, d){
       <dl class="info costs">${costs}</dl>
       ${tc ? `<p class="cost-note">備註：酒店均以 2 人一間計算（最便宜的平價酒店參考價，不是即時價）</p>` : ""}
       ${hotelCrossSell(cheapest, "跟最便宜的機票同天")}
-      <h3 class="sh-h">幾組日期<small>${list.length} 組・${state.type === "rt" ? "來回" : "單程"}</small></h3>
+      <h3 class="sh-h">幾組日期<small>${list.length} 組・${state.type === "rt" ? "來回" : "單程"}・便宜的在前</small></h3>
       <div class="opt-list">${opts}</div>
       <h3 class="sh-h">日曆<small>點日期跳到上面那組</small></h3>
       ${cal}
