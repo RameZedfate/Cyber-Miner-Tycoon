@@ -200,4 +200,4 @@ const AFFILIATE = {
 
 ---
 
-製作：`@adam_ai_plus` ｜ 分享於 HOWTRAVLE
+製作：`@fang__0914` ｜ 分享於 HOWTRAVLE

@@ -1,0 +1,226 @@
+# Claim Form Contract
+
+Use this contract for every routine claim-form run. The user's current message and current diagnosis document are the only case-specific sources of truth.
+
+## Supported scope
+
+Supported in the initial version:
+
+- 全球人壽 general medical claim
+- 台灣人壽 general medical claim
+- Disease hospitalization or surgery
+- Accident medical claim
+- Bank-transfer payment
+- Unsigned draft PDF
+
+Added after a verified live run (2026-07-30), with layouts in `scripts/claim_forms.py`:
+
+- 全球人壽 理賠申請書 2026.03 版 — 版面已驗證
+- 三商美邦人壽 保險金申請書 CL106C — 版面已驗證
+- 國泰人壽 理賠申請書 303002 學團險專用 114.12 版 — 版面已驗證
+
+Stop instead of guessing for death, disability, critical-illness lump sum, travel insurance, group insurance, OIU, a changed form edition, or any unsupported benefit.
+
+## Standing user rules
+
+These override the generic defaults and apply to every future run until the user says otherwise.
+
+1. **事故時間與事故地點一律不填**，任何保險公司都一樣，即使表單標示為必填
+   （三商美邦紅字要求詳填事故時間、地點，仍不填）。相關的員警姓名、聯絡電話、
+   處理憲警單位、事故地區也一併留空。
+2. **表單要求地址時，先問使用者**，不要自行推斷，也不要沿用其他表單上的地址。
+   若表單提供「同保單地址／同收費地址」選項，優先勾選該選項而不填寫地址。
+3. **就醫院所**：只在表單有專屬欄位時填（例如三商美邦「曾就診之醫院診所」）。
+   全球人壽的「事故發生經過情形及全部就醫院所」欄只寫事故經過，不加就醫院所。
+4. **簽章區的法定代理人身分證字號與生日要填**（簽章本身仍留空）。
+5. 金融機構的**分行通匯代號**若未取得就留空，不要臆測。
+6. **交付＝填好的申請書草稿本身，就是完整版。** 不要附「應附文件清單」、送件流程提醒、
+   用印提醒或其他待辦事項。使用者是保險實務工作者，**業界怎麼送件由他決定**，
+   AI 不是流程指導者。除非使用者主動問，否則只交付檔案並說明填了什麼、依規則留空了什麼。
+
+## Minimum intake
+
+Always require:
+
+```text
+姓名：<customer name>
+身分證：<identity number>
+生日：<ROC date>
+手機：<mobile number>
+銀行：<bank name>
+分行：<branch name>
+帳號：<account number>
+事故類型：疾病／意外
+保險公司：<selected insurers>
+```
+
+The account holder defaults to the customer name.
+
+For disease, also require a clear diagnosis document containing the supported diagnosis, admission date, surgery date and procedure, and discharge date.
+
+For accident, also require:
+
+```text
+職業：<occupation>
+事故日：<confirmed ROC date>
+病名：<diagnosis shown on the current document>
+事故經過：<the user's factual wording>
+```
+
+Do not ask for a policy number. Ask for an address only when the selected form requires it and has no approved same-policy/same-billing-address option.
+
+## Common defaults
+
+- Personal insurance
+- Medical claim
+- Applicant and beneficiary are the insured customer
+- Payment by bank transfer
+- Policy number blank
+- Accident time blank
+- Accident location blank
+- Signatures and stamps blank
+- Medical-consent signature blank
+- Sender and agent fields blank
+- Application date blank
+- Final deliverable keeps only the insurer-specific approved application pages
+
+## Disease narrative
+
+Use this sentence only when every fact is present and confirmed:
+
+```text
+因{病名}，於{入院日}入院，於{手術日}行{手術名稱}，於{出院日}出院
+```
+
+If one of those elements is missing, stop and request the missing fact. Do not create a different disease narrative unless the user explicitly teaches and approves it.
+
+Keep the narrative inside the accident/cause box. Adjust font size and line breaks without changing the facts.
+
+## Accident narrative
+
+- Use the user's confirmed accident date.
+- If the date must come from the diagnosis document, choose the earliest confirmed encounter related to this accident, not the certificate issue date.
+- Keep time and location blank.
+- Insert the user's cause wording without adding a diagnosis, location, mechanism, or other inferred detail.
+- Only punctuation and line wrapping may be normalized.
+- Require occupation for an accident case.
+
+## Insurer matrix
+
+| Insurer | Address handling | Final output |
+|---|---|---|
+| 全球人壽 | Check the option meaning the policyholder/insured address is the same as the policy address; leave the alternate-address line blank. | Page 1 only |
+| 台灣人壽 | Check the first policy-address mailing option; do not check alternate mailing address; leave the address line blank. | Page 1 only |
+| 三商美邦 | 勾選「聯絡地址 ■同『收費地址』」，郵遞區號與地址欄全部留空。 | Page 1 only |
+| 國泰人壽（學團險） | 表單將居住地址標為 (＊) 必填，**沒有同保單地址選項**，必須向使用者索取地址後填寫（郵遞區號、縣市、鄉鎮區、街道分四格）。 | **本文 303002 + 附件 303004 共 2 頁** |
+
+Fill only insurers named in the current case.
+
+### 三商美邦 specifics
+
+- 險別預設勾「1 個人險」；若為團體險或旅平險則必須填保單號碼，此時停下來向使用者確認。
+- 「曾就診之醫院診所」要填；「事故時間」「事故地點」「員警姓名」「聯絡電話」「處理憲警單位」「事故地區」一律留空。
+- 帳號為 16 格，不足位數靠左對齊；「金融機構及分行代碼」7 格未知即留空。
+- 申請人與法定代理人的身分證字號格子都要填，簽名欄留空。
+
+### 國泰人壽（學團險專用）specifics
+
+- ⚠️ 這張是**學生團體保險**專用表（左上角標示「學團險專用 含大專學團」，表單編號 303002）。
+  若客戶在國泰另有個人醫療險，**不可沿用這張**，要另外索取個人險表單。
+- 保單號碼標註「服務人員填寫」，一律留空。
+- 「(＊)投保學校證明欄」整區（投保學校、學校代號、校址、電話、校長職章、經辦人簽章、
+  關防／學保專用章）**由學校填寫蓋章，AI 一律不填**；學號與班級科別同樣需要學校提供。
+- 「投保學校證明欄」由學校填寫用印，AI 一律不填，但**不需要在交付時提醒使用者**（見長期規則 6）。
+- 理賠類別依案件勾選（一般醫療為「醫療(E)」）；「申請專案補助」限重大手術，非重大手術不勾。
+- 同意書區的「受益人與被保險人關係」要勾（醫療保險金受益人為被保險人本人時勾「本人」），
+  但立書人與法定代理人的**簽名欄仍留空**。
+- **交付兩頁**：本文（303002）與附件（303004）。附件要重填姓名、身分證字號、
+  領取方式勾選與第一組帳戶資料（戶名／身分證字號／金融機構(分行)／帳號），第二三組帳戶留空。
+  驗證時用 `--expected-pages 2`。
+- 身分證字號欄位是**逐格方格**，必須一格一字元，不可當成一般文字寫入
+  （本文基本資料列、本文保險金領取方式列、附件基本資料列、附件帳戶資料列，共四處）。
+- 附件背面雖印有「各項理賠申請所需文件一覽表」，**不要把它整理成清單提醒使用者**（見長期規則 6）。
+
+## PDF acceptance checks
+
+Before delivery:
+
+1. Confirm the official blank-form edition and expected geometry.
+2. Confirm every selected insurer has exactly one approved intermediate PDF.
+3. Confirm every final PDF has exactly the approved page count for that insurer
+   （預設 1 頁；國泰學團險為 2 頁，見 insurer matrix）。
+4. Render every approved page and inspect every filled field and checkbox.
+5. Confirm the narrative remains inside its box.
+6. Confirm bank digits, identity number, date, and phone are legible and not truncated.
+7. Confirm all prohibited signature, consent, sender, policy-number, and application-date fields remain blank.
+8. Run `scripts/validate_claim_output.py` with the insurer-specific expected page count.
+9. Merge the validated insurer PDFs with `scripts/merge_claim_pdfs.py` in the exact order named by the user.
+10. Validate the combined page count, insurer order, text readback, and 144-DPI visual quality. Deliver only the combined PDF unless separate files were explicitly requested.
+
+## Seven-insurer verified layout rules
+
+Use the explicit rectangles in bundled `scripts/claim_overlay_layout.py`; do not position text by guessing from nearby labels. These rules are reusable and contain no customer data.
+
+| Insurer | Persistent writing rule |
+|---|---|
+| 新光 | Write identity and account one character per printed cell. Keep the mid-page accident date in its three date blanks. In the lower applicant block, fill identity, birth/nationality, mobile, and address on their own rows; keep the signature blank. |
+| 元大 | Check 個人險. Center the accident date as `民國年年/月/月/日/日` text inside the complete accident-date cell. |
+| 遠雄 | Keep name clear of its label. Write identity and account one character per printed cell. Check 同公司最新地址 and align work content and accident date to their own cells. |
+| 富邦 | Use the official 114.11 form. Write county/city and district as full names, then put road, lane, and house-number values before the form's printed units. |
+| 凱基 | Start 戶名 after the label, keep 事故時職業 inside its value cell, write the 14-digit account one character per cell, and fill the lower beneficiary identity while leaving the signature blank. |
+| 宏泰 | Start the identity value after the 身分證字號 label. Keep occupation and work content in separate lower cells. |
+| 保誠 | Center the top-left name inside its value cell. Put the accident-cause check inside the box immediately before 其他. |
+
+Render every completed first page at **144 DPI** or higher. Inspect the reported fields at enlarged scale, not only the whole-page thumbnail. Draw checkmarks as vector strokes so they do not disappear when the selected font lacks a check glyph.
+
+### 寫入方式
+
+用 `scripts/claim_overlay_fill.py` 讀上表座標並寫入，不要自行換算位置。它保證值留在方框內
+（字級自動縮小、必要時斷行），並回報每欄用的字級、行數、逐格欄位寫了幾格。
+
+**收到警告就停下來，不要當成已完成。** 警告包含：
+
+- 表單頁面尺寸與版面宣告不符 → 座標可能整體偏移，多半是拿到不同版次的表單
+- 逐格欄位的值超過格數而被截斷
+- 縮到最小字級仍放不下
+- 富邦的縣市／鄉鎮區未填全名，或門牌號欄位混入非數字
+
+`report["layout_overlaps"]` 列出該版面互相重疊的欄位方框。重疊時兩欄的值會壓在一起，
+但各自檢查都「在框內」，所以一定要看這一項。**目前已知：宏泰有兩組重疊
+（accident_year／accident_month、bank／beneficiary_identity），新光有兩組（申請人區三列上下各壓 4pt）。**
+這幾欄輸出後務必放大確認。
+
+⚠️ 上表七家的座標**尚未經真實空白表單驗證**。第一次處理某一家時視為 development mode：
+144 DPI 以上渲染、逐欄目視確認，確認無誤才可改註記為已驗證。
+
+## Drive delivery
+
+- Use only the approved claim-form parent folder.
+- Create a customer-name folder when no matching folder exists.
+- Ask before reusing an ambiguous same-name folder.
+- Upload new page-1 PDFs only.
+- Never overwrite, update, delete, move, share, sign, or submit.
+- Download every uploaded PDF for readback.
+- Verify parent folder, MIME type, byte size, and SHA-256.
+- Return the customer-folder link only after all selected insurer files pass readback.
+
+## Public-repository boundary
+
+The public skill may contain:
+
+- This operating contract
+- Generic scripts
+- Blank placeholders
+- Synthetic tests
+
+It must not contain:
+
+- Real customer or family data
+- Medical facts from a real case
+- Diagnosis or bank-book images
+- Filled claim forms
+- OCR dumps
+- Drive folder or file identifiers
+- Credentials or tokens
+- Local absolute paths
+- Customer-specific corrections
