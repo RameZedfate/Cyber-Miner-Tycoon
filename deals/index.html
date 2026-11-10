@@ -25,6 +25,9 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://en.wikipedia.org" crossorigin />
+<link rel="preconnect" href="https://commons.wikimedia.org" />
+<link rel="dns-prefetch" href="https://upload.wikimedia.org" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* =====================================================================
@@ -188,6 +191,14 @@
   .g-JP{--g:linear-gradient(135deg,#BE123C,#F472B6)} .g-KR{--g:linear-gradient(135deg,#1D4ED8,#7C3AED)}
   .g-TH{--g:linear-gradient(135deg,#B45309,#F59E0B)} .g-VN{--g:linear-gradient(135deg,#047857,#14B8A6)}
   .g-CN{--g:linear-gradient(135deg,#991B1B,#EF4444)} .g-HK{--g:linear-gradient(135deg,#312E81,#DB2777)}
+  /* 照片載入中：安靜的淺灰底＋一道微光，不先出現彩色大色塊；真的抓不到照片（img 被拿掉）才回到上面的國家漸層＋地標名 */
+  .ph:has(> .bgimg:not(.ok)){background:#E6EAF0}
+  .ph:has(> .bgimg:not(.ok)) > .fb{color:transparent;text-shadow:none;background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.7) 50%,rgba(255,255,255,0) 70%) 120% 0/220% 100% no-repeat}
+  .anim .ph:has(> .bgimg:not(.ok)) > .fb{animation:phsk 1.5s linear infinite}
+  @keyframes phsk{from{background-position:120% 0}to{background-position:-120% 0}}
+  /* 上面有白字的大照片（大圖、價格日曆、幫我選）：載入中用深色底，字才看得到 */
+  .s3d.ph:has(> .bgimg:not(.ok)), .slide.ph:has(> .bgimg:not(.ok)), .sh-head.ph:has(> .bgimg:not(.ok)), .win.ph:has(> .bgimg:not(.ok)){background:#1A2B45}
+  .s3d.ph:has(> .bgimg:not(.ok)) > .fb, .slide.ph:has(> .bgimg:not(.ok)) > .fb, .sh-head.ph:has(> .bgimg:not(.ok)) > .fb, .win.ph:has(> .bgimg:not(.ok)) > .fb{background-image:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.09) 50%,rgba(255,255,255,0) 70%)}
 
   /* ---------- 區塊標題 ---------- */
   h2.sec{font-size:22px;margin:30px 0 2px;line-height:1.3;font-weight:800;letter-spacing:.2px;text-wrap:balance;word-break:keep-all}
@@ -522,6 +533,10 @@
   @keyframes totopfly{to{transform:translateY(-70px) scale(.6);opacity:0}}
   .more-d{position:relative;z-index:2;flex:0 0 auto;border:0;background:none;padding:0;height:22px;line-height:22px;font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap}
   .memo{font-size:13.5px;color:var(--ink-2)}
+  /* 同一個城市的其他出發地：點了看那條航線的日期 */
+  .alt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;margin-top:3px;font-size:12.5px;color:var(--muted)}
+  .alt-o{position:relative;z-index:2;flex:0 0 auto;border:0;border-radius:999px;background:var(--soft);color:var(--ink-2);height:26px;padding:0 10px;font-size:12.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .alt-o b{font-weight:800;color:var(--ink)}
   .card.pick .ph{box-shadow:0 0 0 3px var(--yellow)}
   .card.best .ph{box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
 
@@ -586,7 +601,7 @@
   .radar-wrap{max-width:560px;margin:0 auto;background:radial-gradient(circle at 50% 50%,#12335F 0%,#0A1D38 62%,#071428 100%);border-radius:var(--r-lg);padding:6px;box-shadow:var(--shadow);overflow:hidden}
   #radar{display:block;width:100%;aspect-ratio:1/1;font-family:var(--font)}
   #radar .ring{fill:none;stroke:rgba(147,197,253,.22);stroke-width:1}
-  #radar .ring-l{fill:rgba(191,219,254,.55);font-size:9px}
+  #radar .ring-l{fill:rgba(191,219,254,.55);font-size:var(--kfs,9px)}
   #radar .axis{stroke:rgba(147,197,253,.12);stroke-width:1}
   #radar .sweep{transform-origin:200px 200px;transform-box:view-box;animation:spin 6s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -594,12 +609,12 @@
   #radar .pt .hit{fill:transparent}
   #radar .pt .dot{stroke:#071428;stroke-width:1.5}
   #radar .pt:hover .dot, #radar .pt:focus .dot{stroke:#fff;stroke-width:2}
-  #radar .pt text{font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#071428;stroke-width:3px;stroke-linejoin:round}
+  #radar .pt text{font-size:var(--lfs,11px);font-weight:700;fill:#fff;paint-order:stroke;stroke:#071428;stroke-width:3px;stroke-linejoin:round}
   #radar .pt text .pz{fill:#FDE68A;font-weight:900}
   #radar .pulse{fill:none;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:pulse 2.2s ease-out infinite}
   @keyframes pulse{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}
-  #radar .home text{font-size:11px;font-weight:900;fill:var(--yellow)}
-  #radar .region{font-size:10px;fill:rgba(191,219,254,.6);letter-spacing:2px;font-weight:700;paint-order:stroke;stroke:#0A1D38;stroke-width:3px;pointer-events:none}
+  #radar .home text{font-size:var(--lfs,11px);font-weight:900;fill:var(--yellow)}
+  #radar .region{font-size:var(--rfs,10px);fill:rgba(191,219,254,.6);letter-spacing:2px;font-weight:700;paint-order:stroke;stroke:#0A1D38;stroke-width:3px;pointer-events:none}
 
   /* ---------- 按鈕、空狀態、載入中 ---------- */
   .cta{display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:14px;background:var(--navy);color:#fff;
@@ -1729,6 +1744,7 @@ function flightCard(f, opt = {}){
       <div class="when${nDates > 1 ? " tap" : ""}"${nDates > 1 ? ` data-route="${esc(f.o)}-${esc(f.d)}"` : ""}>
         <b>${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</b><span class="dm">${esc([days, stops].filter(Boolean).join("・"))}</span>
       </div>
+      ${opt.alt && opt.alt.length ? `<div class="alt"><span>也可從</span>${opt.alt.slice(0, 3).map(a => `<button class="alt-o" data-route="${esc(a.o)}-${esc(a.d)}" aria-label="${esc(ORIGIN_NAME[a.o])}出發 ${money(a.price)} 起，看日期">${esc(ORIGIN_NAME[a.o])} <b>${Math.round(a.price).toLocaleString("en-US")}</b></button>`).join("")}</div>` : ""}
       ${opt.pick && opt.note ? `<div class="memo">${esc(opt.note)}</div>` : ""}
     </div>
   </article>`;
@@ -2018,7 +2034,11 @@ function renderFlights(){
   cc.innerHTML = cs.length ? `${esc(cs.map(c => COUNTRY_SHORT[c]).join("・"))} ${icon("close")}` : "";
 
 
-  const list = cheapestPerRoute(baseFiltered().filter(f => okMonth(f.dep)));
+  const routes = cheapestPerRoute(baseFiltered().filter(f => okMonth(f.dep)));
+  // 同一個城市只出一張卡（最便宜的出發地）；其他出發地放在卡片下面一排，不會同一張照片連續出現好幾次
+  const byCity = new Map();
+  for (const f of routes){ const k = canon(f.d), g = byCity.get(k); if (g) g.alt.push(f); else byCity.set(k, { f, alt: [] }); }
+  const list = [...byCity.values()];
   const box = $("#flightList");
   const narrowed = state.countries.size || state.conds.size || state.budget || state.months.size || state.origins.size;
   if (state.origins.size === 1 && state.origins.has("TNN") && !list.length){
@@ -2032,16 +2052,16 @@ function renderFlights(){
     box.innerHTML = `<div class="empty">${EMPTY_ART}<b>這個條件目前沒有預估低價</b>放寬條件看看，或到 Trip.com 查即時價。
       <div class="btns">${narrowed ? `<button class="btn" data-clear>看全部最便宜的票</button>` : ""}<a class="btn" href="${esc(affiliate("https://tw.trip.com/flights/"))}" target="_blank" rel="noopener sponsored">去 Trip.com 看機票</a></div></div>`;
   } else {
-    box.innerHTML = list.slice(0, state.shown).map((f, i) => flightCard(f, { rank: i + 1 })).join("");
+    box.innerHTML = list.slice(0, state.shown).map((g, i) => flightCard(g.f, { rank: i + 1, alt: g.alt })).join("");
   }
-  $("#count").textContent = list.length ? `共 ${list.length} 條航線` : "";
-  $("#setGo").textContent = list.length ? `看 ${list.length} 條航線` : "看結果";
+  $("#count").textContent = routes.length ? `共 ${routes.length} 條航線` : "";
+  $("#setGo").textContent = routes.length ? `看 ${routes.length} 條航線` : "看結果";
   renderFavs();
   renderPicks();
   renderRadar();
   const rest = list.length - state.shown;
   $("#moreBtn").classList.toggle("hidden", rest <= 0);
-  $("#moreBtn").textContent = `再看 ${Math.min(rest, CONFIG.pageSize())} 條航線（還有 ${rest} 條）`;
+  $("#moreBtn").textContent = `再看 ${Math.min(rest, CONFIG.pageSize())} 個城市（還有 ${rest} 個）`;
   queueImages();
 }
 
@@ -2537,7 +2557,8 @@ function seasonFX(code, month){
   if (!MOTION) return "";
   const s = seasonOf(code, month), k = s && FX_KIND[s.ic];
   if (!k) return "";
-  const n = k === "snow" ? 16 : k === "spark" ? 10 : 9;
+  const sm = innerWidth < 760; // 手機照片小，飄落物少一半，不蓋住照片
+  const n = k === "snow" ? (sm ? 9 : 16) : k === "spark" ? (sm ? 6 : 10) : (sm ? 5 : 9);
   let h = "";
   for (let i = 0; i < n; i++){
     // 固定的亂數（同一個城市每次看起來一樣，重畫也不會跳）
@@ -2864,7 +2885,7 @@ document.addEventListener("pointerdown", e => {
   if (e.button > 0) return;
   const el = e.target.closest && e.target.closest(PRESS); if (!el) return;
   // 卡片上的愛心有自己的動畫，不要整張卡片縮
-  if (el.classList.contains("card") && e.target.closest(".fav-btn, .when, .more-d")) return;
+  if (el.classList.contains("card") && e.target.closest(".fav-btn, .when, .more-d, .alt-o")) return;
   unpress(); pressed = el; el.classList.add("press");
   if (e.pointerType === "touch" && navigator.vibrate && (el.matches(".card, .pass, .cta, .hero-cta"))) { try { navigator.vibrate(8); } catch(err) {} }
   const r = el.matches(RIPPLE) && MOTION ? el : null;
@@ -3066,6 +3087,9 @@ function renderRadar(){
   const lv = (p) => p <= q1 ? 1 : p <= q2 ? 2 : 3;
   const COLOR = { 1: "#22C55E", 2: "#FACC15", 3: "#F87171" }, SIZE = { 1: 7, 2: 5.5, 3: 4.5 };
   const C = 200;
+  // 手機上雷達比較小（約 343px 寬）：字放大、標籤少一點，才看得清楚
+  const small = innerWidth < 560, FS = small ? 12.5 : 11, RFS = small ? 12 : 10, KFS = small ? 10.5 : 9, KW = small ? 46 : 40;
+  const rs = $("#radar").style; rs.setProperty("--lfs", FS + "px"); rs.setProperty("--rfs", RFS + "px"); rs.setProperty("--kfs", KFS + "px");
   let svg = `<defs><linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#60A5FA" stop-opacity="0"/><stop offset="1" stop-color="#60A5FA" stop-opacity=".35"/></linearGradient></defs>`;
   svg += `<line class="axis" x1="${C}" y1="${C - RADAR_R}" x2="${C}" y2="${C + RADAR_R}"/><line class="axis" x1="${C - RADAR_R}" y1="${C}" x2="${C + RADAR_R}" y2="${C}"/>`;
   for (const km of [500, 1000, 2000, 3000]){
@@ -3079,16 +3103,16 @@ function renderRadar(){
     const [la, lo] = COORDS[canon(f.d)], g = geo(la, lo), r = radarR(g.d);
     return { f, x: C + r * Math.sin(g.b), y: C - r * Math.cos(g.b), l: lv(f.price) };
   });
-  const boxes = [[C - 24, C - 12, C + 24, C + 28]]; // 台灣的點與標籤
-  for (const km of [500, 1000, 2000, 3000]){ const r = radarR(km), x = C + r * 0.71 + 3, y = C + r * 0.71 + 10; boxes.push([x, y - 9, x + 40, y + 2]); }
+  const boxes = [[C - 24, C - 12, C + 24, C + (small ? 32 : 28)]]; // 台灣的點與標籤
+  for (const km of [500, 1000, 2000, 3000]){ const r = radarR(km), x = C + r * 0.71 + 3, y = C + r * 0.71 + 10; boxes.push([x, y - KFS, x + KW, y + 2]); }
   const hit = (b) => b[0] < 2 || b[2] > 398 || b[1] < 2 || b[3] > 398 || boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
   // 每個點都不能被標籤蓋住（蓋住就看不到也點不到）
   for (const it of items) boxes.push([it.x - SIZE[it.l] - 1, it.y - SIZE[it.l] - 1, it.x + SIZE[it.l] + 1, it.y + SIZE[it.l] + 1]);
   // 標籤：便宜的優先，放不下就只畫點
-  const textW = (t) => [...t].reduce((w, ch) => w + (/[　-鿿＀-￯]/.test(ch) ? 11 : 6.4), 0);
+  const textW = (t) => [...t].reduce((w, ch) => w + (/[　-鿿＀-￯]/.test(ch) ? FS : FS * 0.582), 0);
   const top3 = new Set([...items].sort((a, b) => a.f.price - b.f.price).slice(0, 3).map(i => i.f));
   let dots = "", nLabels = 0;
-  const MAX_LABELS = 20; // 從最便宜的開始標，最多 20 個
+  const MAX_LABELS = small ? 12 : 20; // 從最便宜的開始標，最多 20 個（手機 12 個）
   // 畫的順序：貴的先畫、便宜的後畫（便宜的在最上層）；標籤從便宜的開始分配
   const labelOf = new Map();
   for (const it of [...items].sort((a, b) => a.f.price - b.f.price)){ // 從最便宜的開始放
@@ -3098,7 +3122,7 @@ function renderRadar(){
     const spots = [[x + s + 4, y + 4, "start"], [x - s - 4, y + 4, "end"], [x, y - s - 5, "middle"], [x, y + s + 13, "middle"],
       [x + s + 2, y - s - 3, "start"], [x + s + 2, y + s + 11, "start"], [x - s - 2, y - s - 3, "end"], [x - s - 2, y + s + 11, "end"]];
     for (const [lx, ly, anchor] of spots){
-      const x0 = anchor === "start" ? lx : anchor === "end" ? lx - w : lx - w / 2, b = [x0 - 2, ly - 12, x0 + w + 2, ly + 5];
+      const x0 = anchor === "start" ? lx : anchor === "end" ? lx - w : lx - w / 2, b = [x0 - 2, ly - FS - 1, x0 + w + 2, ly + 5];
       if (!hit(b)){ boxes.push(b); nLabels++; labelOf.set(it, `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${esc(name)} <tspan class="pz">${price}</tspan></text>`); break; }
     }
   }
@@ -3109,7 +3133,7 @@ function renderRadar(){
     const ax = its.reduce((s, i) => s + i.x, 0) / its.length, ay = its.reduce((s, i) => s + i.y, 0) / its.length;
     const dx = ax - C, dy = ay - C, len = Math.hypot(dx, dy) || 1;
     const tx = C + dx / len * (len + 30), ty = C + dy / len * (len + 30);
-    const w = COUNTRIES[c].length * 12 + 8, b = [tx - w / 2, ty - 12, tx + w / 2, ty + 5];
+    const w = COUNTRIES[c].length * (RFS + 2) + 8, b = [tx - w / 2, ty - RFS - 2, tx + w / 2, ty + 5];
     if (!hit(b)){ boxes.push(b); regions += `<text class="region" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle">${esc(COUNTRIES[c])}</text>`; }
   }
   const rankOf = new Map([...items].sort((a, b) => a.f.price - b.f.price).map((it, i) => [it, i]));
@@ -3121,7 +3145,7 @@ function renderRadar(){
       <circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s}" fill="${COLOR[l]}"/>${label}</g>`;
   }
   svg += dots + regions; // 地區名稱畫在最上層
-  svg += `<g class="home"><circle cx="${C}" cy="${C}" r="5" fill="#FFC72C"/><circle cx="${C}" cy="${C}" r="9" fill="none" stroke="#FFC72C" stroke-opacity=".5"/><text x="${C}" y="${C + 22}" text-anchor="middle">台灣</text></g>`;
+  svg += `<g class="home"><circle cx="${C}" cy="${C}" r="5" fill="#FFC72C"/><circle cx="${C}" cy="${C}" r="9" fill="none" stroke="#FFC72C" stroke-opacity=".5"/><text x="${C}" y="${C + (small ? 25 : 22)}" text-anchor="middle">台灣</text></g>`;
   $("#radar").innerHTML = svg;
   radarAll = all;
   setupBudget();
