@@ -1067,7 +1067,7 @@
       </div><span class="t-sp"></span></div>
       <div class="trow"><span class="t-lab" id="labO">哪裡飛？</span>
         <div class="t-opts t-lvl all" id="origin" role="group" aria-labelledby="labO" style="--n:5">
-          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button><button class="t-kid" aria-pressed="false" data-v="TNN">台南</button><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button>
+          <button class="t-kid" aria-pressed="false" data-v="KHH">高雄</button><button class="t-kid" aria-pressed="false" data-v="TNN">台南</button><button class="t-all" aria-pressed="true" data-v="" aria-label="全部出發地">全部</button><button class="t-kid" aria-pressed="false" data-v="RMQ">台中</button><button class="t-kid" aria-pressed="false" data-v="TPE">台北</button>
         </div><span class="t-sp"></span>
       </div>
       <div class="trow"><span class="t-lab" id="labC">飛哪裡？</span>
@@ -1903,17 +1903,21 @@ function renderMonths(){
   const have = mins.filter(Boolean), low = have.length ? Math.min(...have) : null;
   $("#months").classList.toggle("all", !state.months.size);
   $("#months").style.setProperty("--n", keys.length + 1);
-  $("#months").innerHTML = keys.map((k, i) => {
+  const monthBtns = keys.map((k, i) => {
       const [y, m] = k.split("-"), min = mins[i];
       return `<button class="t-kid${min && min === low && have.length > 1 ? " best" : ""}" aria-pressed="${state.months.has(k)}" data-v="${k}" aria-label="${y}年${Number(m)}月${min ? `，最低 ${money(min)}` : ""}">
         <span class="m">${y !== thisYear ? `<small>${y}</small>` : ""}${Number(m)}月</span><span class="p${min ? "" : " none"}">${min ? priceHTML(min) : "即時價"}</span></button>`;
-    }).join("") + `<button class="t-all" aria-pressed="${!state.months.size}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}<em class="qi"> 起</em></small>` : ""}</button>`;
+    });
+  const allM = `<button class="t-all" aria-pressed="${!state.months.size}" data-v="" aria-label="全部月份${low ? `，最低 ${money(low)}` : ""}"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}<em class="qi"> 起</em></small>` : ""}</button>`;
+  $("#months").innerHTML = withAllInMiddle(monthBtns, allM);
   requestAnimationFrame(drawTreePath);
 }
 function renderChips(){
   $("#filters").innerHTML = CONDS.filter(x => !x.rt || state.type === "rt").map(x =>
     `<button class="chip" aria-pressed="${state.conds.has(x.v)}" data-v="${x.v}">${x.t}</button>`).join("");
 }
+// 「全部」放在一排的正中間（左右各一半）
+function withAllInMiddle(btns, all){ const h = Math.floor(btns.length / 2); return [...btns.slice(0, h), all, ...btns.slice(h)].join(""); }
 // 飛哪裡？：每個國家顯示最低價（照目前出發地、月份、條件）
 function renderCountries(){
   const saved = state.countries; state.countries = new Set();
@@ -1921,9 +1925,9 @@ function renderCountries(){
   const mins = {}; for (const f of base) if (!mins[f.country] || f.price < mins[f.country]) mins[f.country] = f.price;
   const all = Object.values(mins), low = all.length ? Math.min(...all) : null;
   $("#countries").classList.toggle("all", !state.countries.size);
-  $("#countries").innerHTML = MAIN_COUNTRIES.map(c => `<button class="t-kid${mins[c] && mins[c] === low && all.length > 1 ? " best" : ""}" aria-pressed="${state.countries.has(c)}" data-v="${c}" aria-label="${COUNTRIES[c]}${mins[c] ? `，最低 ${money(mins[c])}` : ""}">
-      <span class="m">${COUNTRY_SHORT[c]}</span><span class="p${mins[c] ? "" : " none"}">${mins[c] ? priceHTML(mins[c]) : "即時價"}</span></button>`).join("")
-    + `<button class="t-all" aria-pressed="${!state.countries.size}" data-v="" aria-label="全部國家"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}</small>` : ""}</button>`;
+  $("#countries").innerHTML = withAllInMiddle(MAIN_COUNTRIES.map(c => `<button class="t-kid${mins[c] && mins[c] === low && all.length > 1 ? " best" : ""}" aria-pressed="${state.countries.has(c)}" data-v="${c}" aria-label="${COUNTRIES[c]}${mins[c] ? `，最低 ${money(mins[c])}` : ""}">
+      <span class="m">${COUNTRY_SHORT[c]}</span><span class="p${mins[c] ? "" : " none"}">${mins[c] ? priceHTML(mins[c]) : "即時價"}</span></button>`),
+    `<button class="t-all" aria-pressed="${!state.countries.size}" data-v="" aria-label="全部國家"><span class="m">全部</span>${low ? `<small>${priceHTML(low)}</small>` : ""}</button>`);
 }
 // 選「全部」時那排每顆淡淡上色；出發地按鈕照目前的選擇
 function syncTree(){
@@ -2549,13 +2553,13 @@ function tripCost(f){
   const ref = HOTEL_REF[canon(f.d)]; if (!ref || !(f.price > 0)) return null;
   const nights = f.ret ? Math.max(1, diffDays(f.dep, f.ret)) : 3;
   const hotel = ref[0] * nights;
-  return { nights, hotel, total: f.price + hotel, pair: Math.round(f.price + hotel / 2) };
+  return { nights, perNight: ref[0], hotel, total: f.price + hotel, pair: Math.round(f.price + hotel / 2) };
 }
 function tripCostHTML(f){
   const t = tripCost(f); if (!t) return "";
   return `<div class="trip" role="group" aria-label="整趟旅費估算：機票 ${money(f.price)}，酒店 ${t.nights} 晚約 ${money(t.hotel)}，一個人整趟約 ${money(t.total)}">
     <span class="tc"><small>機票</small><b>${priceHTML(f.price)}</b></span><i aria-hidden="true">＋</i>
-    <span class="tc"><small>酒店 ${t.nights} 晚</small><b>${priceHTML(t.hotel)}</b></span>
+    <span class="tc"><small>酒店 ${money(t.perNight)} × ${t.nights} 晚</small><b>${priceHTML(t.hotel)}</b></span>
     <span class="tc sum"><small>一個人整趟約</small><b>${priceHTML(t.total)}</b></span>
     <em>酒店用平價參考價・兩人同住每人約 ${money(t.pair)}</em></div>`;
 }
@@ -2654,7 +2658,7 @@ function routeSheetHTML(o, d){
   // 機票＋酒店（最便宜的平價酒店參考價，不含青旅；雙人房）
   const tc = tripCost(cheapest);
   const costs = `<div class="ir"><dt>機票</dt><dd>${priceHTML(cheapest.price)}</dd></div>` + (tc
-    ? `<div class="ir"><dt>酒店</dt><dd>${priceHTML(tc.hotel)}<small>${tc.nights} 晚・最便宜酒店（不含青旅）</small></dd></div>
+    ? `<div class="ir"><dt>酒店</dt><dd>${priceHTML(tc.hotel)}<small>每晚約 ${money(tc.perNight)} × ${tc.nights} 晚・最便宜酒店（不含青旅）參考價</small></dd></div>
        <div class="ir sum"><dt>機＋酒</dt><dd>${priceHTML(tc.total)}</dd></div>` : "");
   // 價格日曆：每個出發日的最低價，依價格分三級上色
   const byDay = new Map();
