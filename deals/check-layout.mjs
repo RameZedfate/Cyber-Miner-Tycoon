@@ -161,6 +161,8 @@ async function contrast(page, root = "body", skipSheet = true) {
     for (const el of document.querySelector(root).querySelectorAll("*")) {
       const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
       if (el.closest(".ph, .hero, .band, .sh-head, .slot, svg, .toast, .sr-only") || (skipSheet && el.closest("#sheet"))) continue;
+      // 限時動態那排靠邊、被切掉一大半的圈圈故意變淡（提示還能滑），字本來就被切到，不量
+      const cutTile = el.closest(".stories .tile"); if (cutTile && cutTile.style.opacity) continue;
       if ([...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) test(el, getComputedStyle(el), `「${el.textContent.trim().slice(0, 14)}」(${el.className || el.tagName})`);
       if (el.matches("h2.sec[data-eb]")) test(el, getComputedStyle(el, "::before"), `標題英文小字 ${el.dataset.eb}`);
     }

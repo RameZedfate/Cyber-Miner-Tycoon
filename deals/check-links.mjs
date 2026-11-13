@@ -593,8 +593,10 @@ try {
   // 點出去的位置：點的當下 trip_sub1 變成「howtravle(_src)_位置」，後台能分開看
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    // 這一段用「大阪有很多組日期」的資料（多 14 組比較貴的），才量得到日期清單收合
+    const MANY = { ...MOCK, rows: [...MOCK.rows, ...Array.from({ length: 14 }, (_, i) => row("TPE", "OSA", "TPE", "KIX", day(30 + i), day(34 + i), 9000 + i * 111))] };
     await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json",
-      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+      body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MANY) }));
     // trip.com 回一個空白頁，新分頁才有真正打開的網址可以讀
     await page.context().route(/trip\.com/, r => r.fulfill({ contentType: "text/html", body: "<html></html>" }));
     await page.goto(base + "?src=ig_test"); await page.waitForSelector("#flightList .card");
@@ -604,22 +606,86 @@ try {
       const p = await pop; if (!p) return null;
       await p.waitForURL(/trip\.com/, { timeout: 4000 }).catch(() => {});
       const u = p.url(); await p.close();
-      try { return new URL(u).searchParams.get("trip_sub1"); } catch(e) { return u; }
+      try { const q = new URL(u).searchParams; lastSub2 = q.get("trip_sub2"); return q.get("trip_sub1"); } catch(e) { return u; }
     };
-    const cases = [
-      ["hero", () => page.click("#hero .slide:first-child .pass")],
-    ];
-    for (const [want, fn] of cases) {
-      const got = await sub1Of(fn);
-      if (got !== `howtravle_ig_test_${want}`) problems.push(`點「${want}」出去的 trip_sub1 應為 howtravle_ig_test_${want}：${got}`);
-    }
+    let lastSub2 = null;
+    // 大圖的登機證：先打開價格日曆（不直接跳 Trip.com）；在日曆裡訂票記 calbook＋from_hero
+    const heroPop = page.waitForEvent("popup", { timeout: 1500 }).catch(() => null);
+    await page.click("#hero .slide:first-child .pass");
+    await page.waitForSelector("#sheet:not(.hidden) .sh-sticky .cta", { timeout: 3000 }).catch(() => problems.push("點大圖的登機證沒有打開價格日曆"));
+    if (await heroPop) problems.push("點大圖的登機證直接跳去 Trip.com（應先打開價格日曆）");
+    const hb = await sub1Of(() => page.click("#sheet .sh-sticky .cta"));
+    if (hb !== "howtravle_ig_test_calbook" || lastSub2 !== "from_hero") problems.push(`從大圖打開的價格日曆追蹤不對：${hb}／${lastSub2}`);
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    await page.evaluate(() => { sheetFrom = ""; });
     // 價格日曆底部的訂票按鈕
     await page.evaluate(() => openRoute("TPE", "OSA")); await page.waitForSelector("#sheet .sh-sticky .cta");
     const cb = await sub1Of(() => page.click("#sheet .sh-sticky .cta"));
     if (cb !== "howtravle_ig_test_calbook") problems.push(`價格日曆訂票按鈕的 trip_sub1 不對：${cb}`);
     const co = await sub1Of(() => page.click("#sheet .opt"));
     if (co !== "howtravle_ig_test_calopt") problems.push(`價格日曆日期選項的 trip_sub1 不對：${co}`);
-    await page.keyboard.press("Escape");
+    if (lastSub2) problems.push(`不是從卡片打開的價格日曆不該帶 trip_sub2：${lastSub2}`);
+    // 幾組日期：先顯示最便宜的 6 組，其他收起來；第一組標「最便宜」；按「再看」全部展開
+    const shown = () => page.$$eval("#sheet .opt", els => els.filter(e => e.offsetParent).length);
+    const nAll = await page.$$eval("#sheet .opt", els => els.length);
+    if (nAll <= 8) problems.push(`測試資料的大阪應該有很多組日期：${nAll}`);
+    if (await shown() !== 6) problems.push(`幾組日期一開始應該只顯示 6 組：${await shown()}`);
+    if (!/最便宜/.test(await page.textContent("#sheet .opt.best .pp > span").catch(() => ""))) problems.push("最便宜的那組沒有標「最便宜」");
+    const moreTxt = await page.textContent("#sheet .opt-more").catch(() => "");
+    if (!moreTxt.includes(`再看 ${nAll - 6} 組`)) problems.push(`「再看」按鈕的組數不對：${moreTxt}`);
+    // 點日曆上一個被收起來的日期：清單自動展開並標出那一組
+    const hiddenDep = await page.evaluate(() => { const x = [...document.querySelectorAll("#sheet .opt.x")].pop(); return x ? x.dataset.dep : ""; });
+    if (!hiddenDep) problems.push(`幾組日期沒有收起來的組（共 ${nAll} 組）`);
+    else { await page.click(`#sheet .day[data-day="${hiddenDep}"]`); await page.waitForTimeout(500); }
+    if (await shown() !== nAll) problems.push("點日曆上被收起來的日期，清單沒有展開");
+    if (!(await page.$eval(`#sheet .opt.hi`, e => !!e.offsetParent).catch(() => false))) problems.push("點日曆日期後，對應的那組沒有顯示出來");
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    await page.evaluate(() => openRoute("TPE", "OSA")); await page.waitForSelector("#sheet .opt-more");
+    await page.click("#sheet .opt-more");
+    if (await shown() !== nAll) problems.push("按「再看」沒有展開全部日期");
+    if (await page.$eval("#sheet .opt-more", e => !!e.offsetParent).catch(() => false)) problems.push("展開後「再看」按鈕還在");
+    // 日曆：已經整週過去的那幾排不畫；沒有票的日子不是灰色方塊
+    const calInfo = await page.evaluate(() => {
+      const t = todayTW(), cal = [...document.querySelectorAll("#sheet .cal")].find(c => c.querySelector("h4").textContent.includes(`${Number(t.slice(5, 7))} 月`));
+      if (!cal) return null;
+      const ns = [...cal.querySelectorAll(".day:not(.blank) .n")].map(e => Number(e.textContent));
+      const nil = cal.querySelector(".day.nil");
+      return { first: ns[0], want: Math.max(1, Number(t.slice(8)) - parseD(t).getUTCDay()), cols: (cal.querySelectorAll(".cal-grid > *").length) % 7,
+        nilBg: nil ? getComputedStyle(nil).backgroundColor : "" };
+    });
+    if (calInfo) {
+      if (calInfo.first !== calInfo.want) problems.push(`這個月的日曆應該從 ${calInfo.want} 號那一週開始：${calInfo.first}`);
+      if (calInfo.nilBg && calInfo.nilBg !== "rgba(0, 0, 0, 0)") problems.push(`沒有票的日子不該有底色：${calInfo.nilBg}`);
+    }
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 從機票卡打開的價格日曆：trip_sub1 一樣是 calopt，trip_sub2 記 from_card；從限時動態打開記 from_story
+    const fc = await page.$("#flightList .card .card-link"); await fc.scrollIntoViewIfNeeded();
+    const fb = await fc.boundingBox(); await page.mouse.click(fb.x + fb.width / 2, fb.y + fb.height / 2);
+    await page.waitForSelector("#sheet:not(.hidden) .opt");
+    const c1 = await sub1Of(() => page.click("#sheet .opt"));
+    if (c1 !== "howtravle_ig_test_calopt" || lastSub2 !== "from_card") problems.push(`從卡片打開的價格日曆追蹤不對：${c1}／${lastSub2}`);
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    await page.evaluate(() => scrollTo(0, 0)); await page.click("#tiles .tile.story"); await page.waitForSelector("#sheet:not(.hidden) .sh-sticky .cta");
+    const c2 = await sub1Of(() => page.click("#sheet .sh-sticky .cta"));
+    if (c2 !== "howtravle_ig_test_calbook" || lastSub2 !== "from_story") problems.push(`從限時動態打開的價格日曆追蹤不對：${c2}／${lastSub2}`);
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 限時動態那排：右邊還有城市時右邊淡出；電腦有箭頭，按了往右滑、左邊箭頭出現
+    const st = async () => page.evaluate(() => { const w = document.querySelector(".stories-wrap"), t = document.querySelector("#tiles"), vis = (q) => { const e = w.querySelector(q); return !!e && getComputedStyle(e).display !== "none"; };
+      return { more: t.scrollWidth > t.clientWidth + 4, l: w.classList.contains("more-l"), r: w.classList.contains("more-r"), prev: vis(".st-nav.prev"), next: vis(".st-nav.next"), x: t.scrollLeft,
+        cut: [...t.children].filter(k => { const l = k.offsetLeft - t.scrollLeft; return l < t.clientWidth - 2 && l + k.offsetWidth > t.clientWidth + 2; }).map(k => ({ o: Number(k.style.opacity || 1), f: (t.clientWidth - (k.offsetLeft - t.scrollLeft)) / k.offsetWidth })) }; });
+    const s0 = await st();
+    if (s0.more) {
+      if (!s0.r || s0.l) problems.push(`限時動態一開始應該只有右邊還有：${JSON.stringify(s0)}`);
+      if (s0.cut.some(c => c.f < 0.55 ? !(c.o < 1) : c.f > 0.65 && c.o < 1)) problems.push(`限時動態靠邊的圈圈：切掉一大半的要變淡、露出六成以上的不淡：${JSON.stringify(s0.cut)}`);
+      if (page.viewportSize().width >= 760) {
+        if (!s0.next || s0.prev) problems.push(`電腦版限時動態一開始應該只有右箭頭：${JSON.stringify(s0)}`);
+        await page.click(".st-nav.next"); await page.waitForTimeout(900);
+        const s1 = await st();
+        if (!(s1.x > s0.x + 50)) problems.push("按限時動態右箭頭沒有往右滑");
+        if (!s1.prev) problems.push("限時動態往右滑之後左箭頭沒有出現");
+        await page.click(".st-nav.prev"); await page.waitForTimeout(900);
+      }
+    }
     // 酒店城市卡
     await page.click('.tabs button[data-tab="hotels"]');
     const hc = await sub1Of(async () => { const c = await page.$("#hotelCities .card .card-link"); await c.scrollIntoViewIfNeeded(); const b = await c.boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.3); });
