@@ -902,6 +902,7 @@
   .seg .thumb{border-radius:9px}
   /* 登機證：像全息卡片一樣有一道光掃過（每張轉到中間時掃一次） */
   .pass{position:relative;overflow:hidden}
+  button.pass{width:100%;border:0;padding:0;font:inherit;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none}
   .pass::after{content:"";position:absolute;inset:-20% auto -20% 0;width:45%;pointer-events:none;opacity:0;
     background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.1) 30%,rgba(255,255,255,.55) 50%,rgba(255,255,255,.1) 70%,transparent 100%);
     transform:translateX(-120%) skewX(-12deg)}
@@ -1290,7 +1291,7 @@ function trackingSub1(){
 let sheetFrom = ""; // 目前的價格日曆是從哪裡打開的
 function entryOf(el){
   if (!el || !el.closest) return "";
-  return el.closest("#tiles") ? "story" : el.closest("#flightList") ? "card" : el.closest("#picks") ? "pick" : el.closest("#favList") ? "fav"
+  return el.closest("#hero") ? "hero" : el.closest("#tiles") ? "story" : el.closest("#flightList") ? "card" : el.closest("#picks") ? "pick" : el.closest("#favList") ? "fav"
     : el.closest("#radar") ? "radar" : el.closest(".win") ? "lucky" : el.closest("#hotelCities, #hotelList") ? "hotel" : "";
 }
 function placementOf(a){
@@ -1838,7 +1839,7 @@ function renderHero(){
           <div class="wrap"><span class="eyebrow">${fsc ? icon("plane") + "傳統航空" : icon("flame") + "最便宜"}・第 ${i + 1} 名</span></div>
           <div class="wrap has-pass">
             <div class="h2w"><h2>${esc(cityName(f.d))}</h2></div>
-            ${passHTML(f)}
+            ${passHTML(f, true)}
           </div>
         </div>
       </div></div>`;
@@ -2858,12 +2859,16 @@ function sheetRouteSVG(){
     <g class="sr-plane"><g transform="rotate(90) scale(.8) translate(-12 -12)">${ICONS.plane.slice(1)}</g>
       <animateMotion dur="1.6s" begin="0.15s" fill="freeze" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".4 0 .2 1"><mpath href="#srPath"/></animateMotion></g></svg>`;
 }
-// 登機證卡片（大圖、幫我選共用）：機場代碼、天數／直飛、去回程日期、價格，整張點了去訂票
-function passHTML(f){
+// 登機證卡片（大圖、幫我選共用）：機場代碼、天數／直飛、去回程日期、價格
+// 大圖（toCal）：整張點了先打開這條航線的價格日曆；幫我選：整張點了直接去訂那一張
+function passHTML(f, toCal){
   const url = flightUrl(f); if (!url) return "";
+  const cal = toCal && routeFlights(f.o, f.d).length > 0;
   const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 日遊` : "單程";
   const tag = [days, f.direct ? "直飛" : ""].filter(Boolean).join("・");
-  return `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc(tag)}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起，去 Trip.com 看機票">
+  const label = `${esc(ORIGIN_NAME[f.o])}飛${esc(cityName(f.d))}，去程 ${esc(fmtDate(f.dep))}${f.ret ? `，回程 ${esc(fmtDate(f.ret))}` : ""}，${esc(tag)}，${f.ret ? "來回" : "單程"} ${money(f.price)} 起`;
+  return `${cal ? `<button class="pass" data-route="${esc(f.o)}-${esc(f.d)}" aria-label="${label}，看價格日曆">`
+      : `<a class="pass" href="${esc(url)}" target="_blank" rel="noopener sponsored" aria-label="${label}，去 Trip.com 看機票">`}
               <span class="pass-route">
                 <span class="pr-end"><b>${esc(f.oAp || f.o)}</b><small>${esc(ORIGIN_NAME[f.o])}</small></span>
                 <span class="pr-mid"><i class="pr-line"></i>${icon("plane", "pr-plane")}<i class="pr-line"></i><small>${esc(tag)}</small></span>
@@ -2873,7 +2878,7 @@ function passHTML(f){
                 <span class="pf-d"><span><small>去程</small>${esc(fmtDate(f.dep))}</span>${f.ret ? `<span><small>回程</small>${esc(fmtDate(f.ret))}</span>` : ""}</span>
                 <span class="pf-p"><small>${f.ret ? "來回" : "單程"}・起</small><strong data-v="${Math.round(f.price)}">${priceHTML(f.price)}</strong><em>看機票 ${ARROW()}</em></span>
               </span>
-            </a>`;
+            </${cal ? "button" : "a"}>`;
 }
 // 「順便看○○的酒店」：入住／退房跟那張機票同一天（價格日曆、幫我選共用）
 function hotelCrossSell(f, note){
@@ -2967,7 +2972,8 @@ document.addEventListener("click", e => {
   if (t.closest("[data-close]")){ closeSheet(); return; }
   const og = t.closest("[data-origin]"); if (og){ state.origins.clear(); state.origins.add(og.dataset.origin); resetPage(); syncTree(); renderHero(); renderFlights(); return; }
   const hr = t.closest("[data-hroute]"); if (hr){ const [o, d] = hr.dataset.hroute.split("-"); sheetFrom = "hotel"; openHotelRoute(o, d); return; }
-  const r = t.closest("[data-route]"); if (r){ const [o, d] = r.dataset.route.split("-"); sheetFrom = entryOf(r) || sheetFrom; openRouteFrom(r, o, d); return; }
+  const r = t.closest("[data-route]"); if (r){ if (e.defaultPrevented) return; // 旁邊的輪播卡片：只轉到中間
+    const [o, d] = r.dataset.route.split("-"); sheetFrom = entryOf(r) || sheetFrom; openRouteFrom(r, o, d); return; }
   const sh = t.closest("[data-share]"); if (sh){ const [o, d] = sh.dataset.share.split("-"); shareRoute(o, d, sh.dataset.smode, sh.dataset.stype); return; }
   if (t.closest("#luckyBtn") || t.closest("#again")){ lucky(); return; }
   if (t.closest("[data-clear]")){ clearFilters(); return; }

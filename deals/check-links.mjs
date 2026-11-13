@@ -609,13 +609,15 @@ try {
       try { const q = new URL(u).searchParams; lastSub2 = q.get("trip_sub2"); return q.get("trip_sub1"); } catch(e) { return u; }
     };
     let lastSub2 = null;
-    const cases = [
-      ["hero", () => page.click("#hero .slide:first-child .pass")],
-    ];
-    for (const [want, fn] of cases) {
-      const got = await sub1Of(fn);
-      if (got !== `howtravle_ig_test_${want}`) problems.push(`點「${want}」出去的 trip_sub1 應為 howtravle_ig_test_${want}：${got}`);
-    }
+    // 大圖的登機證：先打開價格日曆（不直接跳 Trip.com）；在日曆裡訂票記 calbook＋from_hero
+    const heroPop = page.waitForEvent("popup", { timeout: 1500 }).catch(() => null);
+    await page.click("#hero .slide:first-child .pass");
+    await page.waitForSelector("#sheet:not(.hidden) .sh-sticky .cta", { timeout: 3000 }).catch(() => problems.push("點大圖的登機證沒有打開價格日曆"));
+    if (await heroPop) problems.push("點大圖的登機證直接跳去 Trip.com（應先打開價格日曆）");
+    const hb = await sub1Of(() => page.click("#sheet .sh-sticky .cta"));
+    if (hb !== "howtravle_ig_test_calbook" || lastSub2 !== "from_hero") problems.push(`從大圖打開的價格日曆追蹤不對：${hb}／${lastSub2}`);
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    await page.evaluate(() => { sheetFrom = ""; });
     // 價格日曆底部的訂票按鈕
     await page.evaluate(() => openRoute("TPE", "OSA")); await page.waitForSelector("#sheet .sh-sticky .cta");
     const cb = await sub1Of(() => page.click("#sheet .sh-sticky .cta"));
