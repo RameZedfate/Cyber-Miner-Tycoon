@@ -631,6 +631,44 @@ try {
     console.log(`[動畫 ${w}] 檢查完成`);
     await page.close();
   }
+  // ---------- 各航線頁（r/台北飛大阪）：說明區不能跑版、字要看得清楚；價格日曆裡的「廉航 vs 傳統航空」對齊 ----------
+  for (const [w, h] of [[320, 700], [390, 844], [1280, 900]]) {
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" });
+    page.on("pageerror", e => all.push(`[${w}px 航線頁] 網頁錯誤：${e.message}`));
+    await setup(page);
+    await page.goto(base + "r/taipei-osaka/");
+    await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 6000 }).catch(() => all.push(`[${w}px 航線頁] 沒有打開價格日曆`));
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { scrollTo(0, y); await new Promise(r => setTimeout(r, 30)); } });
+    await page.waitForTimeout(500);
+    const seo = await page.evaluate(() => {
+      const out = [], box = document.querySelector("#seoRoute .seo-route"); if (!box) return ["沒有說明區"];
+      const R = (e) => e.getBoundingClientRect(), b = R(box);
+      if (b.left < 0 || b.right > innerWidth) out.push(`說明區超出畫面（${Math.round(b.left)}～${Math.round(b.right)}）`);
+      for (const el of box.querySelectorAll("h1, h2, h3, p, li, dt, dd, td, th, .cta")) { const r = R(el); if (r.width && (r.right > b.right + 1 || r.left < b.left - 1)) out.push(`說明區文字超出外框：「${el.textContent.trim().slice(0, 14)}」`); }
+      if (document.documentElement.scrollWidth > innerWidth + 1) out.push(`整頁可以左右滑（多 ${document.documentElement.scrollWidth - innerWidth}px）`);
+      return out;
+    });
+    seo.forEach(i => all.push(`[${w}px 航線頁] ${i}`));
+    (await contrast(page, "#seoRoute")).forEach(i => all.push(`[${w}px 航線頁] ${i}`));
+    (await contrast(page, "footer")).forEach(i => all.push(`[${w}px 頁尾] ${i}`));
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `route-${w}.png`), fullPage: true });
+    // 價格日曆：香港有廉航和傳統航空 → 兩格一樣寬、VS 在正中間、字不超出
+    await page.evaluate(() => openRoute("TPE", "HKG")); await page.waitForSelector("#sheet:not(.hidden) .vs", { timeout: 4000 }).catch(() => all.push(`[${w}px] 香港的價格日曆沒有「廉航 vs 傳統航空」`));
+    const vs = await page.evaluate(() => {
+      const out = [], c = [...document.querySelectorAll("#sheet .vs-c")], m = document.querySelector("#sheet .vs-m"); if (c.length !== 2 || !m) return out;
+      const R = (e) => e.getBoundingClientRect(), a = R(c[0]), b = R(c[1]), mm = R(m);
+      if (Math.abs(a.width - b.width) > 1 || Math.abs(a.top - b.top) > 1) out.push("廉航 vs 傳統航空兩格沒有一樣寬、對齊");
+      if (Math.abs((mm.left + mm.right) / 2 - (a.right + b.left) / 2) > 2) out.push("VS 沒有在兩格中間");
+      for (const x of c) for (const el of x.querySelectorAll("small, strong, span, em")) { const r = R(el), p = R(x); if (r.right > p.right + 1) out.push(`廉航 vs 傳統航空的字超出：「${el.textContent.trim().slice(0, 12)}」`); }
+      for (const el of document.querySelectorAll("#sheet .bag-tag, #sheet .cost-note.checked")) { const r = R(el), p = R(el.closest(".sh-body")); if (r.right > p.right + 1) out.push(`費用區的字超出：「${el.textContent.trim().slice(0, 12)}」`); }
+      return out;
+    });
+    vs.forEach(i => all.push(`[${w}px 價格日曆] ${i}`));
+    (await contrast(page, "#sheet", false)).forEach(i => all.push(`[${w}px 價格日曆 香港] ${i}`));
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `vs-${w}.png`) });
+    await page.close();
+  }
 } finally {
   await browser.close();
   server.close();

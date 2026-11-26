@@ -89,7 +89,10 @@ async function setClick(page, sel) {
   await page.waitForSelector("#setSheet", { state: "hidden" }).catch(() => {});
 }
 async function checkLinks(page, where, sub1 = "howtravle") {
-  const hrefs = await page.$$eval("a[href]", as => as.map(a => a.href));
+  // 站內的熱門航線頁（頁尾、航線頁下面的連結）不是訂票連結，另外檢查（要是本站 r/… 的頁面）
+  const hrefs = await page.$$eval("a[href]", as => as.filter(a => !a.closest(".ft-routes, #seoRoute")).map(a => a.href));
+  const inner = await page.$$eval(".ft-routes a, #seoRoute a", as => as.map(a => a.href));
+  for (const h of inner) if (!/\/r\/[a-z-]+\/$/.test(new URL(h).pathname)) problems.push(`${where}: 熱門航線連結不是本站航線頁 → ${h}`);
   for (const h of hrefs) {
     seenLinks.add(h);
     const u = new URL(h);
@@ -432,6 +435,13 @@ try {
       if (!(await more.$(".rip"))) problems.push("按鈕按下去沒有水波");
       await page.mouse.up();
     }
+    // 點擊粒子：點按鈕會炸一圈小粒子，一下就自己消失
+    await page.evaluate(() => scrollTo(0, 0)); await page.waitForTimeout(200); await page.click("#openSet"); await page.waitForTimeout(60);
+    const nTp = await page.$$eval("#tapfx .tp", els => els.length);
+    if (nTp < 8) problems.push(`點按鈕沒有炸出點擊粒子：${nTp}`);
+    await page.waitForTimeout(1000);
+    if (await page.$$eval("#tapfx .tp", els => els.length)) problems.push("點擊粒子沒有自己消失");
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
     // 第 3 輪特效
     // 分頁的白色滑塊：點「便宜酒店」後滑到那顆上面
     await page.evaluate(() => scrollTo(0, 0));
@@ -625,6 +635,9 @@ try {
     const co = await sub1Of(() => page.click("#sheet .opt"));
     if (co !== "howtravle_ig_test_calopt") problems.push(`價格日曆日期選項的 trip_sub1 不對：${co}`);
     if (lastSub2) problems.push(`不是從卡片打開的價格日曆不該帶 trip_sub2：${lastSub2}`);
+    // 機票卡和日期選項：廉航寫「託運另購」
+    if (!(await page.$$eval("#flightList .card .bag-mini.lcc", els => els.some(e => e.textContent.includes("託運另購"))))) problems.push("廉航機票卡沒有寫「託運另購」");
+    if (!(await page.$$eval("#sheet .opt .d2", els => els.some(e => e.textContent.includes("託運另購"))))) problems.push("價格日曆的日期選項沒有寫「託運另購」");
     // 幾組日期：先顯示最便宜的 6 組，其他收起來；第一組標「最便宜」；按「再看」全部展開
     const shown = () => page.$$eval("#sheet .opt", els => els.filter(e => e.offsetParent).length);
     const nAll = await page.$$eval("#sheet .opt", els => els.length);
@@ -656,6 +669,18 @@ try {
     if (calInfo) {
       if (calInfo.first !== calInfo.want) problems.push(`這個月的日曆應該從 ${calInfo.want} 號那一週開始：${calInfo.first}`);
       if (calInfo.nilBg && calInfo.nilBg !== "rgba(0, 0, 0, 0)") problems.push(`沒有票的日子不該有底色：${calInfo.nilBg}`);
+    }
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 香港：廉航和傳統航空都有 → 價格日曆有「廉航 vs 傳統航空」，點傳統航空那格記 calvs
+    await page.evaluate(() => { sheetFrom = ""; openRoute("TPE", "HKG"); }); await page.waitForSelector("#sheet:not(.hidden) .opt");
+    const vsInfo = await page.evaluate(() => { const c = [...document.querySelectorAll("#sheet .vs .vs-c")]; return { n: c.length, t: c.map(x => x.textContent.replace(/\s+/g, " ")), say: document.querySelector("#sheet .vs-say")?.textContent || "" }; });
+    if (vsInfo.n !== 2) problems.push(`香港應該有「廉航 vs 傳統航空」兩格：${vsInfo.n}`);
+    else {
+      if (!vsInfo.t[0].includes("託運另購") || !vsInfo.t[1].includes("含託運")) problems.push(`廉航 vs 傳統航空的行李說明不對：${vsInfo.t}`);
+      if (!/NT\$5,111/.test(vsInfo.t[1])) problems.push(`傳統航空最低價應該是國泰 5,111：${vsInfo.t[1]}`);
+      if (!/便宜|划算|貴/.test(vsInfo.say)) problems.push(`廉航 vs 傳統航空沒有給建議：${vsInfo.say}`);
+      const cv = await sub1Of(() => page.click("#sheet .vs .vs-c.fsc"));
+      if (cv !== "howtravle_ig_test_calvs") problems.push(`廉航 vs 傳統航空點出去的 trip_sub1 不對：${cv}`);
     }
     await page.keyboard.press("Escape"); await page.waitForTimeout(300);
     // 從機票卡打開的價格日曆：trip_sub1 一樣是 calopt，trip_sub2 記 from_card；從限時動態打開記 from_story
@@ -844,9 +869,17 @@ try {
     if (!(await page.$("#sheet .info .flag")) || !/^1 : [\d.,]+$/.test((await page.textContent("#sheet .fx-box").catch(() => "")).trim())) problems.push("貨幣沒有國旗或「1 : 匯率」框");
     if (!(await page.textContent("#sheet .fx-src")).includes("約")) problems.push("拿不到今天匯率時應標示「參考匯率（約）」");
     const cdt = await page.$$eval("#sheet .costs dt", ds => ds.map(d => d.textContent));
-    if (cdt.join() !== "機票,酒店,機＋酒") problems.push(`價格日曆費用的順序不對：${cdt}`);
+    // 廉航（虎航）：機票、託運行李（另購）、酒店、機＋酒＋行李
+    if (cdt.join() !== "機票,託運行李,酒店,合計") problems.push(`價格日曆費用的順序不對：${cdt}`);
+    const bagTxt = await page.textContent("#sheet .costs .ir.bag").catch(() => "");
+    if (!bagTxt.includes("另購") || !/NT\$1,600/.test(bagTxt)) problems.push(`廉航的託運行李沒寫「另購、約 NT$1,600」：${bagTxt}`);
+    const sumOk = await page.evaluate(() => { const n = (q) => Number((document.querySelector(q)?.textContent || "").replace(/[^0-9]/g, ""));
+      const irs = [...document.querySelectorAll("#sheet .costs .ir")]; const v = (i) => Number(irs[i].querySelector("dd").textContent.split("每晚")[0].replace(/[^0-9]/g, ""));
+      return v(0) + 1600 + v(2) === n("#sheet .costs .ir.sum .sv"); });
+    if (!sumOk) problems.push("機＋酒＋行李的總價不等於 機票＋行李 1,600＋酒店");
+    if (!/查到時間/.test(await page.textContent("#sheet .cost-note.checked").catch(() => ""))) problems.push("價格日曆沒寫機票價格查到的時間");
     // 酒店寫清楚怎麼算：每晚參考價 × 晚數
-    const hd = await page.$$eval("#sheet .costs .ir", rs => (rs[1] && rs[1].textContent) || "");
+    const hd = await page.$$eval("#sheet .costs .ir", rs => (rs[2] && rs[2].textContent) || "");
     if (!/每晚約 NT\$[\d,]+ × \d+ 晚/.test(hd) || !hd.includes("參考價")) problems.push(`酒店沒寫「每晚約 NT$○ × N 晚」參考價：${hd}`);
     if (!(await page.textContent("#sheet .cost-note").catch(() => "")).includes("2 人")) problems.push("價格日曆沒有「酒店均以 2 人」的備註");
     const order = await page.evaluate(() => { const b = document.querySelector("#sheet .sh-body"), idx = (q) => [...b.querySelectorAll("*")].indexOf(b.querySelector(q)); return [idx(".info"), idx(".opt-list"), idx(".cal")]; });
@@ -1019,6 +1052,47 @@ try {
     await page.waitForFunction(() => dataSettled, null, { timeout: 12000 }).catch(() => {});
     if ((await page.textContent("#favList").catch(() => "")).includes("比你上次看便宜")) problems.push("同樣價格重新打開，還顯示降價");
     await ctx3.close();
+  }
+
+  // 各航線頁（給 Google 搜尋）：要是最新產生的；打開直接跳出那條航線的價格日曆；說明區有現在的最低價；訂票連結記 seo_航線
+  {
+    const { spawnSync } = await import("node:child_process");
+    const chk = spawnSync(process.execPath, [path.join(DIR, "build-routes.mjs"), "--check"], { encoding: "utf8" });
+    if (chk.status !== 0) problems.push((chk.stdout || chk.stderr || "航線頁檢查失敗").trim());
+    const { ROUTES } = await import("./build-routes.mjs");
+    const sm = fs.readFileSync(path.join(DIR, "sitemap.xml"), "utf8");
+    for (const r of ROUTES) if (!sm.includes(`/deals/r/${r.slug}/</loc>`)) problems.push(`sitemap.xml 沒有 r/${r.slug}/`);
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.route("**/*workers.dev/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(r.request().url().includes("part=fsc") ? FSC : MOCK) }));
+    // 首頁頁尾：每條航線都有連結
+    await page.goto(base); await page.waitForSelector("#flightList .card");
+    const ft = await page.$$eval(".ft-routes a", as => as.map(a => a.getAttribute("href")));
+    if (ft.length !== ROUTES.length || ROUTES.some(r => !ft.includes(`r/${r.slug}/`))) problems.push(`首頁頁尾的熱門航線連結不齊：${ft.length}／${ROUTES.length}`);
+    if (await page.$("#seoRoute, h1")) problems.push("首頁不該有航線頁的說明區");
+    // 台北飛大阪
+    const picksOk = []; page.on("response", r => { const u = new URL(r.url()); if (u.pathname === "/picks.json" && r.ok()) picksOk.push(u.pathname); });
+    await page.goto(base + "r/taipei-osaka/");
+    await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 5000 }).catch(() => problems.push("航線頁沒有直接打開那條航線的價格日曆"));
+    const info = await page.evaluate(() => ({ title: document.title, h1: document.querySelector("#seoRoute h1")?.textContent || "", canon: document.querySelector('link[rel="canonical"]')?.href,
+      city: document.querySelector("#sheet .sh-head .city")?.textContent || "", live: document.querySelector("#seoLive")?.textContent || "",
+      rows: document.querySelectorAll("#seoLive .seo-t tbody tr").length, cur: document.querySelector('.ft-routes a[aria-current="page"]')?.getAttribute("href"),
+      autoset: !document.querySelector("#setSheet").classList.contains("hidden") }));
+    if (!info.title.startsWith("台北飛大阪便宜機票") || !info.h1.startsWith("台北飛大阪便宜機票")) problems.push(`航線頁標題不對：${info.title}／${info.h1}`);
+    if (!/\/deals\/r\/taipei-osaka\/$/.test(info.canon || "")) problems.push(`航線頁的 canonical 不對：${info.canon}`);
+    if (!info.city.includes("大阪")) problems.push(`航線頁打開的價格日曆不是大阪：${info.city}`);
+    if (!/查到：台北飛大阪來回最低 NT\$5,980/.test(info.live)) problems.push(`航線頁說明區沒有填進現在的最低價：${info.live.slice(0, 80)}`);
+    if (info.rows < 1) problems.push("航線頁說明區沒有各月份最低價表");
+    if (info.cur !== "r/taipei-osaka/") problems.push(`航線頁頁尾沒有標出目前這一條：${info.cur}`);
+    if (info.autoset) problems.push("航線頁不該自動打開「選航線」");
+    await checkLinks(page, "航線頁", "howtravle_seo_tpeosa");
+    // 照片、精選、酒店資料這些相對路徑要找得到（頁面在 r/…/ 底下，靠 <base> 指回 deals/）
+    const bad = await page.evaluate(() => [...document.querySelectorAll('img[src^="http://127"]')].filter(i => i.complete && !i.naturalWidth).map(i => i.src));
+    if (bad.length) problems.push(`航線頁有圖片載不到：${bad.slice(0, 3)}`);
+    if (!picksOk.length) problems.push("航線頁沒有從 deals/picks.json 讀到精選（相對路徑不對？）");
+    await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+    // 說明區的「打開價格日曆」按鈕
+    await page.click("#seoLive .seo-open"); await page.waitForSelector("#sheet:not(.hidden) .opt", { timeout: 3000 }).catch(() => problems.push("航線頁說明區的按鈕沒有打開價格日曆"));
+    await page.close();
   }
 
   // 資料抓不到時：不可以顯示假價格
