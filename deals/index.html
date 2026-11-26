@@ -17,6 +17,7 @@
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="HOWTRAVLE 便宜票雷達：台灣出發日韓泰越・大陸港便宜機票" />
 <meta property="og:url" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/" />
+<link rel="canonical" href="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/" />
 <meta name="twitter:image" content="https://ramezedfate.github.io/Cyber-Miner-Tycoon/deals/og.png?v=2" />
 <!-- 加到手機主畫面的圖示與名稱 -->
 <link rel="apple-touch-icon" href="icon-180.png" />
@@ -398,8 +399,49 @@
   .costs .ir dd{font-size:16px}
   .costs .ir.sum dd{font-size:19px;color:var(--navy)}
   .costs .ir.sum dt{color:var(--ink)}
-  .costs .ir.sum dd strong, .costs .ir.sum dd{background:linear-gradient(transparent 60%,rgba(255,199,44,.5) 60%);width:max-content}
+  .costs .ir.sum .sv{background:linear-gradient(transparent 60%,rgba(255,199,44,.5) 60%);width:max-content}
   .cost-note{margin:6px 2px 0;font-size:12px;color:var(--muted)}
+  .cost-note.checked{display:flex;align-items:center;gap:5px}
+  /* 頁尾：熱門航線連結 */
+  .ft-routes{margin-top:14px}
+  .ft-routes b{display:block;font-size:13px;margin-bottom:6px;color:var(--ink)}
+  .ft-routes ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px}
+  .ft-routes a{display:inline-block;font-size:12.5px;color:var(--ink-2);text-decoration:none;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+  .ft-routes a:hover{border-color:#C7D2FE;color:var(--blue)}
+  .ft-routes a[aria-current]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  /* 各航線頁的說明（只有 r/… 頁面有） */
+  .seo-route{margin-top:36px;padding:22px 18px;border-radius:var(--r-lg);background:#fff;border:1px solid var(--line);line-height:1.75;color:var(--ink-2);font-size:14.5px}
+  .seo-route h1{margin:0 0 6px;font-size:22px;line-height:1.35;color:var(--ink);font-weight:900}
+  .seo-route h2{margin:22px 0 6px;font-size:17px;color:var(--ink);font-weight:800}
+  .seo-route p{margin:6px 0}
+  .seo-route ul{margin:6px 0;padding-left:20px}
+  .seo-route dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:10px 0}
+  .seo-route dt{font-weight:700;color:var(--muted);white-space:nowrap} .seo-route dd{margin:0;color:var(--ink)}
+  .seo-now{display:flex;align-items:flex-start;gap:6px;padding:10px 12px;border-radius:12px;background:#ECFDF3;color:#14532D}
+  .seo-now .ic{flex:0 0 auto;width:16px;height:16px;margin-top:5px}
+  .seo-t{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  .seo-t th, .seo-t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
+  .seo-t th{font-size:12.5px;color:var(--muted)}
+  .seo-t small{margin-left:6px;font-size:11.5px;color:var(--muted)}
+  .seo-open{margin-top:12px;border:0;width:100%}
+  .seo-open .ic{width:18px;height:18px}
+  .cost-note .ic{flex:0 0 auto;width:14px;height:14px}
+  /* 託運行李：另購＝灰、已含＝綠 */
+  .bag-tag{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:999px;font-size:13px;font-weight:800}
+  .bag-tag .ic{width:14px;height:14px;color:currentColor !important}
+  .bag-tag.lcc{background:#F3F4F6;color:#4B5563} .bag-tag.fsc{background:#DCFCE7;color:#166534}
+  /* 廉航 vs 傳統航空 */
+  .vs{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .vs-c{display:flex;flex-direction:column;gap:2px;min-width:0;padding:12px 14px;border-radius:16px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+  .vs-c small{font-size:12.5px;font-weight:700;color:var(--muted)}
+  .vs-c strong{font-size:20px;font-weight:900;line-height:1.2}
+  .vs-c span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vs-c em{font-style:normal;font-size:12px;font-weight:800;margin-top:4px;align-self:flex-start;padding:2px 8px;border-radius:999px}
+  .vs-c.lcc em{background:#F3F4F6;color:#4B5563} .vs-c.fsc em{background:#DCFCE7;color:#166534}
+  .vs-c:hover{border-color:#C7D2FE}
+  .vs-m{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:999px;background:var(--navy);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--bg)}
+  .vs-say{display:flex;align-items:flex-start;gap:6px;margin:8px 2px 0;font-size:13px;color:var(--ink-2);font-weight:600;line-height:1.5}
+  .vs-say .ic{flex:0 0 auto;width:16px;height:16px;margin-top:2px;color:var(--gold)}
   .sh-h{display:flex;align-items:baseline;gap:8px;margin:22px 0 10px;font-size:18px;font-weight:900;color:var(--navy)}
   .sh-h small{font-size:12.5px;font-weight:600;color:var(--muted)}
   /* 節慶日：日曆格子角落一個手繪小圖，月份旁邊畫幾朵花火 */
@@ -547,6 +589,11 @@
   .alt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;margin-top:3px;font-size:12.5px;color:var(--muted)}
   .alt-o{position:relative;z-index:2;flex:0 0 auto;border:0;border-radius:999px;background:var(--soft);color:var(--ink-2);height:26px;padding:0 10px;font-size:12.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
   .alt-o b{font-weight:800;color:var(--ink)}
+  /* 機票卡上的託運行李小標：另購＝灰、含＝綠 */
+  .bag-mini{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 8px 0 6px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .bag-mini .ic{width:13px;height:13px}
+  .bag-mini.lcc{background:#F3F4F6;color:#4B5563} .bag-mini.fsc{background:#DCFCE7;color:#166534}
+  .bag-mini + span{margin-left:2px}
   .card.pick .ph{box-shadow:0 0 0 3px var(--yellow)}
   .card.best .ph{box-shadow:0 0 0 2px var(--yellow),var(--shadow)}
 
@@ -915,6 +962,15 @@
   .anim .card .ph.pvis .bgimg{will-change:translate} /* 只有畫面上看得到的照片放到獨立圖層（省重畫） */
   .progress i, .progress b{will-change:transform}
   /* 點訂票連結：一架小飛機從手指的位置起飛 */
+  /* 點擊粒子 */
+  #tapfx{position:fixed;inset:0;pointer-events:none;z-index:125;overflow:hidden;contain:strict}
+  .tp{position:absolute;left:0;top:0;width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);border-radius:50%;background:var(--c);
+    box-shadow:0 0 8px var(--c);transform:translate(var(--x),var(--y));animation:tp var(--t,.6s) cubic-bezier(.15,.7,.3,1) forwards;will-change:transform,opacity}
+  .tp.st{border-radius:0;box-shadow:none;filter:drop-shadow(0 0 3px var(--c));clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+  .tp.ring{background:none;border:2.5px solid var(--c);box-shadow:0 0 12px var(--c);animation:tpring .55s ease-out forwards}
+  @keyframes tp{0%{transform:translate(var(--x),var(--y)) scale(.3);opacity:1}65%{opacity:1}
+    100%{transform:translate(calc(var(--x) + var(--dx)),calc(var(--y) + var(--dy) + 12px)) scale(.15) rotate(var(--r));opacity:0}}
+  @keyframes tpring{from{transform:translate(var(--x),var(--y)) scale(.15);opacity:1}to{transform:translate(var(--x),var(--y)) scale(1);opacity:0}}
   .takeoff{position:fixed;z-index:120;width:30px;height:30px;margin:-15px 0 0 -15px;pointer-events:none;color:var(--yellow);
     filter:drop-shadow(0 4px 8px rgba(11,35,64,.35));animation:takeoff .9s cubic-bezier(.5,0,.75,0) forwards}
   .takeoff svg{width:100%;height:100%;transform:rotate(45deg)}
@@ -1134,6 +1190,7 @@
   <p>價格為預估最低價，實際以 Trip.com 為準。本頁訂購連結為 Trip.com 聯盟連結，你付的價格不變，我會獲得少量回饋，謝謝支持！</p>
   <p>照片：Wikipedia／Wikimedia Commons。本站非 Trip.com 官方網站。</p>
   <p class="ft-visits hidden" id="visits" aria-live="polite"></p>
+  <!--ROUTES--><nav class="ft-routes" aria-label="熱門航線"><b>熱門航線便宜機票</b><ul><li><a href="r/taipei-tokyo/">台北飛東京</a></li><li><a href="r/taipei-osaka/">台北飛大阪</a></li><li><a href="r/taipei-fukuoka/">台北飛福岡</a></li><li><a href="r/taipei-okinawa/">台北飛沖繩</a></li><li><a href="r/taipei-sapporo/">台北飛札幌</a></li><li><a href="r/taipei-seoul/">台北飛首爾</a></li><li><a href="r/taipei-busan/">台北飛釜山</a></li><li><a href="r/taipei-jeju/">台北飛濟州島</a></li><li><a href="r/taipei-bangkok/">台北飛曼谷</a></li><li><a href="r/taipei-da-nang/">台北飛峴港</a></li><li><a href="r/taipei-ho-chi-minh/">台北飛胡志明市</a></li><li><a href="r/taipei-hong-kong/">台北飛香港</a></li><li><a href="r/taipei-shanghai/">台北飛上海</a></li><li><a href="r/kaohsiung-tokyo/">高雄飛東京</a></li><li><a href="r/kaohsiung-osaka/">高雄飛大阪</a></li><li><a href="r/kaohsiung-okinawa/">高雄飛沖繩</a></li><li><a href="r/kaohsiung-seoul/">高雄飛首爾</a></li><li><a href="r/kaohsiung-bangkok/">高雄飛曼谷</a></li><li><a href="r/kaohsiung-hong-kong/">高雄飛香港</a></li><li><a href="r/taichung-okinawa/">台中飛沖繩</a></li><li><a href="r/taichung-seoul/">台中飛首爾</a></li><li><a href="r/taichung-da-nang/">台中飛峴港</a></li></ul></nav><!--/ROUTES-->
 </footer>
 
 <script>
@@ -1282,7 +1339,7 @@ const ORIGIN_GROUP = { TPE:"TPE", TSA:"TPE", KHH:"KHH", RMQ:"RMQ", TNN:"TNN" };
    ==================================================================== */
 function trackingSub1(){
   let src = "";
-  try { src = new URLSearchParams(location.search).get("src") || ""; } catch(e) {}
+  try { src = new URLSearchParams(location.search).get("src") || window.SEO_SRC || ""; } catch(e) {}
   src = src.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 30);
   return src ? `${AFFILIATE.sub1}_${src}` : AFFILIATE.sub1;
 }
@@ -1291,7 +1348,7 @@ function trackingSub1(){
 let sheetFrom = ""; // 目前的價格日曆是從哪裡打開的
 function entryOf(el){
   if (!el || !el.closest) return "";
-  return el.closest("#hero") ? "hero" : el.closest("#tiles") ? "story" : el.closest("#flightList") ? "card" : el.closest("#picks") ? "pick" : el.closest("#favList") ? "fav"
+  return el.closest("#seoRoute") ? "seo" : el.closest("#hero") ? "hero" : el.closest("#tiles") ? "story" : el.closest("#flightList") ? "card" : el.closest("#picks") ? "pick" : el.closest("#favList") ? "fav"
     : el.closest("#radar") ? "radar" : el.closest(".win") ? "lucky" : el.closest("#hotelCities, #hotelList") ? "hotel" : "";
 }
 function placementOf(a){
@@ -1302,6 +1359,7 @@ function placementOf(a){
     if (a.closest(".win")) return "lucky";
     if (a.closest(".sh-sticky")) return "calbook";
     if (a.closest(".opt")) return "calopt";
+    if (a.closest(".vs")) return "calvs";
     return "sheet";
   }
   if (a.closest("#picks")) return "pick";
@@ -1367,6 +1425,8 @@ const ICONS = {
   heart: '<path d="M12 20.5s-7.5-4.4-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.2 5 3 1.5-1.8 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/>',
   heartF: 'F<path d="M12 20.5s-7.5-4.4-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.2 5 3 1.5-1.8 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  bag: '<rect x="5" y="7" width="14" height="13" rx="2.5"/><path d="M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M9 11v5M15 11v5"/>',
+  bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
   grid: '<rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9.5h18M9 9.5V21M15 9.5V21M3 15h18"/>',
   down: 'F<path d="M12 3c.6 0 1 .4 1 1v12.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 1.4-1.4l4.3 4.3V4c0-.6.4-1 1-1z"/>',
   // 季節小圖示
@@ -1780,7 +1840,7 @@ function flightCard(f, opt = {}){
       <div class="when${nDates > 1 ? " tap" : ""}"${nDates > 1 ? ` data-route="${esc(f.o)}-${esc(f.d)}"` : ""}>
         <b>${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</b><span class="dm">${esc([days, stops].filter(Boolean).join("・"))}</span>
       </div>
-      ${opt.alt && opt.alt.length ? `<div class="alt"><span>也可從</span>${opt.alt.slice(0, 3).map(a => `<button class="alt-o" data-route="${esc(a.o)}-${esc(a.d)}" aria-label="${esc(ORIGIN_NAME[a.o])}出發 ${money(a.price)} 起，看日期">${esc(ORIGIN_NAME[a.o])} <b>${Math.round(a.price).toLocaleString("en-US")}</b></button>`).join("")}</div>` : ""}
+      ${bagShort(f) || (opt.alt && opt.alt.length) ? `<div class="alt">${bagShort(f) ? `<span class="bag-mini ${bagOf(f.airline)}">${icon("bag")}${esc(bagShort(f))}</span>` : ""}${opt.alt && opt.alt.length ? `<span>也可從</span>${opt.alt.slice(0, 3).map(a => `<button class="alt-o" data-route="${esc(a.o)}-${esc(a.d)}" aria-label="${esc(ORIGIN_NAME[a.o])}出發 ${money(a.price)} 起，看日期">${esc(ORIGIN_NAME[a.o])} <b>${Math.round(a.price).toLocaleString("en-US")}</b></button>`).join("")}` : ""}</div>` : ""}
       ${opt.pick && opt.note ? `<div class="memo">${esc(opt.note)}</div>` : ""}
     </div>
   </article>`;
@@ -1788,6 +1848,11 @@ function flightCard(f, opt = {}){
 
 // 航空公司名稱：名單裡有就用中文名，沒有就寫「其他航空」，資料沒給就請粉絲到 Trip.com 看
 function airlineLabel(code){ return AIRLINE_NAMES[code] || (code ? "其他航空" : "航空公司見 Trip.com"); }
+// 託運行李：廉航票價不含託運（要另外買）；傳統航空經濟艙多數含 1 件 20–23kg（少數輕省票不含）
+const BAG_LCC_RT = 1600; // 廉航來回加買 1 件 20kg 的參考價（網路預購；越早買越便宜，機場現場買更貴）
+function bagOf(code){ return FSC_AIRLINES[code] ? "fsc" : AIRLINE_NAMES[code] ? "lcc" : ""; }
+function bagShort(f){ const b = bagOf(f.airline); return b === "lcc" ? "託運另購" : b === "fsc" ? "含託運" : ""; }
+function bagFee(f){ return bagOf(f.airline) === "lcc" ? (f.ret ? BAG_LCC_RT : BAG_LCC_RT / 2) : 0; }
 // 收藏小卡：照片在上，下面城市與價格、日期、出發地；整張點了去 Trip.com
 function miniCard(f, o = {}){
   const url = flightUrl(f); if (!url) return "";
@@ -2330,6 +2395,7 @@ function mergeAndRender(rows){
   if (state.tab !== "hotels"){ if (!heroTouched) renderHero(); renderFlights(); } else renderHotelCities();
   renderBrandTag();
   if (pendingRoute) openRouteFromUrl();
+  fillSeoRoute(); // 細抓的資料到了，航線頁的說明也更新
 }
 // 累積資料庫的精簡格式：{ cols:[欄位...], data:[[值...], ...] } → 一般格式
 function decodePool(p){
@@ -2393,7 +2459,7 @@ async function loadFlights(){
   }
   // 粉絲已經在滑大圖（用存的資料畫的）就不重畫大圖，免得被拉回第一張
   if (cached && heroTouched){ renderFlights(); renderHotelCities(); renderBrandTag(); } else renderAllFlights();
-  openRouteFromUrl();
+  openRouteFromUrl(); fillSeoRoute();
   loadExtras();
 }
 // 預設選「有票、而且最便宜」的月份
@@ -2731,9 +2797,29 @@ function routeSheetHTML(o, d){
   ].join("");
   // 機票＋酒店（最便宜的平價酒店參考價，不含青旅；雙人房）
   const tc = tripCost(cheapest);
-  const costs = `<div class="ir"><dt>機票</dt><dd>${priceHTML(cheapest.price)}</dd></div>` + (tc
+  const bk = bagOf(cheapest.airline), bf = bagFee(cheapest);
+  const bagRow = bk === "lcc"
+    ? `<div class="ir bag"><dt>託運行李</dt><dd><span class="bag-tag lcc">${icon("bag")}另購</span><small>廉航票價不含，${cheapest.ret ? "來回" : "單程"} 1 件 20kg 約 ${money(bf)}（越早買越便宜）</small></dd></div>`
+    : bk === "fsc" ? `<div class="ir bag"><dt>託運行李</dt><dd><span class="bag-tag fsc">${icon("bag")}已含</span><small>傳統航空經濟艙多數含 1 件 20–23kg（少數輕省票不含）</small></dd></div>` : "";
+  const costs = `<div class="ir"><dt>機票</dt><dd>${priceHTML(cheapest.price)}</dd></div>` + bagRow + (tc
     ? `<div class="ir"><dt>酒店</dt><dd>${priceHTML(tc.hotel)}<small>每晚約 ${money(tc.perNight)} × ${tc.nights} 晚・最便宜酒店（不含青旅）參考價</small></dd></div>
-       <div class="ir sum"><dt>機＋酒</dt><dd>${priceHTML(tc.total)}</dd></div>` : "");
+       <div class="ir sum"><dt>${bf ? "合計" : "機＋酒"}</dt><dd><span class="sv">${priceHTML(tc.total + bf)}</span>${bf ? "<small>機票＋行李＋酒店</small>" : ""}</dd></div>`
+    : bf ? `<div class="ir sum"><dt>合計</dt><dd><span class="sv">${priceHTML(cheapest.price + bf)}</span><small>機票＋行李</small></dd></div>` : "");
+  // 廉航 vs 傳統航空：同一條航線兩邊最低價擺在一起（傳統航空多含託運），差多少一眼看
+  const minOf = (mode) => withMode(mode, state.type, () => withAllOrigins(() => routeFlights(o, d))).reduce((m, x) => !m || x.price < m.price ? x : m, null);
+  const vl = minOf("lcc"), vf = minOf("fsc");
+  let vs = "";
+  if (vl && vf && flightUrl(vl) && flightUrl(vf)){
+    const diff = Math.round(vf.price - vl.price), fee = bagFee(vl);
+    const say = diff <= 0 ? `傳統航空反而比較便宜，還多含託運行李，選它就對了`
+      : diff <= fee ? `傳統航空只貴 ${money(diff)}，廉航加買行李（約 ${money(fee)}）反而更貴，要帶大行李選傳統航空`
+      : `廉航便宜 ${money(diff)}，就算加買行李（約 ${money(fee)}）還省 ${money(diff - fee)}，行李少選廉航最划算`;
+    const cell = (f, k, t) => `<a class="vs-c ${k}" href="${esc(flightUrl(f))}" target="_blank" rel="noopener sponsored" aria-label="${t} ${money(f.price)}，${esc(airlineLabel(f.airline))}，${esc(fmtDate(f.dep))} 出發，去 Trip.com 看">
+        <small>${t}</small><strong>${priceHTML(f.price)}</strong><span>${esc(airlineLabel(f.airline))}・${esc(fmtDate(f.dep))}</span><em>${k === "lcc" ? "託運另購" : "通常含託運"}</em></a>`;
+    vs = `<h3 class="sh-h">廉航 vs 傳統航空<small>同一條航線的最低價</small></h3>
+      <div class="vs">${cell(vl, "lcc", "廉航最低")}<span class="vs-m" aria-hidden="true">VS</span>${cell(vf, "fsc", "傳統航空最低")}</div>
+      <p class="vs-say">${icon("bulb")}${esc(say)}</p>`;
+  }
   // 價格日曆：每個出發日的最低價，依價格分三級上色
   const byDay = new Map();
   for (const f of list){ const cur = byDay.get(f.dep); if (!cur || f.price < cur.price) byDay.set(f.dep, f); }
@@ -2772,7 +2858,7 @@ function routeSheetHTML(o, d){
     const days = f.ret ? `${diffDays(f.dep, f.ret) + 1} 天` : "單程";
     return `<a class="opt${i === 0 && sorted.length > 1 ? " best" : ""}${fold && i >= OPT_SHOW ? " x" : ""}" data-dep="${f.dep}" href="${esc(url)}" target="_blank" rel="noopener sponsored">
       <div style="min-width:0"><div class="d1">${esc(fmtDate(f.dep))}${f.ret ? " → " + esc(fmtDate(f.ret)) : ""}</div>
-        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([f.airline ? airlineLabel(f.airline) : "", days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : "")].filter(Boolean).join("・"))}</span></div></div>
+        <div class="d2">${f.airline ? logoHTML(f.airline) : ""}<span>${esc([f.airline ? airlineLabel(f.airline) : "", days, f.direct ? "直飛" : ((f.tr > 0 || f.rtr > 0) ? "轉機" : ""), bagShort(f)].filter(Boolean).join("・"))}</span></div></div>
       <div class="pp"><strong>${priceHTML(f.price)}</strong><span>${i === 0 && sorted.length > 1 ? "最便宜 →" : "訂這組 →"}</span></div></a>`;
   }).join("") + (fold ? `<button class="opt-more" data-optmore>再看 ${sorted.length - OPT_SHOW} 組日期<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button>` : "");
   const url = flightUrl(cheapest);
@@ -2783,6 +2869,8 @@ function routeSheetHTML(o, d){
       <dl class="info">${info}</dl>
       <dl class="info costs">${costs}</dl>
       ${tc ? `<p class="cost-note">備註：酒店均以 2 人一間計算（最便宜的平價酒店參考價，不是即時價）</p>` : ""}
+      <p class="cost-note checked">${icon("clock")}機票價格查到時間：${esc(state.updatedAt ? fmtTime(state.updatedAt) : "今天")}・預估價，實際以 Trip.com 為準</p>
+      ${vs}
       ${hotelCrossSell(cheapest, "跟最便宜的機票同天")}
       <h3 class="sh-h">幾組日期<small>${list.length} 組・${state.type === "rt" ? "來回" : "單程"}・便宜的在前</small></h3>
       <div class="opt-list">${opts}</div>
@@ -2941,8 +3029,39 @@ function lucky(){
   clearTimeout(slotTimer); slotTimer = setTimeout(tick, delay);
 }
 
+// 點擊粒子：點下去的地方炸開一圈小粒子（彩色圓點＋小星星＋一圈光環）；訂票、打開日曆這種重要的點擊炸大一點
+const TAP_COLORS = ["#FFC72C", "#FF8A00", "#E11D48", "#4F7BFF", "#22C55E", "#B32ADB"];
+const TAP_SEL = PRESS_LIST() + ", .fav-btn, .alt-o, .more-d, .st-nav, .opt-more, .day[data-day], .vs-c, #openSet";
+const TAP_BIG = ".cta, .opt, .pass, .hero-cta, .vs-c, .card, .tile.story, #luckyBtn, #again";
+let tapLayer = null, tapLive = 0;
+function tapBurst(x, y, big){
+  if (!MOTION || tapLive > 90) return;
+  if (!tapLayer || !tapLayer.isConnected){ tapLayer = document.createElement("div"); tapLayer.id = "tapfx"; tapLayer.setAttribute("aria-hidden", "true"); document.body.appendChild(tapLayer); }
+  const n = big ? 18 : 12, nodes = [];
+  const ring = document.createElement("i"); ring.className = "tp ring";
+  ring.style.cssText = `--x:${x}px;--y:${y}px;--s:${big ? 84 : 56}px;--c:${big ? "rgba(255,199,44,.85)" : "rgba(79,123,255,.55)"}`;
+  nodes.push(ring);
+  for (let i = 0; i < n; i++){
+    const a = (i / n) * Math.PI * 2 + Math.random() * 0.5, dist = (big ? 52 : 34) + Math.random() * (big ? 46 : 26), star = i % 3 === 0;
+    const el = document.createElement("i"); el.className = "tp" + (star ? " st" : "");
+    el.style.cssText = `--x:${x}px;--y:${y}px;--dx:${(Math.cos(a) * dist).toFixed(1)}px;--dy:${(Math.sin(a) * dist).toFixed(1)}px;` +
+      `--s:${(star ? 11 + Math.random() * 5 : 5 + Math.random() * 4).toFixed(1)}px;--c:${TAP_COLORS[(i + Math.floor(Math.random() * 6)) % 6]};--r:${Math.round(Math.random() * 240 - 120)}deg;--t:${(0.55 + Math.random() * 0.3).toFixed(2)}s`;
+    nodes.push(el);
+  }
+  tapLive += nodes.length; tapLayer.append(...nodes);
+  setTimeout(() => { nodes.forEach(x => x.remove()); tapLive -= nodes.length; }, 820);
+}
+// 只在真的「點」才炸（手指滑動捲頁不算）；鍵盤按 Enter 的 click 沒有座標，炸在元素中間
+document.addEventListener("click", e => {
+  const el = e.target.closest && e.target.closest(TAP_SEL); if (!el) return;
+  let x = e.clientX, y = e.clientY;
+  if (!e.detail && !x && !y){ const b = el.getBoundingClientRect(); x = b.left + b.width / 2; y = b.top + b.height / 2; }
+  tapBurst(x, y, el.matches(TAP_BIG));
+}, true);
+function PRESS_LIST(){ return ".card, .pass, .tile, .f-sum, .mini, .chip, .month, .lucky, .cta, .hero-cta, .btn2, .more, .seg button, .tabs button, .rrow, .opt, .hotel-x, .t-all, .t-kid"; }
+
 // 點擊感：按下去時加 .press（縮一下）、按鈕加水波；Android 輕震一下
-const PRESS = ".card, .pass, .tile, .f-sum, .mini, .chip, .month, .lucky, .cta, .hero-cta, .btn2, .more, .seg button, .tabs button, .rrow, .opt, .hotel-x, .t-all, .t-kid";
+const PRESS = PRESS_LIST() + ", .vs-c";
 const RIPPLE = ".cta, .btn2:not(.fav-btn), .more, .rrow, .opt, .chip, .month, .lucky, .hotel-x";
 let pressed = null;
 const unpress = () => { if (pressed){ pressed.classList.remove("press"); pressed = null; } };
@@ -3001,12 +3120,30 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && !setOpen &
 $("#setSheet .sheet-x").innerHTML = icon("close");
 $("#luckyBtn").innerHTML = icon("dice") + "幫我選！";
 $("#sheet .sheet-x").innerHTML = icon("close");
+// 各航線頁下面的說明：資料到了把「現在最低價、各月份最低價、廉航 vs 傳統航空」填進去（沒有資料就保留原本的文字）
+function fillSeoRoute(){
+  const box = document.getElementById("seoLive"); if (!box || !window.SEO_ROUTE) return;
+  const [o, d] = window.SEO_ROUTE.split("-");
+  const all = withMode("all", "rt", () => withAllOrigins(() => routeFlights(o, d)));
+  if (!all.length) return;
+  const best = all.reduce((m, x) => x.price < m.price ? x : m);
+  const byM = new Map(); for (const f of all){ const k = f.dep.slice(0, 7), c = byM.get(k); if (!c || f.price < c.price) byM.set(k, f); }
+  const minOf = (mode) => withMode(mode, "rt", () => withAllOrigins(() => routeFlights(o, d))).reduce((m, x) => !m || x.price < m.price ? x : m, null);
+  const vl = minOf("lcc"), vf = minOf("fsc");
+  box.innerHTML = `<p class="seo-now">${icon("clock")}<span>${esc(state.updatedAt ? fmtTime(state.updatedAt) : "今天")} 查到：${esc(ORIGIN_NAME[o])}飛${esc(cityName(d))}來回最低 <b>${money(best.price)}</b> 起（${esc(fmtDate(best.dep))} → ${esc(fmtDate(best.ret))}・${esc(airlineLabel(best.airline))}${bagShort(best) ? "・" + esc(bagShort(best)) : ""}）</span></p>
+    <table class="seo-t"><thead><tr><th>出發月份</th><th>來回最低價</th><th>航空公司</th></tr></thead><tbody>
+    ${[...byM.keys()].sort().map(k => { const f = byM.get(k); return `<tr><td>${Number(k.slice(0, 4))} 年 ${Number(k.slice(5))} 月</td><td><b>${money(f.price)}</b></td><td>${esc(airlineLabel(f.airline))}${bagShort(f) ? `<small>${esc(bagShort(f))}</small>` : ""}</td></tr>`; }).join("")}
+    </tbody></table>
+    ${vl && vf ? `<p class="seo-vs">廉航最低 <b>${money(vl.price)}</b>（託運另購）、傳統航空最低 <b>${money(vf.price)}</b>（通常含託運）。</p>` : ""}
+    <button class="cta seo-open" data-route="${esc(o)}-${esc(d)}">${icon("grid")}打開${esc(ORIGIN_NAME[o])}飛${esc(cityName(d))}價格日曆</button>`;
+}
 // 分享連結 ?route=KHH-SEL：資料載入後直接打開那條航線
 function openRouteFromUrl(){
-  let r = ""; try { r = new URLSearchParams(location.search).get("route") || ""; } catch(e) {}
+  let r = "", fromUrl = false; try { r = new URLSearchParams(location.search).get("route") || ""; fromUrl = !!r; } catch(e) {}
+  if (!r) r = window.SEO_ROUTE || ""; // 各航線頁（r/台北飛東京…）：打開就是那條航線的價格日曆
   const m = r.toUpperCase().match(/^([A-Z]{3})-([A-Z]{3})$/);
   if (!m){ pendingRoute = false; return; }
-  if (ORIGIN_GROUP[m[1]] && CITIES[m[2]] && routeFlights(ORIGIN_GROUP[m[1]], m[2]).length){ pendingRoute = false; sheetFrom = "share"; openRoute(ORIGIN_GROUP[m[1]], m[2]); }
+  if (ORIGIN_GROUP[m[1]] && CITIES[m[2]] && routeFlights(ORIGIN_GROUP[m[1]], m[2]).length){ pendingRoute = false; sheetFrom = fromUrl ? "share" : "seo"; openRoute(ORIGIN_GROUP[m[1]], m[2]); }
 }
 
 
@@ -3386,7 +3523,7 @@ setTimeout(loadFx, 2000);
 // 一進來就打開「航線」設定（每次打開網站一次；分享連結直接開那條航線時不打開）
 const AUTOSET_KEY = "howtravle_autoset_v1";
 (function autoOpenSet(){
-  let hasRoute = false; try { hasRoute = !!new URLSearchParams(location.search).get("route"); } catch(e) {}
+  let hasRoute = !!window.SEO_ROUTE; try { hasRoute = hasRoute || !!new URLSearchParams(location.search).get("route"); } catch(e) {}
   let shown = false; try { shown = !!sessionStorage.getItem(AUTOSET_KEY); sessionStorage.setItem(AUTOSET_KEY, "1"); } catch(e) {}
   if (!hasRoute && !shown) setTimeout(() => { if (state.tab === "flights" && $("#sheet").classList.contains("hidden")) openSet(); }, 350);
 })();
